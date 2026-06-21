@@ -107,7 +107,7 @@ MIT — same as open-slide. See [LICENSE](./LICENSE).
 
 This pipeline and every skill in it are extracted from [`1weiho/open-slide`](https://github.com/1weiho/open-slide) — "A slide framework built for agents." All credit for the methodology, gate design, and status helper belongs to that project and its author.
 
-The skill-packaging style is also inspired by [`mattpocock/skills`](https://github.com/mattpocock/skills) — "Skills for Real Engineers. Straight from my .claude directory."
+The grilling methodology behind the `product-grill`, `story-grill`, and `stage-grill` gates — one-question-at-a-time alignment interviews that close the gap between you and the agent — is inspired by [`mattpocock/skills`](https://github.com/mattpocock/skills) — "Skills For Real Engineers" — and its `/grill-me` and `/grill-with-docs` skills in particular.
 
 ---
 
@@ -214,4 +214,4 @@ MIT——與 open-slide 相同。見 [LICENSE](./LICENSE)。
 
 本流水線與其中每一個 skill,皆取自 [`1weiho/open-slide`](https://github.com/1weiho/open-slide)——「A slide framework built for agents.」。方法論、gate 設計與狀態輔助腳本的功勞,全歸該專案與其作者。
 
-skill 的封裝風格亦受 [`mattpocock/skills`](https://github.com/mattpocock/skills)——「Skills for Real Engineers. Straight from my .claude directory.」——啟發。
+`product-grill`、`story-grill`、`stage-grill` 三道 gate 背後的「grilling(逐一逼問)」方法——透過一次一題的對齊訪談,拉近你與 agent 之間的認知落差——受 [`mattpocock/skills`](https://github.com/mattpocock/skills)(「Skills For Real Engineers」)啟發,尤其是其中的 `/grill-me` 與 `/grill-with-docs` 兩個 skill。
