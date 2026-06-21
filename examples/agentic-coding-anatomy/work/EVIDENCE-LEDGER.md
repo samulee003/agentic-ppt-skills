@@ -1,0 +1,6 @@
+# EVIDENCE-LEDGER
+
+| Claim ID | Claim | Source | Source type | Date | Definition / unit | Method / denominator | Caveat | Safety | Allowed use | Supports slide |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claim-01 | In the original 2023 SWE-bench evaluation, Claude 2 resolved 1.96% of the full benchmark with BM25 retrieval | Jimenez et al., `SWE-bench: Can Language Models Resolve Real-World GitHub Issues?`, arXiv:2310.06770v1, Table 5 | Primary academic paper | 2023-10-10 | Percentage of task instances resolved | Full SWE-bench: 2,294 real GitHub issue / pull-request tasks; BM25 retrieval setup | Historical baseline for Claude 2 and the paper's retrieval setup; not SWE-bench Lite, not a current leaderboard result, and not a no-tools control | A | Main talk with date and setup caveat | Slide 4 |
+| claim-02 | An iterative agent can observe tool output, revise files, run tests, and retry instead of ending after one generation | `raw_notes.md`, Core Concepts 1-2 | Draft technical framing | 2026-06-20 | Qualitative workflow mechanism | Read-plan-write-verify loop with execution feedback | This mechanism does not establish a fixed performance gain; results depend on the model, tools, permissions, task, and evaluation | B | Main talk with cautious wording; no numerical uplift | Slides 2-4 |
