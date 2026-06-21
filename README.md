@@ -114,7 +114,9 @@ These are agent skills (markdown instructions + a zero-dependency status helper)
 ```
 skills/        8 engine-agnostic gate skills + the orchestrator + a zero-dep status helper
 adapters/      engine-specific rules for the two gates that render/export
-  open-slide/  the reference adapter (canvas, PPTX/PDF export, PowerPoint QA)
+  open-slide/  React canvas + in-browser inspector; visual-faithful PPTX/PDF via dev-server UI
+  marp/        Markdown → slides; CLI export (pptx/pdf/html)
+  pptxgenjs/   Node script → native-shape PPTX; no browser needed
 examples/      a complete end-to-end pipeline run, produced with the open-slide adapter
 ```
 
@@ -148,13 +150,15 @@ source-intake → product-grill → evidence → story-architecture
 
 ### Engines
 
-Gates 6 and 8 need a **slide engine** to render and export. The pipeline is engine-agnostic by design:
+Gates 6 and 8 need a **slide engine** to render and export. The pipeline is engine-agnostic by design: at the prototype gate the agent asks which engine to use, records it via `status.mjs set-engine` and in `PRESENTATION-BRIEF.md`, then reads `adapters/<engine>/`. The deck-qa gate inherits the choice. Three adapters ship:
 
-- At the prototype gate, the agent asks the user which engine to use (one question, with a recommended default), records the choice in `PRESENTATION-BRIEF.md`, and reads `adapters/<engine>/prototype.md` for that engine's authoring rules.
-- The deck-qa gate reads the recorded engine and follows `adapters/<engine>/qa.md` for its preview surface and export steps.
-- The bundled reference adapter is **`open-slide`** — [the slide framework built for agents](https://github.com/1weiho/open-slide): a 1920×1080 React canvas, an in-browser inspector, and visual-faithful PPTX + PDF export.
+| Adapter | Real slide source | Live review | Export | Best for |
+| --- | --- | --- | --- | --- |
+| [`open-slide`](./adapters/open-slide) | `slides/<id>/index.tsx` (React) | dev-server canvas + in-browser inspector | visual-faithful PPTX + PDF (dev-server UI) | highest visual quality; user wants the inspector loop |
+| [`marp`](./adapters/marp) | `slides/<id>.md` (Markdown) | rendered HTML | **CLI**: `marp deck.md -o deck.pptx` | lightest weight; agent can't drive a browser; fastest path |
+| [`pptxgenjs`](./adapters/pptxgenjs) | `slides/<id>/build.mjs` (Node script) | the produced PPTX itself | `node build.mjs` → native-shape PPTX | deliverable must be fully-editable native PowerPoint; no browser |
 
-To add another engine (Marp, reveal.js, PptxGenJS, a proprietary template…), create `adapters/<engine>/` with a `prototype.md` and a `qa.md` describing that engine's authoring contract, preview surface, and exports. The pipeline skills pick it up automatically — no orchestrator changes needed.
+To add another engine (reveal.js, a proprietary template…), create `adapters/<engine>/` with a `README.md`, `prototype.md`, and `qa.md` describing that engine's prerequisites, authoring contract, preview surface, and exports. The pipeline skills pick it up automatically — no orchestrator changes needed.
 
 ### Install
 
@@ -317,7 +321,9 @@ node .agents/skills/make-presentation/scripts/status.mjs init presentation-work/
 ```
 skills/        8 個引擎無關 gate skill + orchestrator + 零依賴狀態輔助腳本
 adapters/      兩道「渲染/匯出」gate 的引擎專屬規則
-  open-slide/  參考 adapter(畫布、PPTX/PDF 匯出、PowerPoint QA)
+  open-slide/  React 畫布 + 瀏覽器 inspector;visual-faithful PPTX/PDF(dev-server UI)
+  marp/        Markdown → 投影片;CLI 匯出(pptx/pdf/html)
+  pptxgenjs/   Node 腳本 → 原生形狀 PPTX;免瀏覽器
 examples/      一次完整的端到端 pipeline 實跑,用 open-slide adapter 產生
 ```
 
@@ -351,13 +357,15 @@ source-intake → product-grill → evidence → story-architecture
 
 ### 引擎
 
-Gate 6 和 8 需要**投影片引擎**來渲染與匯出。Pipeline 刻意設計成引擎無關:
+Gate 6 和 8 需要**投影片引擎**來渲染與匯出。Pipeline 刻意設計成引擎無關:進到 prototype gate 時,agent 問使用者用哪個引擎,用 `status.mjs set-engine` 記錄並寫進 `PRESENTATION-BRIEF.md`,再讀 `adapters/<engine>/`。deck-qa gate 繼承這個選擇。隨附三個 adapter:
 
-- 進到 prototype gate 時,agent 會問使用者用哪個引擎(一次一題,附建議預設),把選擇記進 `PRESENTATION-BRIEF.md`,並讀 `adapters/<engine>/prototype.md` 取得該引擎的編寫規則。
-- deck-qa gate 讀取已記錄的引擎,並依 `adapters/<engine>/qa.md` 跑預覽與匯出。
-- 隨附的參考 adapter 是 **`open-slide`**——[the slide framework built for agents](https://github.com/1weiho/open-slide):1920×1080 React 畫布、瀏覽器 inspector、visual-faithful PPTX + PDF 匯出。
+| Adapter | 真實投影片來源 | 預覽 | 匯出 | 適合 |
+| --- | --- | --- | --- | --- |
+| [`open-slide`](./adapters/open-slide) | `slides/<id>/index.tsx`(React) | dev-server 畫布 + 瀏覽器 inspector | visual-faithful PPTX + PDF(dev-server UI) | 畫質最高;使用者要 inspector 編輯迴圈 |
+| [`marp`](./adapters/marp) | `slides/<id>.md`(Markdown) | 渲染出的 HTML | **CLI**:`marp deck.md -o deck.pptx` | 最輕量;agent 無法開瀏覽器;最快 |
+| [`pptxgenjs`](./adapters/pptxgenjs) | `slides/<id>/build.mjs`(Node 腳本) | 產出的 PPTX 本身 | `node build.mjs` → 原生形狀 PPTX | 交付物必須是可完全編輯的原生 PowerPoint;無瀏覽器 |
 
-要加別的引擎(Marp、reveal.js、PptxGenJS、公司專屬樣板⋯⋯),在 `adapters/<engine>/` 下放一份 `prototype.md` 和 `qa.md`,描述該引擎的編寫契約、預覽介面與匯出。Pipeline skill 會自動讀取——不用改 orchestrator。
+要加別的引擎(reveal.js、公司專屬樣板⋯⋯),在 `adapters/<engine>/` 下放 `README.md`、`prototype.md`、`qa.md`,描述該引擎的前提、編寫契約、預覽介面與匯出。Pipeline skill 會自動讀取——不用改 orchestrator。
 
 ### 安裝
 
