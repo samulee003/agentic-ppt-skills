@@ -2,6 +2,8 @@
 
 A complete end-to-end run of the presentation pipeline, included so you can see exactly what each gate produces.
 
+> **Engine: this run used the [open-slide adapter](../../adapters/open-slide/).** Gates 6 (`deck-prototype`) and 8 (`production-qa`) produce engine-specific artifacts — here `apps/demo/slides/agentic-coding-anatomy/index.tsx` and `test-results/*.pptx` / `*.pdf` reflect open-slide's canvas + visual-faithful export. Run with a different engine and those artifact paths and formats differ; everything upstream (gates 1–5) is engine-agnostic and would be identical.
+
 ## How to read it
 
 Start with [`work/STATUS.md`](./work/STATUS.md) — the pipeline tracker. All eight gates are `passed` in `research-enhanced` mode. Each row links the gate to its artifacts, inputs, decisions, and review reason, so you can trace how an upstream choice flowed downstream.

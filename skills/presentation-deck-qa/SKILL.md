@@ -1,11 +1,19 @@
 ---
-name: open-slide-deck-finalization
-description: Finalizes a complete open-slide presentation with aligned notes, verified evidence and timing, browser QA, a fresh visual-faithful PPTX, a matching PDF, and real PowerPoint inspection. Use when the production-qa gate is current, final downloads are requested, exports changed, or a deck must be proven stage-ready.
+name: presentation-deck-qa
+description: Finalizes a complete presentation with aligned notes, verified evidence and timing, preview QA, and a fresh export of the chosen delivery format(s). Use when the production-qa gate is current, final downloads are requested, exports changed, or a deck must be proven stage-ready.
 ---
 
-# Finalize an open-slide deck
+# Finalize the deck for delivery
 
-Use when `production-qa` is the current gate or when a quick `create-slide` deck needs final delivery. Consult `slide-authoring` for technical authoring rules.
+Use when `production-qa` is the current gate or when a deck needs final delivery. Author to the engine's technical rules (from its adapter).
+
+## Engine
+
+This gate renders and exports, so it needs the **slide engine** chosen at the prototype gate. Resolve it before QA:
+
+- Read the engine from `PRESENTATION-BRIEF.md` (recorded at the prototype gate) or from `STATUS.md` if present.
+- If no engine is recorded, ask the user now, one question, with a recommended default (see `adapters/`; the bundled reference adapter is `open-slide`).
+- Read `adapters/<engine>/qa.md` for that engine's preview surface, export command, export format(s), and inspection steps. The sections below are the engine-agnostic backbone; the adapter supplies the engine-specific surface and exports.
 
 ## Choose context
 
@@ -25,24 +33,22 @@ Use when `production-qa` is the current gate or when a quick `create-slide` deck
 - Confirm one necessary job and one dominant message per slide.
 - In research-enhanced mode, require a per-slide fact check plus a reference and Q&A backup plan before export approval.
 
-## Verify the browser
+## Verify the preview
 
 - Run the relevant repo checks and target build.
-- Review the complete deck in the live open-slide canvas.
+- Review the complete deck in the engine's live preview surface.
 - Inspect full-page renders or a contact sheet, then inspect changed, dense, and image-heavy pages at full size.
 - Reject verbose paragraphs and nested text tiers. Split the slide rather than shrink text or hide overflow.
 - Treat clipping, unreadable type, inconsistent page grammar, or notes drift as failed QA.
 
 ## Export and inspect
 
-- After deck or exporter changes, create a fresh visual-faithful PPTX and matching PDF; old downloads are not repaired.
-- Validate PPTX archive integrity and confirm the archive opens cleanly.
-- Confirm PDF page count and 16:9 geometry match the final deck.
-- Open the PPTX in Microsoft PowerPoint and review wrapping, alignment, and notes.
-- If PowerPoint, PDF, and the browser disagree, the export is not complete.
+- After deck or exporter changes, produce a fresh export in each chosen delivery format; old downloads are not repaired.
+- Follow `adapters/<engine>/qa.md` for the engine's export steps, archive integrity, geometry, and any native-application inspection.
+- If the preview and any export disagree, the export is not complete.
 
 ## Record and hand off
 
 - Complete `templates/QA-REPORT.md` with evidence for every section and any remaining caveats.
 - In pipeline mode, update the `production-qa` gate in `STATUS.md` through `.agents/skills/make-presentation/scripts/status.mjs`.
-- Provide direct links to both PPTX and PDF, page/note counts, timing, inspected pages, and explicit PowerPoint verification evidence.
+- Provide direct links to every exported file, page/note counts, timing, inspected pages, and explicit export verification evidence.

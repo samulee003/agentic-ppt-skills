@@ -11,7 +11,7 @@ Use when `stage-grill` is the current gate.
 - Always explore the files instead of asking the user for discoverable facts.
 - Ask one question at a time when a consequential stage decision is unresolved.
 - Include a recommended answer with each question.
-- Use `current-slide` when the user refers to the live page without naming it.
+- When the user refers to the page they're currently viewing without naming it, resolve it through the engine's "current page" mechanism (e.g. `current-slide` for open-slide) before judging.
 - Use actual renders and current speaker notes, not outline-only summaries.
 - Apply `references/stage-questions.md` to representative prototype pages first, then to the full deck when available.
 - Enforce presenter-language constraints, timed trimming, and existing-versus-remaining distinction.

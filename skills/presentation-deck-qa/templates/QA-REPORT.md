@@ -18,12 +18,8 @@
 
 ## Timing
 
-## Browser
+## Preview
 
-## PPTX
-
-## PDF
-
-## PowerPoint
+## Exports
 
 ## Remaining caveats

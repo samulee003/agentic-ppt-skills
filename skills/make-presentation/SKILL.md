@@ -45,7 +45,7 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke exact
 5. `story-grill` → `presentation-story-grill`
 6. `deck-prototype` → `presentation-prototype`
 7. `stage-grill` → `presentation-stage-grill`
-8. `production-qa` → `open-slide-deck-finalization`
+8. `production-qa` → `presentation-deck-qa`
 
 - Do not skip ahead because a PPTX, PDF, or other artifact already exists.
 - Read `references/gate-results.md`, then translate a passed focused-skill result with `node .agents/skills/make-presentation/scripts/status.mjs result <work-root> <gate> passed "<reason>" --artifact <path> [--artifact <path>]... [--input <value>]... [--decision <value>]...`.

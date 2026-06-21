@@ -1,23 +1,32 @@
 ---
 name: presentation-prototype
-description: Builds a small representative prototype in the real slide source so the team can test tone, density, visual system, and page grammar before producing the full deck. Use when the deck-prototype gate is current for a presentation project or when a router asks for representative opening, thesis, evidence, dense-page, and ending pages plus live open-slide review.
+description: Builds a small representative prototype in the real slide source so the team can test tone, density, visual system, and page grammar before producing the full deck. Use when the deck-prototype gate is current for a presentation project or when a router asks for representative opening, thesis, evidence, dense-page, and ending pages plus live review in the chosen slide engine.
 ---
 
 # Build the presentation prototype
 
 Use when `deck-prototype` is the current gate.
 
+## Engine
+
+This gate renders slides, so it needs a **slide engine**. Resolve it before authoring:
+
+- If `PRESENTATION-BRIEF.md` (or the gate-1 intake) already records the engine, use it.
+- Otherwise ask the user, one question, with a recommended default. Offer installed engines first (see `adapters/`); the bundled reference adapter is `open-slide`. The user may also name a self-supplied engine.
+- Record the choice in `PRESENTATION-BRIEF.md` so downstream gates (stage-grill, deck-qa) inherit it.
+- Read `adapters/<engine>/prototype.md` for that engine's authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
+
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, cited source files, and existing slide files before editing.
 - Always explore the files instead of asking the user for discoverable facts.
 - Ask one question at a time when a consequential prototype decision is unresolved.
 - Include a recommended answer with each question.
-- Invoke `slide-authoring` before editing any page in the real slide source.
+- Follow the engine's authoring rules (from `adapters/<engine>/prototype.md`) before editing any page in the real slide source.
 - Build only the representative set in `references/prototype-set.md`; do not build the full deck at this gate.
 - Use real assets, real type scale, and the intended visual direction rather than placeholder visuals or compressed mini-layouts.
-- Follow `slide-authoring` for canonical projector-safe typography and overflow rules. Do not create a separate type scale in this workflow.
+- Author to the engine's canonical projector-safe typography and overflow rules. Do not create a separate type scale in this workflow.
 - Preserve one necessary job and one dominant message per slide. Reject verbose paragraphs and nested text tiers. Split the slide rather than shrink text or pack multiple messages onto one page.
 - Keep the prototype in the real slide source so later work can revise the actual pages instead of rebuilding from mockups.
-- Require live open-slide review before calling the gate passed.
+- Require a live review in the chosen engine before calling the gate passed.
 - Return to story or evidence if representative pages fail because the narrative job, proof, or density is wrong rather than merely unpolished.
 
 Write only consequential decisions to `GRILL-LOG.md` from `../presentation-product-grill/templates/GRILL-LOG.md`.
