@@ -13,8 +13,8 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 
 - If `PRESENTATION-BRIEF.md` (or the gate-1 intake) already records the engine, use it.
 - Otherwise ask the user, one question, with a recommended default. Offer installed engines first (see `adapters/`); the bundled reference adapter is `open-slide`. The user may also name a self-supplied engine.
-- Record the choice in `PRESENTATION-BRIEF.md` so downstream gates (stage-grill, deck-qa) inherit it.
-- Read `adapters/<engine>/prototype.md` for that engine's authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
+- Read `adapters/<engine>/README.md` **first** for that engine's prerequisites and setup, then `adapters/<engine>/prototype.md` for its authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
+- Record the choice so downstream gates (stage-grill, deck-qa) inherit it: set it in the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs set-engine <work-root> <engine>`, and add an `## Engine` line to `PRESENTATION-BRIEF.md`.
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, cited source files, and existing slide files before editing.
 - Always explore the files instead of asking the user for discoverable facts.

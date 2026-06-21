@@ -2,6 +2,19 @@
 
 Engine rules for the `deck-prototype` gate when the deck is built with open-slide. The pipeline skill (`presentation-prototype`) calls this; author to it.
 
+## Prerequisites — read this first
+
+This adapter assumes an open-slide workspace already exists and its dependencies are installed. If you have not scaffolded one yet, do so before authoring any slide — `slide-authoring` and the other authoring skills referenced below live **inside the scaffolded workspace**, not in this pipeline repo:
+
+```bash
+npx @open-slide/cli init <deck-name>      # creates the workspace
+cd <deck-name>
+pnpm install                              # or the package manager the scaffold uses
+pnpm dev                                  # the live canvas you review against
+```
+
+open-slide needs **Node 18+** and a package manager (the scaffold defaults to pnpm). Without this scaffold, `slide-authoring`, `create-slide`, etc. will not be present and this gate cannot run.
+
 Follow the workspace's `slide-authoring` skill for the full reference. The essentials below are the parts the prototype gate most often gets wrong.
 
 ## File contract

@@ -31,6 +31,10 @@
 - Tone: Technical, clear, structured, objective
 - Non-negotiables: Explain the core loop clearly, label illustrative tools, use risk-based safety gates, and frame the 2023 SWE-bench result as historical.
 
+## Engine
+
+- open-slide (set at the deck-prototype gate; recorded in `STATUS.md` via `set-engine`).
+
 ## Success test
 
 - Observable signal that the presentation worked: The audience can accurately explain the difference between a prompt completion and an agentic loop.

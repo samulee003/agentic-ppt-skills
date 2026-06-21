@@ -15,7 +15,7 @@ export const GATES = [
 
 export const STATUSES = ['pending', 'in_progress', 'passed', 'needs_revision', 'blocked'];
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const MODES = ['general', 'research-enhanced'];
 const RESULTS = ['passed', 'blocked', 'needs_revision: product-grill', 'needs_revision: evidence'];
 
@@ -73,6 +73,8 @@ ${JSON.stringify(state, null, 2)}
 \`\`\`
 <!-- presentation-status:end -->
 
+**Deck:** ${state.deckId} · **Mode:** ${state.mode} · **Engine:** ${state.engine ?? '(not chosen yet — picked at the deck-prototype gate)'}
+
 | Gate | Status | Artifacts | Inputs | Decisions | Invalidated by | Reviewed | Review reason | Invalidated | Invalidation reason |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ${rows.split('\n').join(' |\n| ')} |
@@ -81,13 +83,13 @@ ${JSON.stringify(state, null, 2)}
 
 function normalizeState(state) {
   if (state.schemaVersion === SCHEMA_VERSION) return state;
-  if (state.schemaVersion !== 1) {
+  if (state.schemaVersion !== 1 && state.schemaVersion !== 2) {
     throw new Error('Unsupported presentation status schema');
   }
   const migratedAt = new Date().toISOString();
-  return {
+  const v2 = state.schemaVersion === 2 ? state : {
     ...state,
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: 2,
     modeReviewedAt:
       typeof state.modeReviewedAt === 'string' && state.modeReviewedAt
         ? state.modeReviewedAt
@@ -126,6 +128,11 @@ function normalizeState(state) {
       }),
     ),
   };
+  return {
+    ...v2,
+    schemaVersion: SCHEMA_VERSION,
+    engine: typeof v2.engine === 'string' && v2.engine ? v2.engine : null,
+  };
 }
 
 async function load(root) {
@@ -145,14 +152,17 @@ async function save(root, state, options = {}) {
 function createState(deckId, sourceRoot, mode, modeReason) {
   assertDeckId(deckId);
   assertRequiredString(sourceRoot, 'sourceRoot');
-  assertOneOf(mode, MODES, 'mode');
-  assertRequiredString(modeReason, 'modeReason');
+  const resolvedMode = mode && mode.trim() ? mode : 'general';
+  assertOneOf(resolvedMode, MODES, 'mode');
+  const resolvedReason =
+    modeReason && modeReason.trim() ? modeReason : `Initial mode: ${resolvedMode}`;
   return {
     schemaVersion: SCHEMA_VERSION,
     deckId,
-    mode,
+    mode: resolvedMode,
     modeReviewedAt: new Date().toISOString(),
-    modeReason,
+    modeReason: resolvedReason,
+    engine: null,
     sourceRoot: path.resolve(sourceRoot),
     gates: Object.fromEntries(
       GATES.map((gate) => [
@@ -179,10 +189,14 @@ function validateState(state) {
     throw new Error('Unsupported presentation status schema');
   }
   assertDeckId(state.deckId);
-  assertOneOf(state.mode, MODES, 'mode');
-  assertRequiredString(state.sourceRoot, 'sourceRoot');
-  assertRequiredString(state.modeReviewedAt, 'modeReviewedAt');
-  assertRequiredString(state.modeReason, 'modeReason');
+  const mode = state.mode && state.mode.trim() ? state.mode : 'general';
+  assertOneOf(mode, MODES, 'mode');
+  if (!state.sourceRoot || typeof state.sourceRoot !== 'string' || state.sourceRoot.trim() === '') {
+    throw new Error('Missing sourceRoot');
+  }
+  if (state.engine !== null && (typeof state.engine !== 'string' || state.engine.trim() === '')) {
+    throw new Error('Invalid engine');
+  }
   if (JSON.stringify(Object.keys(state.gates)) !== JSON.stringify(GATES)) {
     throw new Error('STATUS.md gate order does not match the presentation pipeline');
   }
@@ -317,6 +331,14 @@ async function setMode(root, mode, reason) {
   return state;
 }
 
+async function setEngine(root, engine) {
+  assertRequiredString(engine, 'engine');
+  const state = validateState(await load(root));
+  state.engine = engine;
+  await save(root, state);
+  return state;
+}
+
 async function applyResult(root, gate, result, reason, metadata) {
   assertOneOf(gate, GATES, 'gate');
   assertOneOf(result, RESULTS, 'result');
@@ -343,17 +365,24 @@ async function nextGate(root) {
 async function main(argv) {
   const [command, root, ...args] = argv;
   if (command === 'init') {
+    const deckId = args[0];
+    const sourceRoot = args[1];
+    const mode = args[2] ?? 'general';
+    const modeReason = args[3] ?? '';
+    const hasForce = args[args.length - 1] === '--force';
+    const positional = hasForce ? args.slice(0, -1) : args;
     if (
       !root ||
-      args.length < 4 ||
-      args.length > 5 ||
-      (args.length === 5 && args[4] !== '--force')
+      positional.length < 2 ||
+      positional.length > 4 ||
+      (hasForce && args.length - 1 > 4) ||
+      (args.length > 5)
     ) {
       throw new Error(
-        'Usage: status.mjs init <root> <deck-id> <source-root> <mode> <mode-reason> [--force]',
+        'Usage: status.mjs init <root> <deck-id> <source-root> [mode] [mode-reason] [--force]',
       );
     }
-    await init(root, args[0], args[1], args[2], args[3], args[4] === '--force');
+    await init(root, deckId, sourceRoot, mode, modeReason, hasForce);
   } else if (command === 'validate') {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs validate <root>');
     validateState(await load(root));
@@ -374,6 +403,11 @@ async function main(argv) {
       throw new Error('Usage: status.mjs set-mode <root> <mode> <reason>');
     }
     await setMode(root, args[0], args[1]);
+  } else if (command === 'set-engine') {
+    if (!root || args.length !== 1) {
+      throw new Error('Usage: status.mjs set-engine <root> <engine>');
+    }
+    await setEngine(root, args[0]);
   } else if (command === 'result') {
     if (!root || args.length < 3) {
       throw new Error(
@@ -386,7 +420,7 @@ async function main(argv) {
     process.stdout.write(`${await nextGate(root)}\n`);
     return;
   } else {
-    throw new Error('Expected command: init, validate, set, invalidate, set-mode, result, or next');
+    throw new Error('Expected command: init, validate, set, invalidate, set-mode, set-engine, result, or next');
   }
   process.stdout.write(`${command} ok\n`);
 }

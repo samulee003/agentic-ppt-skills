@@ -11,8 +11,8 @@ Use when `production-qa` is the current gate or when a deck needs final delivery
 
 This gate renders and exports, so it needs the **slide engine** chosen at the prototype gate. Resolve it before QA:
 
-- Read the engine from `PRESENTATION-BRIEF.md` (recorded at the prototype gate) or from `STATUS.md` if present.
-- If no engine is recorded, ask the user now, one question, with a recommended default (see `adapters/`; the bundled reference adapter is `open-slide`).
+- Read the engine from the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs next <work-root>` (the JSON block in `STATUS.md` carries an `engine` field set at the prototype gate). Fall back to the `## Engine` line in `PRESENTATION-BRIEF.md` if the tracker has no engine recorded.
+- If no engine is recorded anywhere, ask the user now, one question, with a recommended default (see `adapters/`; the bundled reference adapter is `open-slide`).
 - Read `adapters/<engine>/qa.md` for that engine's preview surface, export command, export format(s), and inspection steps. The sections below are the engine-agnostic backbone; the adapter supplies the engine-specific surface and exports.
 
 ## Choose context
