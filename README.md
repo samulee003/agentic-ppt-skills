@@ -1,6 +1,91 @@
 # agentic-ppt-skills
 
-[English](#english) · [繁體中文](#繁體中文)
+[English](#english) · [繁體中文](#繁體中文) · [For AI agents (EN)](#for-ai-agents) · [給 AI Agent (繁中)](#給-ai-agent繁中版)
+
+---
+
+## For AI agents
+
+> **You are an AI agent and a user pointed you at this repo. Follow these instructions exactly.** This section is written for you. Do not paraphrase it; do not improvise. If anything here conflicts with the skill files under `skills/`, the skill files win for *how* a gate runs — this section only governs *installation* and *invocation*.
+
+### 1. Detect the host environment
+
+Before installing, determine where this agent session runs:
+
+- **If you are operating inside a user's project repo** (you can run `git rev-parse --show-toplevel` and it returns a real repo), install there. That project becomes the deck workspace.
+- **If you are in a scratch / no-repo / sandbox environment**, create a fresh folder for the deck and install there. Tell the user the path you chose.
+- Pick the skill directory your runtime reads: `.agents/skills/` (most runtimes) **or** `.claude/skills/` (Claude Code). If unsure, prefer `.agents/skills/`. If a `.claude/skills/` already exists, mirror there too.
+
+### 2. Install the skills and adapters
+
+Run these from the install root (the repo or folder from step 1). The exact commands assume this repo is checked out at `./agentic-ppt-skills` — adjust the source path to wherever you cloned it:
+
+```bash
+mkdir -p .agents/skills
+cp -r agentic-ppt-skills/skills/* .agents/skills/
+cp -r agentic-ppt-skills/adapters .agents/adapters
+```
+
+Verify the install before proceeding:
+
+```bash
+test -f .agents/skills/make-presentation/SKILL.md && echo "orchestrator present"
+test -x .agents/skills/make-presentation/scripts/status.mjs && echo "status helper present"
+node .agents/skills/make-presentation/scripts/status.mjs 2>&1 | head -1   # must print usage, not crash
+ls .agents/adapters/open-slide/                                            # must list README.md, prototype.md, qa.md
+```
+
+If any check fails, **stop and report the failure to the user** — do not attempt a partial install.
+
+### 3. Ask the user for the one input you actually need
+
+Before starting the pipeline, ask exactly one question (with a recommended default) and wait for the answer:
+
+> **What's the source for this presentation?** It can be a folder of notes, an existing deck file, a URL, or just a topic. Default: I'll use the notes in the current folder.
+
+Record the answer. Do not start building until the user replies.
+
+### 4. Invoke the orchestrator
+
+Load `.agents/skills/make-presentation/SKILL.md` and follow it. It is the single entry point. Key rules the orchestrator enforces — respect them, do not shortcut:
+
+- **Run one gate at a time, in order.** Never jump ahead. The next gate is whichever the status helper reports as unresolved; get it with:
+  ```bash
+  node .agents/skills/make-presentation/scripts/status.mjs next <work-root>
+  ```
+- **Never hand-edit `STATUS.md`.** Always go through the status helper (`init` / `next` / `result` / `invalidate` / `set-mode`). It validates gate order and artifact provenance; hand-editing silently breaks the pipeline.
+- **Do not decide the engine yourself.** The prototype gate (`deck-prototype`) and the qa gate (`production-qa`) need a slide engine. When you reach the prototype gate, ask the user which engine to use (recommended default: `open-slide`), record it in `PRESENTATION-BRIEF.md`, then read `.agents/adapters/<engine>/prototype.md` for that engine's rules. If the user names an engine with no adapter folder, stop and tell them — do not guess.
+
+### 5. What each gate produces (the agent's contract)
+
+| Gate | Skill to invoke | Must produce |
+| --- | --- | --- |
+| `source-intake` | `presentation-source-intake` | `SOURCE-INVENTORY.md` |
+| `product-grill` | `presentation-product-grill` | `PRESENTATION-BRIEF.md` |
+| `evidence` | `presentation-evidence` | `EVIDENCE-LEDGER.md` |
+| `story-architecture` | `presentation-story-architecture` | `STORY.md` + `STORYBOARD.md` |
+| `story-grill` | `presentation-story-grill` | `GRILL-LOG.md` |
+| `deck-prototype` ⚙ | `presentation-prototype` | deck prototype in the chosen engine |
+| `stage-grill` | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
+| `production-qa` ⚙ | `presentation-deck-qa` | `QA-REPORT.md` + exports |
+
+⚙ gates read `.agents/adapters/<engine>/`. Mark a gate passed only via the helper, with real `--artifact` paths.
+
+### 6. When you're done
+
+When `status.mjs next <work-root>` reports `complete`, give the user:
+- the path to `STATUS.md`,
+- the path to every exported file (PPTX, PDF, etc.),
+- and the pipeline's work folder (`presentation-work/<deck-id>/`).
+
+Do not claim success unless `next` reports `complete`. If a gate failed or is unresolved, say so plainly.
+
+### 7. Hard limits — do not violate
+
+- Do not install `node_modules` or any npm package. `status.mjs` is zero-dependency.
+- Do not edit files under `.agents/skills/` or `.agents/adapters/` — they are read-only.
+- Do not skip evidence, readability, or export checks "to save time". The orchestrator forbids it under deadline pressure.
+- If you cannot determine the host environment or a check fails, stop and ask — do not guess.
 
 ---
 
@@ -106,6 +191,91 @@ MIT. See [LICENSE](./LICENSE).
 This pipeline and every skill in it are extracted from [`1weiho/open-slide`](https://github.com/1weiho/open-slide) — "the slide framework built for agents." All credit for the methodology, gate design, and status helper belongs to that project and its author. open-slide is also the reference engine adapter shipped here.
 
 The grilling methodology behind the `product-grill`, `story-grill`, and `stage-grill` gates — one-question-at-a-time alignment interviews that close the gap between you and the agent — is inspired by [`mattpocock/skills`](https://github.com/mattpocock/skills) ("Skills For Real Engineers"), and its `/grill-me` and `/grill-with-docs` skills in particular.
+
+---
+
+## 給 AI Agent(繁中版)
+
+> **你是 AI agent,使用者把這個 repo 丟給你了。請嚴格照下面指令做。** 這一段是寫給你看的——不要改寫、不要自由發揮。如果這段跟 `skills/` 底下的 skill 檔案有衝突,以 skill 檔案為準(它管「gate 怎麼跑」),這段只管「安裝」和「啟動」。
+
+### 1. 偵測執行環境
+
+安裝前,先判斷你現在跑在哪裡:
+
+- **如果你在使用者的專案 repo 裡**(執行 `git rev-parse --show-toplevel` 會回傳一個真實 repo),就裝在那裡。那個專案會成為簡報的工作區。
+- **如果是臨時環境 / 沒有 repo / 沙盒**,就建一個新資料夾來裝,並告訴使用者你選的路徑。
+- 選擇你的 runtime 會讀的 skill 目錄:`.agents/skills/`(多數 runtime)或 `.claude/skills/`(Claude Code)。不確定就用 `.agents/skills/`;如果已存在 `.claude/skills/`,那邊也鏡像一份。
+
+### 2. 安裝 skills 與 adapters
+
+在步驟 1 選的根目錄下執行。下面的指令假設這個 repo clone 在 `./agentic-ppt-skills`——實際路徑視你 clone 的位置調整:
+
+```bash
+mkdir -p .agents/skills
+cp -r agentic-ppt-skills/skills/* .agents/skills/
+cp -r agentic-ppt-skills/adapters .agents/adapters
+```
+
+裝完先驗證,再繼續:
+
+```bash
+test -f .agents/skills/make-presentation/SKILL.md && echo "orchestrator present"
+test -x .agents/skills/make-presentation/scripts/status.mjs && echo "status helper present"
+node .agents/skills/make-presentation/scripts/status.mjs 2>&1 | head -1   # 要印出用法,不能 crash
+ls .agents/adapters/open-slide/                                            # 要列出 README.md, prototype.md, qa.md
+```
+
+任何一項檢查失敗,**停下來回報給使用者**——不要嘗試半成品安裝。
+
+### 3. 問使用者你唯一需要的一個輸入
+
+啟動 pipeline 前,問一個問題(附建議預設),等他回答:
+
+> **這份簡報的素材來源是什麼?** 可以是一疊筆記、一份現有簡報檔、一個網址,或只是一個主題。預設:我用目前資料夾裡的筆記。
+
+記下答案。使用者回答前不要開始做。
+
+### 4. 啟動 orchestrator
+
+載入 `.agents/skills/make-presentation/SKILL.md` 並照它做。它是唯一入口。orchestrator 強制的規則——要遵守,不能抄捷徑:
+
+- **一次只跑一道 gate,照順序。** 絕不跳過。下一道 gate 是狀態腳本回報「未解決」的那道,用以下指令查:
+  ```bash
+  node .agents/skills/make-presentation/scripts/status.mjs next <work-root>
+  ```
+- **絕不手改 `STATUS.md`。** 一律透過狀態腳本(`init` / `next` / `result` / `invalidate` / `set-mode`)。它會驗證 gate 順序與產出溯源;手改會悄悄弄壞 pipeline。
+- **不要自己決定引擎。** prototype gate(`deck-prototype`)和 qa gate(`production-qa`)需要投影片引擎。走到 prototype gate 時,問使用者用哪個引擎(建議預設:`open-slide`),記進 `PRESENTATION-BRIEF.md`,再讀 `.agents/adapters/<engine>/prototype.md` 取得該引擎的規則。如果使用者指定了一個沒有 adapter 資料夾的引擎,停下來告訴他——不要猜。
+
+### 5. 每道 gate 的產出(agent 的契約)
+
+| Gate | 要呼叫的 skill | 必須產出 |
+| --- | --- | --- |
+| `source-intake` | `presentation-source-intake` | `SOURCE-INVENTORY.md` |
+| `product-grill` | `presentation-product-grill` | `PRESENTATION-BRIEF.md` |
+| `evidence` | `presentation-evidence` | `EVIDENCE-LEDGER.md` |
+| `story-architecture` | `presentation-story-architecture` | `STORY.md` + `STORYBOARD.md` |
+| `story-grill` | `presentation-story-grill` | `GRILL-LOG.md` |
+| `deck-prototype` ⚙ | `presentation-prototype` | 所選引擎裡的 deck 原型 |
+| `stage-grill` | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
+| `production-qa` ⚙ | `presentation-deck-qa` | `QA-REPORT.md` + 匯出檔 |
+
+⚙ gate 會讀 `.agents/adapters/<engine>/`。一道 gate 只有透過腳本、附真實 `--artifact` 路徑,才能標成 passed。
+
+### 6. 做完時
+
+當 `status.mjs next <work-root>` 回報 `complete`,給使用者:
+- `STATUS.md` 的路徑,
+- 每一個匯出檔(PPTX、PDF 等)的路徑,
+- pipeline 的工作資料夾(`presentation-work/<deck-id>/`)。
+
+`next` 沒回報 `complete`,就不要宣稱成功。若有 gate 失敗或未解決,老實說。
+
+### 7. 硬性限制——不可違反
+
+- 不要安裝 `node_modules` 或任何 npm 套件。`status.mjs` 零依賴。
+- 不要編輯 `.agents/skills/` 或 `.agents/adapters/` 底下的檔案——它們是唯讀。
+- 不要「為了省時間」跳過證據、可讀性或匯出檢查。orchestrator 在期限壓力下也明文禁止。
+- 判斷不出執行環境或任何檢查失敗時,停下來問——不要猜。
 
 ---
 
