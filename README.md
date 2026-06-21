@@ -103,6 +103,10 @@ This repo is **pipeline methodology only**. Three skills reference open-slide's 
 
 MIT — same as open-slide. See [LICENSE](./LICENSE).
 
+### Acknowledgements
+
+This pipeline and every skill in it are extracted from [`1weiho/open-slide`](https://github.com/1weiho/open-slide) — "A slide framework built for agents." All credit for the methodology, gate design, and status helper belongs to that project and its author.
+
 ---
 
 ## 繁體中文
@@ -203,3 +207,7 @@ node skills/make-presentation/scripts/status.mjs next      examples/agentic-codi
 ### 授權
 
 MIT——與 open-slide 相同。見 [LICENSE](./LICENSE)。
+
+### 銘謝
+
+本流水線與其中每一個 skill,皆取自 [`1weiho/open-slide`](https://github.com/1weiho/open-slide)——「A slide framework built for agents.」。方法論、gate 設計與狀態輔助腳本的功勞,全歸該專案與其作者。
