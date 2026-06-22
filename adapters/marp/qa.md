@@ -39,7 +39,7 @@ npx @marp-team/marp-cli@latest slides/<deck-id>.md -o exports/<deck-id>.pdf
 npx @marp-team/marp-cli@latest slides/<deck-id>.md -o exports/<deck-id>.html
 ```
 
-Produce at least the formats the user asked for; if unspecified, produce PPTX + PDF (the pipeline's default deliverables). The `--pptx` / `--pdf` / `-o <file>.<ext>` flags select the format by output extension or explicit flag.
+Produce at least the formats the user asked for; if unspecified, produce PPTX + PDF (the pipeline's default deliverables). Marp infers the format from the `-o <file>.<ext>` output extension — `.pptx`, `.pdf`, `.html`.
 
 - **PPTX:** confirm the file opens cleanly in PowerPoint. Marp's PPTX export renders each page as an image-backed slide (visual fidelity is high; text is not re-editable as native shapes — that is expected for Marp, not a defect).
 - **PDF:** confirm page count matches the slide count and the aspect is 16:9.

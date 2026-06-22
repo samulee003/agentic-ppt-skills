@@ -74,3 +74,14 @@ node slides/<deck-id>/build.mjs        # writes exports/<deck-id>.pptx
 ```
 
 Open the produced `.pptx` (have the user open it, or use a headless preview if available). Confirm type is projector-readable, nothing overflows its text box (PptxGenJS clips or shrinks-to-fit depending on options — verify the intended behaviour), and the visual direction reads as one hand across every page.
+
+### Headless review (no browser)
+
+If you are a headless agent, convert to PDF then rasterize to PNG and inspect with your image tool instead of opening the PPTX in PowerPoint:
+
+```bash
+soffice --headless --convert-to pdf exports/<deck-id>.pptx --outdir /tmp
+pdftoppm -png -r 100 /tmp/<deck-id>.pdf /tmp/page
+```
+
+Open the PNGs with your vision capability and confirm each page is 16:9 and no text box clips its content. You can also cross-check programmatically: each string passed to `addText`/bullets must fit its `w`/`h` at the given `fontSize` — flag implausibly large content for its bounds. If you have no image tool, record that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.

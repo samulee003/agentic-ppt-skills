@@ -58,3 +58,14 @@ npx @marp-team/marp-cli@latest slides/<deck-id>.md -o /tmp/preview.html
 ```
 
 Open `/tmp/preview.html` in a browser (or have the user open it). Confirm type is projector-readable, nothing is cut off, pagination is correct (each `---` is a clean break), and the visual direction reads as one hand across every page.
+
+### Headless review (no browser)
+
+If you are a headless agent, render to PDF then rasterize to PNG and inspect with your image tool instead of opening a browser:
+
+```bash
+npx @marp-team/marp-cli@latest slides/<deck-id>.md -o /tmp/preview.pdf
+pdftoppm -png -r 100 /tmp/preview.pdf /tmp/page
+```
+
+Open the PNGs with your vision capability and confirm each page is 16:9, text is not clipped, and every `---` produced exactly one page. If you have no image tool, record in the gate result that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.

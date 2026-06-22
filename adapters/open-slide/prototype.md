@@ -89,3 +89,7 @@ Do not use placeholders for decoration, stock-photo filler, or anywhere typograp
 ## Live review
 
 Before calling the prototype gate passed, review the representative pages in the **live open-slide canvas** (the dev server) at full size — not just the source. Confirm type is projector-readable, nothing overflows 1080px, and the visual direction reads as one hand across every page.
+
+### Headless review (no browser)
+
+If you are a headless agent, the open-slide canvas is a browser surface, so capture screenshots programmatically: drive the running dev server (`pnpm dev`) with a headless browser (Playwright/Puppeteer), navigate to each slide route, and screenshot at 1920×1080. Open the PNGs with your vision capability and confirm nothing overflows 1080px and type is projector-readable. If you have no headless browser or no image tool, record that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.
