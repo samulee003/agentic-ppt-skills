@@ -11,6 +11,7 @@ Use when `stage-grill` is the current gate.
 - Always explore the files instead of asking the user for discoverable facts.
 - Ask one question at a time when a consequential stage decision is unresolved.
 - Include a recommended answer with each question.
+- Use `references/autonomous-stage.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining stage decisions are resolvable from the deck and upstream artifacts — apply `references/stage-questions.md` yourself, resolve each finding with a concrete change and confidence level, and flag any low-confidence load-bearing edit for later human review instead of silently rewriting it.
 - When the user refers to the page they're currently viewing without naming it, resolve it through the engine's "current page" mechanism (e.g. `current-slide` for open-slide) before judging.
 - Use actual renders and current speaker notes, not outline-only summaries.
 - Apply `references/stage-questions.md` to representative prototype pages first, then to the full deck when available.

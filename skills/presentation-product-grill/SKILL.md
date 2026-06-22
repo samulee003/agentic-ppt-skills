@@ -13,6 +13,7 @@ Use when `product-grill` is the current gate.
 - Ask one question at a time when a consequential decision is still unresolved.
 - Include a recommended answer with each question.
 - Explain what the decision would invalidate downstream when that impact exists.
+- Use `references/autonomous-brief.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining product decisions are resolvable from the sources — resolve each open field with a defensible value, its rationale, and a confidence level, and flag any low-confidence load-bearing decision for later human review instead of silently guessing.
 - Let any consequential change to Audience, Problem, Outcome, Promise, Evidence threshold, Constraints, Success test, or Out of scope invalidate downstream gates.
 
 Write `PRESENTATION-BRIEF.md` from `templates/PRESENTATION-BRIEF.md`.

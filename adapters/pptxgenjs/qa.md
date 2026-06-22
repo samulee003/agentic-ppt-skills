@@ -16,6 +16,15 @@ node slides/<deck-id>/build.mjs        # writes exports/<deck-id>.pptx
 
 Inspect the produced `.pptx`: page count, then the changed/dense/image-heavy pages at full size in PowerPoint or a previewer. Because PptxGenJS writes **native shapes** (not image-backed pages), check that text boxes do not clip their content and that the layout matches the script's `x/y/w/h` coordinates. Treat clipped text, unreadable type, or notes drift as failed QA.
 
+### Headless review (no browser)
+
+If you are a headless agent, satisfy the visual review programmatically rather than skipping it:
+
+- Convert the PPTX to PDF (`soffice --headless --convert-to pdf deck.pptx`), then rasterize pages to PNG with `pdftoppm -png -r 100 deck.pdf page`.
+- Open the PNGs with your image-inspection tool (vision capability) and confirm: each page is 16:9, text boxes are not clipped (a clipped box shows truncated text or overlap), no page is blank, and the page count matches `addSlide()` calls in the script.
+- Programmatically, you can also cross-check the script: each text string passed to `addText`/`bullet` must be short enough for its `w`/`h` at the given `fontSize` — flag any box whose content length is implausibly large for its bounds as a clipping risk.
+- If you have no image-inspection tool and no soffice, **do not claim the review passed** — record in QA-REPORT that visual review was not performed and flag it for a human. The gate forbids skipping the review; an honest "not verified" beats a false "passed".
+
 ## Exports — the script writes the PPTX directly (native shapes)
 
 The build script **is** the export: `pres.writeFile({ fileName: ... })` writes a native, fully-editable PPTX. This is PptxGenJS's distinguishing property — text and objects are real PowerPoint shapes, not images.

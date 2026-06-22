@@ -16,6 +16,14 @@ npx @marp-team/marp-cli@latest slides/<deck-id>.md -o /tmp/preview.html
 
 Inspect a contact sheet (scroll through all pages) and the changed/dense/image-heavy pages at full size in a browser. Treat cut-off content, unreadable type, broken pagination (a `---` not producing a page break), or notes drift as failed QA.
 
+### Headless review (no browser)
+
+If you are a headless agent with no browser, satisfy the visual review programmatically rather than skipping it:
+
+- Render the deck to PDF (`marp deck.md -o preview.pdf`), then rasterize pages to PNG with `pdftoppm` (poppler) or `magick`/`convert` (ImageMagick): `pdftoppm -png -r 100 preview.pdf page`.
+- Open the resulting PNGs with your image-inspection tool (vision capability) and confirm: each page is 16:9, text is not clipped at the bottom edge, no page is blank, and `---` separators each produced exactly one page.
+- If you have no image-inspection tool at all, **do not claim the review passed** — record in QA-REPORT that visual review was not performed and flag it for a human, or ask the user to open the HTML/PDF. The gate forbids skipping the review; an honest "not verified" beats a false "passed".
+
 ## Exports — CLI (there IS an export command)
 
 Unlike the open-slide adapter, Marp exports via a **real CLI command** — no browser UI action required. This makes it the easiest engine for a fully headless agent.

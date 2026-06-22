@@ -25,6 +25,13 @@ open-slide needs **Node 18+** and a package manager (the scaffold defaults to pn
 - Inspect a contact sheet or full-page renders first, then changed, dense, and image-heavy pages at full size.
 - The canvas is a fixed 1920×1080 — anything clipped below 1080px is gone, not scrolled. Treat clipping, unreadable type, inconsistent page grammar, or notes drift as failed QA.
 
+### Headless review (no browser)
+
+If you are a headless agent, open-slide's dev-server canvas is a browser surface, so satisfy the visual review programmatically:
+
+- Drive the running dev server with a headless browser (Playwright/Puppeteer): navigate to each slide route, capture a 1920×1080 screenshot per page, and inspect the PNGs with your image-inspection tool (vision capability). Confirm nothing is clipped below 1080px and type is projector-readable.
+- If your runtime cannot drive a browser, **do not claim the review passed** — record in QA-REPORT that the live-canvas review was not performed, or ask the user to review in their browser. The gate forbids skipping the review; an honest "not verified" beats a false "passed".
+
 ## Exports — triggered from the dev-server UI (there is no export CLI command)
 
 open-slide **does not have a CLI export subcommand.** PPTX and PDF are produced from the **running dev server's UI** — the export controls live in the canvas UI (an export / download affordance per deck). This matters for an automated agent: exporting is a **browser/UI action**, not a shell command.

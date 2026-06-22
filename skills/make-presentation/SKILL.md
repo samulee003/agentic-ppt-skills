@@ -13,6 +13,7 @@ Read repo instructions first. Route the project from the earliest unresolved gat
 - Original presentation source folders are read-only by default.
 - Inspect existing artifacts in the source folder, work area, and slide folder before creating anything new.
 - Reuse equivalent artifacts when they already satisfy the current gate.
+- **Writing artifacts:** every gate that says "Write X from `templates/X.md`" means create that file in the work area using your runtime's file-write tool (the `Write`/`Edit` tool, or shell redirection if that is all you have). Start from the named template, fill it with real content for this deck, and write it to the path the gate specifies. There is no separate build script — file creation is your responsibility.
 
 ## Status
 

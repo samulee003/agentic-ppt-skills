@@ -61,12 +61,13 @@ node .agents/skills/make-presentation/scripts/status.mjs init presentation-work/
 
 Then load `.agents/skills/make-presentation/SKILL.md` and follow it. It is the single entry point. Key rules the orchestrator enforces — respect them, do not shortcut:
 
+- **Create artifact files yourself.** Every gate that says "Write X from `templates/X.md`" means use your runtime's file-write tool to create that file (start from the template, fill it with real content). There is no build script that does this for you.
 - **Run one gate at a time, in order.** Never jump ahead. The next gate is whichever the status helper reports as unresolved; get it with:
   ```bash
   node .agents/skills/make-presentation/scripts/status.mjs next presentation-work/<deck-id>
   ```
 - **Never hand-edit `STATUS.md`.** Always go through the status helper (`init` / `next` / `result` / `invalidate` / `set-mode` / `set-engine`). It validates gate order and artifact provenance; hand-editing silently breaks the pipeline.
-- **Do not decide the engine yourself.** The prototype gate (`deck-prototype`) and the qa gate (`production-qa`) need a slide engine. When you reach the prototype gate, ask the user which engine to use (recommended default: `open-slide`), record it via `node .../status.mjs set-engine presentation-work/<deck-id> <engine>` and add an `## Engine` line to `PRESENTATION-BRIEF.md`, then read `.agents/adapters/<engine>/README.md` and `prototype.md`. If the user names an engine with no adapter folder, stop and tell them — do not guess.
+- **Do not decide the engine yourself.** The prototype gate (`deck-prototype`) and the qa gate (`production-qa`) need a slide engine. When you reach the prototype gate, ask the user which engine to use (recommended default: `open-slide`). Before recording it, verify the adapter exists: `test -d .agents/adapters/<engine>` must pass — if it does not, tell the user there is no adapter for that engine and offer the installed ones (`ls .agents/adapters/`); do not record an engine with no adapter. Then record it via `node .../status.mjs set-engine presentation-work/<deck-id> <engine>` and add an `## Engine` line to `PRESENTATION-BRIEF.md`, then read `.agents/adapters/<engine>/README.md` and `prototype.md`.
 
 ### 5. What each gate produces (the agent's contract)
 
@@ -155,7 +156,7 @@ Gates 6 and 8 need a **slide engine** to render and export. The pipeline is engi
 | Adapter | Real slide source | Live review | Export | Best for |
 | --- | --- | --- | --- | --- |
 | [`open-slide`](./adapters/open-slide) | `slides/<id>/index.tsx` (React) | dev-server canvas + in-browser inspector | visual-faithful PPTX + PDF (dev-server UI) | highest visual quality; user wants the inspector loop |
-| [`marp`](./adapters/marp) | `slides/<id>.md` (Markdown) | rendered HTML | **CLI**: `marp deck.md -o deck.pptx` | lightest weight; agent can't drive a browser; fastest path |
+| [`marp`](./adapters/marp) | `slides/<id>.md` (Markdown) | rendered HTML | **CLI**: `marp deck.md -o deck.pptx` (image-backed, not editable) | lightest weight; agent can't drive a browser; fastest path |
 | [`pptxgenjs`](./adapters/pptxgenjs) | `slides/<id>/build.mjs` (Node script) | the produced PPTX itself | `node build.mjs` → native-shape PPTX | deliverable must be fully-editable native PowerPoint; no browser |
 
 To add another engine (reveal.js, a proprietary template…), create `adapters/<engine>/` with a `README.md`, `prototype.md`, and `qa.md` describing that engine's prerequisites, authoring contract, preview surface, and exports. The pipeline skills pick it up automatically — no orchestrator changes needed.
@@ -268,12 +269,13 @@ node .agents/skills/make-presentation/scripts/status.mjs init presentation-work/
 
 接著載入 `.agents/skills/make-presentation/SKILL.md` 並照它做。它是唯一入口。orchestrator 強制的規則——要遵守,不能抄捷徑:
 
+- **自己建立產出檔。** 每個寫「Write X from `templates/X.md`」的 gate,意思是用你 runtime 的檔案寫入工具建立那個檔(從模板開始,填入真實內容)。沒有幫你建檔的腳本。
 - **一次只跑一道 gate,照順序。** 絕不跳過。下一道 gate 是狀態腳本回報「未解決」的那道,用以下指令查:
   ```bash
   node .agents/skills/make-presentation/scripts/status.mjs next presentation-work/<deck-id>
   ```
 - **絕不手改 `STATUS.md`。** 一律透過狀態腳本(`init` / `next` / `result` / `invalidate` / `set-mode` / `set-engine`)。它會驗證 gate 順序與產出溯源;手改會悄悄弄壞 pipeline。
-- **不要自己決定引擎。** prototype gate(`deck-prototype`)和 qa gate(`production-qa`)需要投影片引擎。走到 prototype gate 時,問使用者用哪個引擎(建議預設:`open-slide`),用 `node .../status.mjs set-engine presentation-work/<deck-id> <engine>` 記錄,並在 `PRESENTATION-BRIEF.md` 加一行 `## Engine`,再讀 `.agents/adapters/<engine>/README.md` 與 `prototype.md`。如果使用者指定了一個沒有 adapter 資料夾的引擎,停下來告訴他——不要猜。
+- **不要自己決定引擎。** prototype gate(`deck-prototype`)和 qa gate(`production-qa`)需要投影片引擎。走到 prototype gate 時,問使用者用哪個引擎(建議預設:`open-slide`)。記錄前先驗證 adapter 存在:`test -d .agents/adapters/<engine>` 必須通過——不通過就告訴使用者沒有該引擎的 adapter,並列出已安裝的(`ls .agents/adapters/`);不要記錄沒有 adapter 的引擎。然後用 `node .../status.mjs set-engine presentation-work/<deck-id> <engine>` 記錄,在 `PRESENTATION-BRIEF.md` 加一行 `## Engine`,再讀 `.agents/adapters/<engine>/README.md` 與 `prototype.md`。
 
 ### 5. 每道 gate 的產出(agent 的契約)
 
@@ -362,7 +364,7 @@ Gate 6 和 8 需要**投影片引擎**來渲染與匯出。Pipeline 刻意設計
 | Adapter | 真實投影片來源 | 預覽 | 匯出 | 適合 |
 | --- | --- | --- | --- | --- |
 | [`open-slide`](./adapters/open-slide) | `slides/<id>/index.tsx`(React) | dev-server 畫布 + 瀏覽器 inspector | visual-faithful PPTX + PDF(dev-server UI) | 畫質最高;使用者要 inspector 編輯迴圈 |
-| [`marp`](./adapters/marp) | `slides/<id>.md`(Markdown) | 渲染出的 HTML | **CLI**:`marp deck.md -o deck.pptx` | 最輕量;agent 無法開瀏覽器;最快 |
+| [`marp`](./adapters/marp) | `slides/<id>.md`(Markdown) | 渲染出的 HTML | **CLI**:`marp deck.md -o deck.pptx`(image-backed,不可編輯) | 最輕量;agent 無法開瀏覽器;最快 |
 | [`pptxgenjs`](./adapters/pptxgenjs) | `slides/<id>/build.mjs`(Node 腳本) | 產出的 PPTX 本身 | `node build.mjs` → 原生形狀 PPTX | 交付物必須是可完全編輯的原生 PowerPoint;無瀏覽器 |
 
 要加別的引擎(reveal.js、公司專屬樣板⋯⋯),在 `adapters/<engine>/` 下放 `README.md`、`prototype.md`、`qa.md`,描述該引擎的前提、編寫契約、預覽介面與匯出。Pipeline skill 會自動讀取——不用改 orchestrator。
