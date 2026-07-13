@@ -309,9 +309,20 @@ function invalidateFrom(state, gate, reason, invalidatedBy = gate) {
   return state;
 }
 
-async function invalidate(root, gate, reason) {
+async function invalidate(root, gate, reason, selective = false) {
   const state = validateState(await load(root));
-  invalidateFrom(state, gate, reason);
+  if (selective) {
+    const item = state.gates[gate];
+    state.gates[gate] = {
+      ...item,
+      status: 'needs_revision',
+      invalidatedAt: new Date().toISOString(),
+      invalidatedBy: [...new Set([...item.invalidatedBy, gate])],
+      invalidationReason: reason,
+    };
+  } else {
+    invalidateFrom(state, gate, reason);
+  }
   await save(root, state);
   return state;
 }
@@ -362,6 +373,22 @@ async function nextGate(root) {
   return GATES.find((gate) => state.gates[gate].status !== 'passed') ?? 'complete';
 }
 
+async function summary(root) {
+  const state = validateState(await load(root));
+  process.stdout.write(`\n=== Presentation Pipeline Summary ===\n`);
+  process.stdout.write(`Deck ID:   ${state.deckId}\n`);
+  process.stdout.write(`Mode:      ${state.mode}\n`);
+  process.stdout.write(`Engine:    ${state.engine ?? '(not chosen yet)'}\n`);
+  process.stdout.write(`-------------------------------------\n`);
+  for (const gate of GATES) {
+    const item = state.gates[gate];
+    const status = item.status.toUpperCase().padEnd(15);
+    const date = item.reviewedAt ? new Date(item.reviewedAt).toLocaleString() : 'N/A';
+    process.stdout.write(`- [${status}] ${gate.padEnd(20)} (Reviewed: ${date})\n`);
+  }
+  process.stdout.write(`=====================================\n\n`);
+}
+
 async function main(argv) {
   const [command, root, ...args] = argv;
   if (command === 'init') {
@@ -394,10 +421,12 @@ async function main(argv) {
     }
     await setGate(root, args[0], args[1], args[2], parseMetadataOptions(args.slice(3)));
   } else if (command === 'invalidate') {
-    if (!root || args.length !== 2) {
-      throw new Error('Usage: status.mjs invalidate <root> <gate> <reason>');
+    const hasSelective = args.includes('--selective');
+    const filteredArgs = args.filter(a => a !== '--selective');
+    if (!root || filteredArgs.length !== 2) {
+      throw new Error('Usage: status.mjs invalidate <root> <gate> <reason> [--selective]');
     }
-    await invalidate(root, args[0], args[1]);
+    await invalidate(root, filteredArgs[0], filteredArgs[1], hasSelective);
   } else if (command === 'set-mode') {
     if (!root || args.length !== 2) {
       throw new Error('Usage: status.mjs set-mode <root> <mode> <reason>');
@@ -419,8 +448,12 @@ async function main(argv) {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs next <root>');
     process.stdout.write(`${await nextGate(root)}\n`);
     return;
+  } else if (command === 'summary') {
+    if (!root || args.length !== 0) throw new Error('Usage: status.mjs summary <root>');
+    await summary(root);
+    return;
   } else {
-    throw new Error('Expected command: init, validate, set, invalidate, set-mode, set-engine, result, or next');
+    throw new Error('Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, or summary');
   }
   process.stdout.write(`${command} ok\n`);
 }
