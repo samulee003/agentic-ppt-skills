@@ -1,5 +1,8 @@
-node_modules
-.DS_Store
+node_modules/
+dist/
+scratch/
+.system_generated/
 *.log
 *.tsbuildinfo
 .turbo
+.DS_Store
