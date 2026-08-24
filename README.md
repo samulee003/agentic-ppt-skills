@@ -32,7 +32,7 @@ production QA use an adapter; `open-slide`, `marp`, and `pptxgenjs` are included
 From the root of a project where an agent should use these skills:
 
 ```bash
-SRC=/absolute/path/to/agentic-ppt-skills
+SRC=/absolute/path/to/agentic-ppt-skills  # replace with this checkout's path
 mkdir -p .agents/skills .agents/adapters
 cp -r "$SRC/skills/." .agents/skills/
 cp -r "$SRC/adapters/." .agents/adapters/
