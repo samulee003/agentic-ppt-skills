@@ -32,7 +32,7 @@ least one adapter:
 node --version                                                # must be v18 or higher
 test -f .agents/skills/make-presentation/SKILL.md && echo "orchestrator present"
 test -f .agents/skills/make-presentation/scripts/status.mjs && echo "status helper present"
-node .agents/skills/make-presentation/scripts/status.mjs 2>&1 | head -1
+node .agents/skills/make-presentation/scripts/status.mjs 2>&1 | head -1  # "error: Expected command..." confirms it ran
 ls .agents/adapters/open-slide/                               # must list adapter files
 ```
 
