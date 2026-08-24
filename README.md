@@ -32,8 +32,10 @@ production QA use an adapter; `open-slide`, `marp`, and `pptxgenjs` are included
 From the root of a project where an agent should use these skills:
 
 ```bash
-cp -r /path/to/agentic-ppt-skills/skills/. .agents/skills/
-cp -r /path/to/agentic-ppt-skills/adapters/. .agents/adapters/
+SRC=/absolute/path/to/agentic-ppt-skills
+mkdir -p .agents/skills .agents/adapters
+cp -r "$SRC/skills/." .agents/skills/
+cp -r "$SRC/adapters/." .agents/adapters/
 ```
 
 Then ask your agent to make a presentation, for example:
