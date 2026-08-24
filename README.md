@@ -64,3 +64,11 @@ execution.
 ## License
 
 MIT. See [`LICENSE`](./LICENSE).
+
+## Tests
+
+Run the zero-dependency status helper tests with:
+
+```bash
+npm test
+```
