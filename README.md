@@ -1,5 +1,7 @@
 # agentic-ppt-skills
 
+[English](./README.md) · [繁體中文](./README.zh-TW.md) · [简体中文](./README.zh-CN.md)
+
 Engine-agnostic agent skills for turning notes, an existing deck, or an idea
 into a finished, stage-ready presentation.
 
