@@ -104,11 +104,17 @@ test('passed results require an artifact and invalid result names fail', async (
 
     await assert.rejects(
       runStatus(root, 'result', 'source-intake', 'passed', 'Missing artifact'),
-      /Passed result requires at least one --artifact/,
+      (error) => {
+        assert.match(error.stderr, /Passed result requires at least one --artifact/);
+        return true;
+      },
     );
     await assert.rejects(
       runStatus(root, 'result', 'source-intake', 'unknown', 'Bad result'),
-      /Invalid result "unknown"/,
+      (error) => {
+        assert.match(error.stderr, /Invalid result "unknown"/);
+        return true;
+      },
     );
   });
 });
