@@ -39,12 +39,25 @@ open-slide **does not have a CLI export subcommand.** PPTX and PDF are produced 
 - For a **human-in-the-loop** run: tell the user to open the dev-server URL in a browser and use the in-canvas export to produce a visual-faithful PPTX and a matching PDF. Collect the downloaded file paths.
 - For a **fully automated (headless)** run: drive the dev server with a headless browser (e.g. Playwright/Puppeteer pointed at the served canvas URL) and trigger the export affordance programmatically, then read the produced files. If your runtime cannot drive a browser, **stop and ask the user to export manually** — do not fabricate an export command.
 
-"Visual-faithful" means the PPTX preserves the canvas layout rather than re-flowing it as native PowerPoint shapes — so the browser preview and the PPTX should agree pixel-for-pixel.
+### Visual-faithful PPTX contract
 
-- After deck or exporter changes, produce a **fresh** PPTX and PDF. Old downloads are not repaired by re-exporting.
-- **PPTX:** validate the archive integrity (a PPTX is a zip; a truncated/corrupt archive fails QA on its own) and confirm it opens cleanly.
-- **PDF:** confirm page count and **16:9 geometry** match the final deck. open-slide decks are 16:9 (1920×1080); a mismatched aspect ratio means the wrong export was used.
-- **PowerPoint:** open the PPTX in Microsoft PowerPoint and review wrapping, alignment, and notes. PPTX fidelity is high but PowerPoint's text engine differs from the browser — check that nothing re-wrapped or re-aligned.
+"Visual-faithful" means the PPTX export renders the visual slide layout into an authoritative high-resolution presentation surface so PowerPoint cannot reflow, re-wrap, or drift text boxes.
+- **Do not confuse with Native-editable PPTX**: A native-editable export would trade visual fidelity for freeform shape manipulation. Visual-faithful PPTX guarantees presentation stability when projected.
+- **Safety buffer & bounding box**: Verify that text containers include width safety buffers to prevent unexpected line wrapping on different OS font rendering engines.
+- **Font loading stability**: Confirm global Google Fonts load cleanly without hanging the export pipeline.
+
+### Mandatory QA verification checklist
+
+1. **Strict 1:1 Parity**:
+   - `Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`.
+   - Every slide (including title, transitions, and backup slides) must have a synchronized, speakable note in the PPTX notes pane.
+2. **Language Hygiene & Purity**:
+   - For English / International Summit presentations: 100% English check. Verify 0 stray non-English characters in slide titles, body cards, chart captions, and notes.
+3. **PowerPoint Native Spot-Check**:
+   - Open the PPTX in Microsoft PowerPoint (or inspect headless XML).
+   - Spot-check dense, multi-card, and visual metaphor slides (e.g. 3-pillar framework, iceberg diagram, large stat callouts) to confirm no text boxes shifted downward or truncated.
+4. **PDF 16:9 Geometry**:
+   - Confirm PDF export matches standard 16:9 (1920×1080) aspect ratio.
 
 ## Agreement check
 

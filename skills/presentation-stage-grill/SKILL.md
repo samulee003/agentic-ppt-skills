@@ -16,6 +16,12 @@ Use when `stage-grill` is the current gate.
 - Use actual renders and current speaker notes, not outline-only summaries.
 - Apply `references/stage-questions.md` to representative prototype pages first, then to the full deck when available.
 - Enforce presenter-language constraints, timed trimming, and existing-versus-remaining distinction.
+- **Speakability & Spoken-First Phrasing**: Speaker notes must be written in natural, fluent spoken phrasing that the presenter can deliver aloud comfortably without stumbling (no dense academic paper sentences).
+- **Strict 1:1 Note Parity**: Every slide must have exactly one corresponding speaker note matching its dominant message.
+- **Adult Attention Management & Active Learning Resets**: In presentations longer than 30 minutes, verify that the delivery incorporates structured attention reset switches (e.g. audience polling/temperature checks, buzz-pair sharing, dialogue choral rehearsal, silent reflection) to combat the natural 15–20 minute adult attention decay.
+- **Behavioral Scaffolding (Kirkpatrick Level 3 Transfer)**: Ensure actionable tools include verbal rehearsal opportunities and take-home scaffolds (checklists, pocket cards) so knowledge bridges into daily behavioral change.
+- **Language Purity**: For international presentations (e.g. English summit), confirm 100% target language consistency across all notes and visible cues with zero stray translation leftovers.
+- **Constructive Context Framing ("Not starting from zero")**: When presenting local policy or regional case studies, clearly separate what the community/system has already established from the next challenge, avoiding nihilistic or accusatory framing.
 - Separate what the audience can see immediately from what only works after narration.
 - Produce `SPEAKER-SCRIPT.md` from `templates/SPEAKER-SCRIPT.md` with approved wording, timing, likely audience challenge, and Q&A risk.
 - Return pages for revision when density, wording, transition logic, or defensibility breaks the live talk.

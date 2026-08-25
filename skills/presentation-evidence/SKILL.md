@@ -17,6 +17,12 @@ Use when `evidence` is the current gate.
 - Add dates, definitions, units, or methods when they are necessary to keep a material claim honest.
 - Use `references/claim-safety.md` for research-enhanced claim safety.
 
+## Authority & scientific fidelity rules
+
+- **Primary & Official Authority Preference**: For demographic, economic, suicide/mortality, birth rate, or public health claims, mandate primary/official sources (e.g. official statistical bureaus like DSEC, WHO, World Bank, peer-reviewed journals) rather than secondary news reports or casual commentary.
+- **Explicit Baselines & Denominators**: Always capture the exact reference year, definition, denominator, and global baseline comparisons (e.g. regional suicide rate vs WHO global average).
+- **Nuanced Literature Fidelity**: Guard against oversimplified pop-clichés (e.g. do not reduce complex findings like the Killingsworth/Kahneman income-wellbeing association to "money can't buy happiness").
+
 Research-enhanced mode alone adds A/B/C/D claim safety.
 
 - `A`: directly supportable in the main talk.

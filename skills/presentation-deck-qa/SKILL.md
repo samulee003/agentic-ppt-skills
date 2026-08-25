@@ -27,7 +27,8 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - Read repo instructions, the full deck, notes, and unresolved QA risks. In pipeline mode also read available `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, `GRILL-LOG.md`, and `SPEAKER-SCRIPT.md`.
 - Check visible claims, notes, timing, and delivery wording for consistency with the approved brief, evidence ledger, story, and script.
 - Reject stale, unsupported, or contradictory claims instead of polishing around them.
-- Confirm slide count equals note count, including backup pages.
+- **Strict 1:1 Parity**: Confirm slide count equals note count, including backup pages (`Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`).
+- **Language Purity**: For target-language presentations (e.g. 100% English summit), verify zero stray secondary-language characters across all slides and notes.
 - Check factual consistency across slides, notes, references, and exports.
 - Confirm the main-talk range, backup range, total timing, and per-slide timing.
 - Confirm one necessary job and one dominant message per slide.
@@ -45,6 +46,8 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 
 - After deck or exporter changes, produce a fresh export in each chosen delivery format; old downloads are not repaired.
 - Follow `adapters/<engine>/qa.md` for the engine's export steps, archive integrity, geometry, and any native-application inspection.
+- **Visual-Faithful Verification**: Verify that the exported PPTX preserves visual layout without text box re-wrapping or bounding-box drift when opened in Microsoft PowerPoint.
+- **Speaker Notes Verification**: Confirm speaker notes are properly embedded in the exported PPTX notes pane for every slide.
 - If the preview and any export disagree, the export is not complete.
 
 ## Record and hand off
