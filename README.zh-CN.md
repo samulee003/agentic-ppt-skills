@@ -25,8 +25,9 @@
 | 上台审查 | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
 | 生产环境 QA | `presentation-deck-qa` | `QA-REPORT.md`、导出文件 |
 
-流程支持 `general` 和 `research-enhanced` 模式。原型与生产环境 QA 使用
-adapter；内含 `open-slide`、`marp` 和 `pptxgenjs`。
+流程支持 `general`、`fast-track` 和 `research-enhanced` 模式。原型与生产环境 QA 使用
+adapter；内含 `open-slide`、`genoffice`、`marp` 和 `pptxgenjs`，并附带 `genoffice`
+技能供代理直接读取、创建、几何审计（audit）、渲染与转换本地 Office 文件。
 
 ### 安装
 
@@ -48,8 +49,8 @@ cp -r "$SRC/adapters/." .agents/adapters/
 
 ### 仓库结构
 
-- `skills/` — 可发布、与引擎无关的技能
-- `adapters/` — 各引擎的原型与导出说明
+- `skills/` — 可发布、与引擎无关的技能（含 `genoffice`）
+- `adapters/` — 各引擎的原型与导出说明（`open-slide`、`genoffice`、`marp`、`pptxgenjs`）
 - `examples/` — 完整的流程运行示例
 - `.agents/` — 内含的开发与参考副本
 

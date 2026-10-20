@@ -26,8 +26,10 @@ Each gate has one focused skill and a named deliverable:
 | Stage review | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
 | Production QA | `presentation-deck-qa` | `QA-REPORT.md`, exports |
 
-The pipeline supports `general` and `research-enhanced` modes. Prototype and
-production QA use an adapter; `open-slide`, `marp`, and `pptxgenjs` are included.
+The pipeline supports `general`, `fast-track`, and `research-enhanced` modes.
+Prototype and production QA use an adapter; `open-slide`, `genoffice`, `marp`,
+and `pptxgenjs` are included, alongside the standalone `genoffice` skill for
+creating, reading, auditing, rendering, and converting local Office files.
 
 ### Install
 
@@ -49,8 +51,8 @@ The orchestrator resumes from the earliest unresolved gate and records state in
 
 ### Repository layout
 
-- `skills/` — distributable, engine-agnostic skills
-- `adapters/` — engine-specific prototype and export instructions
+- `skills/` — distributable, engine-agnostic skills (including `genoffice`)
+- `adapters/` — engine-specific prototype and export instructions (`open-slide`, `genoffice`, `marp`, `pptxgenjs`)
 - `examples/` — a complete pipeline run
 - `.agents/` — bundled development/reference copies
 

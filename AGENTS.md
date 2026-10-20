@@ -26,14 +26,14 @@ cp -r "$SRC/adapters/." .agents/adapters/
 ```
 
 Before continuing, verify Node 18+, the orchestrator, the status helper, and at
-least one adapter:
+least one adapter (`open-slide`, `genoffice`, `marp`, or `pptxgenjs`):
 
 ```bash
 node --version                                                # must be v18 or higher
 test -f .agents/skills/make-presentation/SKILL.md && echo "orchestrator present"
 test -f .agents/skills/make-presentation/scripts/status.mjs && echo "status helper present"
 node .agents/skills/make-presentation/scripts/status.mjs 2>&1 | head -1  # "error: Expected command..." confirms it ran
-ls .agents/adapters/open-slide/                               # must list adapter files
+ls .agents/adapters/open-slide/ .agents/adapters/genoffice/   # must list adapter files
 ```
 
 Stop and report any failed check. Do not install dependencies for the
@@ -66,13 +66,14 @@ Create each named artifact yourself from its template. Never skip a gate
 because an output already exists.
 
 Never hand-edit `STATUS.md`. Use only `init`, `next`, `result`, `invalidate`,
-`set-mode`, and `set-engine` from the status helper. Mark a gate passed only
-with real `--artifact` paths.
+`set-mode`, `set-engine`, and `summary` from the status helper. Mark a gate
+passed only with real `--artifact` paths.
 
 At the prototype gate, ask the user to choose an installed adapter (default:
-`open-slide`), verify its directory, record it with `set-engine`, and read that
-adapter's `README.md` and `prototype.md`. Production QA inherits the choice and
-must also read `qa.md`.
+`open-slide`, or `genoffice` when generating a native byte-preserving Office
+`.pptx` via GenOffice), verify its directory, record it with `set-engine`, and
+read that adapter's `README.md` and `prototype.md`. Production QA inherits the
+choice and must also read `qa.md`.
 
 ## 5. Completion contract
 
