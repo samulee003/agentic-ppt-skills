@@ -15,6 +15,7 @@ Use when `story-grill` is the current gate.
 - Use `references/opposition-review.md` for the autonomous opposition-review fallback when the user is unavailable or the remaining challenge is clear from the files.
 - State the strongest reasonable case against the story and what the opposition must concede.
 - Pressure-test why the audience should care, whether the thesis answers the right problem, whether the evidence supports the interpretation, what counter-evidence is missing, whether slides repeat or decorate, and whether the conclusion really follows.
+- Sort every finding into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`. An unresolved Act on finding blocks `passed`.
 - Return `needs_revision: product-grill` when the story exposes the wrong audience, problem, outcome, promise, or success test.
 - Return `needs_revision: evidence` when the story needs unsupported claims, missing counter-evidence, or weaker wording.
 - Return `passed` only when the remaining story is still useful, accurate, and distinctive after the strongest reasonable opposition.

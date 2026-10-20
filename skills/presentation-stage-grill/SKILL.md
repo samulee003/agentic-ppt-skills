@@ -23,6 +23,8 @@ Use when `stage-grill` is the current gate.
 - **Language Purity**: For international presentations (e.g. English summit), confirm 100% target language consistency across all notes and visible cues with zero stray translation leftovers.
 - **Constructive Context Framing ("Not starting from zero")**: When presenting local policy or regional case studies, clearly separate what the community/system has already established from the next challenge, avoiding nihilistic or accusatory framing.
 - Separate what the audience can see immediately from what only works after narration.
+- Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <work-root>/SPEAKER-SCRIPT.md <slide-folder>` and rewrite flagged notes using `../make-presentation/references/unslop-copy.md`. Spoken phrasing still comes first.
+- Sort audience-challenge and trimming findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`.
 - Produce `SPEAKER-SCRIPT.md` from `templates/SPEAKER-SCRIPT.md` with approved wording, timing, likely audience challenge, and Q&A risk.
 - Return pages for revision when density, wording, transition logic, or defensibility breaks the live talk.
 - Return `passed` only when the talk is readable, speakable, timed, defensible, and audience-appropriate.

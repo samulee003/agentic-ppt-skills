@@ -31,6 +31,11 @@ Prototype and production QA use an adapter; `open-slide`, `genoffice`, `marp`,
 and `pptxgenjs` are included, alongside the standalone `genoffice` skill for
 creating, reading, auditing, rendering, and converting local Office files.
 
+Shared practices in `skills/make-presentation/references/` are adapted from
+[`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT): sharpen and
+playback, unslop copy checks (`scripts/unslop-check.mjs`), review buckets,
+prototype arena, and encode-lessons.
+
 ### Install
 
 From the root of a project where an agent should use these skills:
@@ -69,7 +74,7 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Tests
 
-Run the zero-dependency status helper tests with:
+Run the zero-dependency status helper and unslop checker tests with:
 
 ```bash
 npm test

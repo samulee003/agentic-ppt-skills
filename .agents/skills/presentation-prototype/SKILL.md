@@ -48,6 +48,8 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
    - **Archetype 3 — Full-Canvas System Metaphor (大圖流)**: 70%+ of the content zone dedicated to a structured diagram or visual model with callouts embedded inside the nodes.
    - **Archetype 4 — Distinct Multi-Card Grid (卡片流)**: 2–4 high-craft cards with committed borders/shadows and clear visual hierarchy (avoid generic 1px faint gray SaaS dashboard boxes).
 
+- **Arena (optional)**: when the visual direction is unsettled, the deck is high stakes, or the first prototype was rejected twice, follow `../make-presentation/references/arena-prototype.md` to build 2 to 3 competing directions, pick a base, and graft. Skip in `fast-track` mode.
+- **Unslop**: run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder>` on the prototype pages and fix findings per `../make-presentation/references/unslop-copy.md`.
 - Keep the prototype in the real slide source so later work can revise the actual pages instead of rebuilding from mockups.
 - Require a live review in the chosen engine before calling the gate passed.
 - Return to story or evidence if representative pages fail because the narrative job, proof, or density is wrong rather than merely unpolished.

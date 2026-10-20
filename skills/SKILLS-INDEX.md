@@ -25,6 +25,18 @@ Shared references and templates contain the detailed domain material.
 | [genoffice](./genoffice/SKILL.md) | create, convert, read, audit, render, and edit native `.pptx`, `.docx`, `.xlsx`, and `.pdf` files locally via the GenOffice CLI or MCP server |
 | [open-slide-deck-finalization](./open-slide-deck-finalization/SKILL.md) | standalone finalization shortcut specifically for `open-slide` workspaces |
 
+## Shared practices (`make-presentation/references/`)
+
+Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT).
+
+| Reference | Use it when you need to… |
+| --- | --- |
+| [sharpen-playback.md](./make-presentation/references/sharpen-playback.md) | avoid interrogation fatigue at `product-grill` |
+| [unslop-copy.md](./make-presentation/references/unslop-copy.md) + [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | remove AI tells from slide copy and notes |
+| [review-buckets.md](./make-presentation/references/review-buckets.md) | turn review findings into Act on / Consider / Noted / Dismissed |
+| [arena-prototype.md](./make-presentation/references/arena-prototype.md) | compare 2 to 3 prototype directions and graft the best parts |
+| [encode-lessons.md](./make-presentation/references/encode-lessons.md) | stop repeated mistakes with checks instead of docs |
+
 ## Bundled engine adapters (`.agents/adapters/`)
 
 | Engine | Adapter | Output |

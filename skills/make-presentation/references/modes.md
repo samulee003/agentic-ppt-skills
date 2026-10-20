@@ -13,6 +13,7 @@ Use `fast-track` when producing lightweight, agile presentations (< 10 slides, i
 - Combines Story & Opposition pass (Gate 4 & 5).
 - Directly triggers prototype generation (Gate 6) and fast-path QA (Gate 8).
 - Preserves all canvas budgets, CJK typography rules, and export defect checks.
+- Skips the arena. Playback and recommended defaults replace extended grilling. The unslop scan and review buckets still run at their gates.
 
 ## Research-enhanced
 

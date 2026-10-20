@@ -55,6 +55,16 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke exact
 - If product decisions remain unresolved, stop for one-question-at-a-time grilling with a recommended answer.
 - If upstream decisions change, invalidate downstream gates and resume from the earliest invalidated gate.
 
+## Cross-cutting practices
+
+Read the named reference only when its trigger applies.
+
+- **Sharpen and play back** (`references/sharpen-playback.md`): at `product-grill`, play the goal back in one paragraph and proceed on recommended defaults for reversible choices instead of asking every question.
+- **Unslop** (`references/unslop-copy.md`): at `story-architecture`, `deck-prototype`, `stage-grill`, and `production-qa`, run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <path>... [--strict]` on slide copy and speaker notes, then rewrite by hand.
+- **Review buckets** (`references/review-buckets.md`): at `story-grill`, `stage-grill`, and `production-qa`, sort every review finding into Act on, Consider, Noted, or Dismissed.
+- **Arena** (`references/arena-prototype.md`): at `deck-prototype`, build 2 to 3 competing directions for high-stakes or unsettled visual direction, pick a base, and graft the best parts. Skip in `fast-track`.
+- **Encode lessons** (`references/encode-lessons.md`): when the user corrects the same mistake twice, fix it in the template or a check first, a test next, and a doc last. Keep the rule table current.
+
 ## Handoff
 
 Report the chosen mode, selected engine (once resolved at prototype), current gate, reused artifacts, and next focused skill.

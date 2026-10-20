@@ -9,12 +9,14 @@ Use when `product-grill` is the current gate.
 
 - Read repo instructions, `SOURCE-INVENTORY.md`, and the cited source files before asking anything.
 - Investigate discoverable answers in the sources instead of asking the user.
-- Cover the full product model: audience, problem, outcome, promise, evidence threshold, constraints, success test, and out of scope.
-- Ask one question at a time when a consequential decision is still unresolved.
+- Cover the full product model: audience, problem, outcome, promise, evidence threshold, constraints, **visual direction & rendering DNA**, success test, and out of scope.
+- **Mandatory Visual Theme Grilling**: When visual direction or rendering style is unconfirmed, ask one focused question with concrete theme archetypes from `themes/*.md` or benchmark decks (e.g. `sticker-pop` / `macau-wellbeing-sketch` for physical sketch with 3px ink & hard shadows, `bright-sans` for Swiss minimal, `aurora` for dark glassmorphism). Never allow vague adjectives (e.g. "warm", "clean", "modern") to pass without binding them to a concrete rendering contract (border, shadow, typography scale).
+- Before the first question, follow `../make-presentation/references/sharpen-playback.md`: sharpen the task, write a one-paragraph `## Playback` at the top of the brief, and proceed on recommended defaults (recorded as `Assumed`) for reversible choices.
+- Ask one question at a time when a consequential decision is still unresolved and the sources cannot answer it. Ask at most 5 blocking questions before showing something tangible.
 - Include a recommended answer with each question.
 - Explain what the decision would invalidate downstream when that impact exists.
-- Use `references/autonomous-brief.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining product decisions are resolvable from the sources — resolve each open field with a defensible value, its rationale, and a confidence level, and flag any low-confidence load-bearing decision for later human review instead of silently guessing.
-- Let any consequential change to Audience, Problem, Outcome, Promise, Evidence threshold, Constraints, Success test, or Out of scope invalidate downstream gates.
+- Use `references/autonomous-brief.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining product decisions are resolvable from the sources — resolve each open field with a defensible value, its rationale, and a confidence level (defaulting visual direction to an explicit registered theme from `themes/*.md` rather than generic unstyled UI), and flag any low-confidence load-bearing decision for later human review instead of silently guessing.
+- Let any consequential change to Audience, Problem, Outcome, Promise, Evidence threshold, Constraints, Visual direction, Success test, or Out of scope invalidate downstream gates.
 
 Write `PRESENTATION-BRIEF.md` from `templates/PRESENTATION-BRIEF.md`.
 

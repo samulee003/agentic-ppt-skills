@@ -30,6 +30,7 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - **Strict 1:1 Parity**: Confirm slide count equals note count, including backup pages (`Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`).
 - **Language Purity**: For target-language presentations (e.g. 100% English summit), verify zero stray secondary-language characters across all slides and notes.
 - Check factual consistency across slides, notes, references, and exports.
+- Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder-or-notes> --strict`. Fix every finding or record an exception with its reason in `QA-REPORT.md`. See `references/unslop-copy.md` in `make-presentation`.
 - Confirm the main-talk range, backup range, total timing, and per-slide timing.
 - Confirm one necessary job and one dominant message per slide.
 - In research-enhanced mode, require a per-slide fact check plus a reference and Q&A backup plan before export approval.
@@ -57,6 +58,7 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 
 ## Record and hand off
 
+- Sort remaining findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`. Any Act on finding blocks the gate.
 - Complete `templates/QA-REPORT.md` with evidence for every section and any remaining caveats.
 - In pipeline mode, update the `production-qa` gate in `STATUS.md` through `.agents/skills/make-presentation/scripts/status.mjs`.
 - Provide direct links to every exported file, page/note counts, timing, inspected pages, and explicit export verification evidence.
