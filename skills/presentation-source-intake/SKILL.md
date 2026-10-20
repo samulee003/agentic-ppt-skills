@@ -11,6 +11,7 @@ Use when `source-intake` is the current gate.
 - Keep the source folder read-only. Create working notes only in the presentation work area.
 - Read existing deck, source, and work artifacts before creating new ones.
 - Inspect file contents with structured tools appropriate to each type: PDF, PPTX, DOCX, spreadsheet, image, script, note, and export.
+  - When `genoffice` is available (`genoffice --version` or `/Applications/GenOffice.app/Contents/Resources/cli/genoffice`), use it to read Office and PDF files cleanly without raw `unzip`/`cat`: `genoffice info <file> --json`, `genoffice docs read <file.docx> --full --json` (or `genoffice convert <file.docx> --to md`), `genoffice sheet read <file.xlsx> --stats --json`, `genoffice slides read <file.pptx> --full --json`, and `genoffice pdf read <file.pdf> --range 1-20 --json`.
 - Classify every relevant item by role, recency, and reuse value instead of copying folders into the work area.
 - Identify version lineage: draft, revision, export, derivative, duplicate, and latest known source.
 - Mark the most authoritative source for each topic, chart, claim set, and visual asset.

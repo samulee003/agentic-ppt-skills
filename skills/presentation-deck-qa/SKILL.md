@@ -12,8 +12,8 @@ Use when `production-qa` is the current gate or when a deck needs final delivery
 This gate renders and exports, so it needs the **slide engine** chosen at the prototype gate. Resolve it before QA:
 
 - Read the engine from the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs next <work-root>` (the JSON block in `STATUS.md` carries an `engine` field set at the prototype gate). Fall back to the `## Engine` line in `PRESENTATION-BRIEF.md` if the tracker has no engine recorded.
-- If no engine is recorded anywhere, ask the user now, one question, with a recommended default (see `adapters/`; the bundled reference adapter is `open-slide`).
-- Read `adapters/<engine>/qa.md` for that engine's preview surface, export command, export format(s), and inspection steps. The sections below are the engine-agnostic backbone; the adapter supplies the engine-specific surface and exports.
+- If no engine is recorded anywhere, ask the user now, one question, with a recommended default (see `.agents/adapters/`: `open-slide`, `genoffice`, `marp`, `pptxgenjs`; the bundled reference adapter is `open-slide`, or `genoffice` for native byte-preserving Office `.pptx`).
+- Read `.agents/adapters/<engine>/qa.md` (or `adapters/<engine>/qa.md`) for that engine's preview surface, export command, export format(s), and inspection steps. The sections below are the engine-agnostic backbone; the adapter supplies the engine-specific surface and exports.
 
 ## Choose context
 
@@ -34,13 +34,18 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - Confirm one necessary job and one dominant message per slide.
 - In research-enhanced mode, require a per-slide fact check plus a reference and Q&A backup plan before export approval.
 
-## Verify the preview
+## Verify the preview & visual integrity
 
 - Run the relevant repo checks and target build.
 - Review the complete deck in the engine's live preview surface.
 - Inspect full-page renders or a contact sheet, then inspect changed, dense, and image-heavy pages at full size.
 - Reject verbose paragraphs and nested text tiers. Split the slide rather than shrink text or hide overflow.
-- Treat clipping, unreadable type, inconsistent page grammar, or notes drift as failed QA.
+- **Aesthetic & Rendering Contract Verification**:
+  - Verify compliance with the declared `Visual Direction & Rendering DNA` in `PRESENTATION-BRIEF.md`.
+  - Verify typography hierarchy (Hero titles reach 120px+, section headers 72px+, prominent display scale).
+  - If Sticker Pop / Sketch archetype was declared, verify all cards carry 3px ink borders and hard offset shadows (`8px 8px 0px`), not generic diffuse soft shadows or 1px faint borders.
+  - Verify visual diagram craft (SVGs match the aesthetic DNA, no raw generic boxes).
+- Treat clipping, unreadable type, generic AI slop styling, inconsistent page grammar, or notes drift as failed QA.
 
 ## Export and inspect
 

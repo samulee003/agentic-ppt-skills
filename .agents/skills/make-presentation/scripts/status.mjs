@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -73,7 +73,7 @@ ${JSON.stringify(state, null, 2)}
 \`\`\`
 <!-- presentation-status:end -->
 
-**Deck:** ${state.deckId} 繚 **Mode:** ${state.mode} 繚 **Engine:** ${state.engine ?? '(not chosen yet ??picked at the deck-prototype gate)'}
+**Deck:** ${state.deckId} · **Mode:** ${state.mode} · **Engine:** ${state.engine ?? '(not chosen yet — picked at the deck-prototype gate)'}
 
 | Gate | Status | Artifacts | Inputs | Decisions | Invalidated by | Reviewed | Review reason | Invalidated | Invalidation reason |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -87,47 +87,50 @@ function normalizeState(state) {
     throw new Error('Unsupported presentation status schema');
   }
   const migratedAt = new Date().toISOString();
-  const v2 = state.schemaVersion === 2 ? state : {
-    ...state,
-    schemaVersion: 2,
-    modeReviewedAt:
-      typeof state.modeReviewedAt === 'string' && state.modeReviewedAt
-        ? state.modeReviewedAt
-        : migratedAt,
-    modeReason:
-      typeof state.modeReason === 'string' && state.modeReason
-        ? state.modeReason
-        : 'Migrated from schema version 1',
-    gates: Object.fromEntries(
-      GATES.map((gate) => {
-        const item = state.gates?.[gate] ?? {};
-        const artifacts = Array.isArray(item.artifacts)
-          ? item.artifacts
-          : typeof item.artifact === 'string' && item.artifact
-            ? [item.artifact]
-            : [];
-        return [
-          gate,
-          {
-            status: item.status ?? 'pending',
-            artifacts,
-            reviewedAt: item.reviewedAt ?? null,
-            invalidatedAt: item.invalidatedAt ?? null,
-            inputs: Array.isArray(item.inputs) ? item.inputs : [],
-            decisions: Array.isArray(item.decisions) ? item.decisions : [],
-            invalidatedBy: Array.isArray(item.invalidatedBy) ? item.invalidatedBy : [],
-            reason: typeof item.reason === 'string' ? item.reason : '',
-            invalidationReason:
-              typeof item.invalidationReason === 'string'
-                ? item.invalidationReason
-                : item.status === 'needs_revision' && typeof item.reason === 'string'
-                  ? item.reason
-                  : '',
-          },
-        ];
-      }),
-    ),
-  };
+  const v2 =
+    state.schemaVersion === 2
+      ? state
+      : {
+          ...state,
+          schemaVersion: 2,
+          modeReviewedAt:
+            typeof state.modeReviewedAt === 'string' && state.modeReviewedAt
+              ? state.modeReviewedAt
+              : migratedAt,
+          modeReason:
+            typeof state.modeReason === 'string' && state.modeReason
+              ? state.modeReason
+              : 'Migrated from schema version 1',
+          gates: Object.fromEntries(
+            GATES.map((gate) => {
+              const item = state.gates?.[gate] ?? {};
+              const artifacts = Array.isArray(item.artifacts)
+                ? item.artifacts
+                : typeof item.artifact === 'string' && item.artifact
+                  ? [item.artifact]
+                  : [];
+              return [
+                gate,
+                {
+                  status: item.status ?? 'pending',
+                  artifacts,
+                  reviewedAt: item.reviewedAt ?? null,
+                  invalidatedAt: item.invalidatedAt ?? null,
+                  inputs: Array.isArray(item.inputs) ? item.inputs : [],
+                  decisions: Array.isArray(item.decisions) ? item.decisions : [],
+                  invalidatedBy: Array.isArray(item.invalidatedBy) ? item.invalidatedBy : [],
+                  reason: typeof item.reason === 'string' ? item.reason : '',
+                  invalidationReason:
+                    typeof item.invalidationReason === 'string'
+                      ? item.invalidationReason
+                      : item.status === 'needs_revision' && typeof item.reason === 'string'
+                        ? item.reason
+                        : '',
+                },
+              ];
+            }),
+          ),
+        };
   return {
     ...v2,
     schemaVersion: SCHEMA_VERSION,
@@ -312,6 +315,8 @@ function invalidateFrom(state, gate, reason, invalidatedBy = gate) {
 async function invalidate(root, gate, reason, selective = false) {
   const state = validateState(await load(root));
   if (selective) {
+    assertOneOf(gate, GATES, 'gate');
+    assertRequiredString(reason, 'reason');
     const item = state.gates[gate];
     state.gates[gate] = {
       ...item,
@@ -375,36 +380,30 @@ async function nextGate(root) {
 
 async function summary(root) {
   const state = validateState(await load(root));
-  process.stdout.write(`\n=== Presentation Pipeline Summary ===\n`);
+  process.stdout.write('\n=== Presentation Pipeline Summary ===\n');
   process.stdout.write(`Deck ID:   ${state.deckId}\n`);
   process.stdout.write(`Mode:      ${state.mode}\n`);
   process.stdout.write(`Engine:    ${state.engine ?? '(not chosen yet)'}\n`);
-  process.stdout.write(`-------------------------------------\n`);
+  process.stdout.write('-------------------------------------\n');
   for (const gate of GATES) {
     const item = state.gates[gate];
     const status = item.status.toUpperCase().padEnd(15);
     const date = item.reviewedAt ? new Date(item.reviewedAt).toLocaleString() : 'N/A';
     process.stdout.write(`- [${status}] ${gate.padEnd(20)} (Reviewed: ${date})\n`);
   }
-  process.stdout.write(`=====================================\n\n`);
+  process.stdout.write('=====================================\n\n');
 }
 
 async function main(argv) {
   const [command, root, ...args] = argv;
   if (command === 'init') {
-    const deckId = args[0];
-    const sourceRoot = args[1];
-    const mode = args[2] ?? 'general';
-    const modeReason = args[3] ?? '';
-    const hasForce = args[args.length - 1] === '--force';
-    const positional = hasForce ? args.slice(0, -1) : args;
-    if (
-      !root ||
-      positional.length < 2 ||
-      positional.length > 4 ||
-      (hasForce && args.length - 1 > 4) ||
-      (args.length > 5)
-    ) {
+    const hasForce = args.includes('--force');
+    const positional = args.filter((a) => a !== '--force');
+    const deckId = positional[0];
+    const sourceRoot = positional[1];
+    const mode = positional[2] ?? 'general';
+    const modeReason = positional[3] ?? '';
+    if (!root || positional.length < 2 || positional.length > 4) {
       throw new Error(
         'Usage: status.mjs init <root> <deck-id> <source-root> [mode] [mode-reason] [--force]',
       );
@@ -422,7 +421,7 @@ async function main(argv) {
     await setGate(root, args[0], args[1], args[2], parseMetadataOptions(args.slice(3)));
   } else if (command === 'invalidate') {
     const hasSelective = args.includes('--selective');
-    const filteredArgs = args.filter(a => a !== '--selective');
+    const filteredArgs = args.filter((a) => a !== '--selective');
     if (!root || filteredArgs.length !== 2) {
       throw new Error('Usage: status.mjs invalidate <root> <gate> <reason> [--selective]');
     }
@@ -453,7 +452,9 @@ async function main(argv) {
     await summary(root);
     return;
   } else {
-    throw new Error('Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, or summary');
+    throw new Error(
+      'Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, or summary',
+    );
   }
   process.stdout.write(`${command} ok\n`);
 }

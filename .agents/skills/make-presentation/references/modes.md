@@ -1,4 +1,4 @@
-﻿# Presentation router modes
+# Presentation router modes
 
 ## General
 
@@ -12,7 +12,7 @@ Use `fast-track` when producing lightweight, agile presentations (< 10 slides, i
 - Streamlines Gate 3 (Evidence) to focus only on top critical metrics.
 - Combines Story & Opposition pass (Gate 4 & 5).
 - Directly triggers prototype generation (Gate 6) and fast-path QA (Gate 8).
-- Preserves all physical 1080px canvas budgets, CJK typography rules, and export defect checks.
+- Preserves all canvas budgets, CJK typography rules, and export defect checks.
 
 ## Research-enhanced
 

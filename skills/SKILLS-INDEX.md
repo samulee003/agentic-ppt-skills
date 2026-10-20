@@ -18,6 +18,22 @@ Shared references and templates contain the detailed domain material.
 | 7 | [presentation-stage-grill](./presentation-stage-grill/SKILL.md) | make the deck speakable, timed, and audience-ready | `SPEAKER-SCRIPT.md` |
 | 8 | [presentation-deck-qa](./presentation-deck-qa/SKILL.md) | verify previews, exports, notes, and delivery readiness | `QA-REPORT.md` |
 
+## Engine & document skills
+
+| Skill | Use it when you need to… |
+| --- | --- |
+| [genoffice](./genoffice/SKILL.md) | create, convert, read, audit, render, and edit native `.pptx`, `.docx`, `.xlsx`, and `.pdf` files locally via the GenOffice CLI or MCP server |
+| [open-slide-deck-finalization](./open-slide-deck-finalization/SKILL.md) | standalone finalization shortcut specifically for `open-slide` workspaces |
+
+## Bundled engine adapters (`.agents/adapters/`)
+
+| Engine | Adapter | Output |
+| --- | --- | --- |
+| `open-slide` | [`adapters/open-slide/`](../adapters/open-slide/README.md) | React `1920×1080` live canvas + visual-faithful `.pptx` & `.pdf` |
+| `genoffice` | [`adapters/genoffice/`](../adapters/genoffice/README.md) | Staged `style.md` + `outline.json` + `pages/NN.json` (`1280×720` px) → native byte-preserving `.pptx`, `slides audit`, grid PNGs, and `.pdf` |
+| `marp` | [`adapters/marp/`](../adapters/marp/README.md) | Markdown slide deck → Marp CLI `.pptx` & `.pdf` |
+| `pptxgenjs` | [`adapters/pptxgenjs/`](../adapters/pptxgenjs/README.md) | Node script (`build.mjs`) → native-shape `.pptx` |
+
 ## How the two audiences use this repository
 
 - **AI agent:** read the selected `SKILL.md`, then only the references and

@@ -7,19 +7,13 @@ description: Turns a source folder, existing deck, or presentation idea into a c
 
 Read repo instructions first. Route the project from the earliest unresolved gate instead of recreating work.
 
-## Workspace & Runtime Preflight (Gate 0)
+## Workspace
 
-Before executing presentation workflows, verify the execution environment:
-
-1. **Dependency Preflight**:
-   - Check if `@open-slide/core` is installed in `node_modules`. If missing or if running in a fresh repo, run `npm.cmd i @open-slide/core` (or `npm i @open-slide/core` on Unix).
-   - Ensure the official dev server runs via `npx.cmd open-slide dev` (or `open-slide dev`) so that in-browser **Inspect Mode (I)**, **Design Panel (D)**, **Notes**, and real-time **Slide Drawer** are fully active.
-2. **Design System Source**:
-   - Extract design tokens (palette, typography, lighting mood, aspect ratios) from Stitch MCP (`DESIGN.md` / `projects/<id>`).
-3. **Workspace Organization**:
-   - Derive or confirm `deck-id`, then use `presentation-work/<deck-id>/`.
-   - Slide code lives strictly in `slides/<deck-id>/index.tsx`.
-   - Image & icon assets live in `slides/<deck-id>/assets/`.
+- Derive or confirm `deck-id`, then use `presentation-work/<deck-id>/`.
+- Original presentation source folders are read-only by default.
+- Inspect existing artifacts in the source folder, work area, and slide folder before creating anything new.
+- Reuse equivalent artifacts when they already satisfy the current gate.
+- **Writing artifacts:** every gate that says "Write X from `templates/X.md`" means create that file in the work area using your runtime's file-write tool (the `Write`/`Edit` tool, or shell redirection if that is all you have). Start from the named template, fill it with real content for this deck, and write it to the path the gate specifies. There is no separate build script — file creation is your responsibility.
 
 ## Status
 
@@ -36,6 +30,7 @@ Before executing presentation workflows, verify the execution environment:
 Read `references/modes.md` before routing.
 
 - Choose `general` for internal, creative, or low-risk decks without consequential external claims.
+- Choose `fast-track` for lightweight, agile decks (< 10 slides) when speed is prioritized.
 - Choose `research-enhanced` when the deck depends on consequential external claims, research, citations, datasets, policy, law, medicine, psychology, finance, safety, or statistics.
 - Re-evaluate mode after source intake. If later evidence triggers research safeguards, run `node .agents/skills/make-presentation/scripts/status.mjs set-mode <work-root> research-enhanced "<reason>"`.
 - Read the current mode from `STATUS.md` before invoking Evidence or Finalization.
@@ -43,17 +38,12 @@ Read `references/modes.md` before routing.
 
 ## Route one gate at a time
 
-Read `references/gates.md` for pass conditions and artifact owners. Invoke focused skills in sequence:
+Read `references/gates.md` for pass conditions and artifact owners. Invoke exactly one focused skill for the earliest unresolved gate:
 
-0. `preflight-check` → Verify `@open-slide/core` runtime & Stitch MCP design tokens.
 1. `source-intake` → `presentation-source-intake`
 2. `product-grill` → `presentation-product-grill`
 3. `evidence` → `presentation-evidence`
-4. `story-architecture` → `presentation-story-architecture` (Categorize every slide: 大字流 / 半圖流 / 全圖流).
-4.5. `visual-assets` → **Visual Asset Generator Subagent**:
-   - For **Mechanisms / Frameworks / Comparisons**: Generate **High-End Flat Vector / Flat Icon sets** matching Stitch MCP palette (`#FAF7F2`, `#B45309`, `#0F172A`, `#047857`, `#BE123C`). No cheap emojis, no floating cards.
-   - For **Emotional Resonance / Life Dramas / Climax**: Generate **Cinematic 35mm Photography** (Portra 400, 3500K golden hour lighting).
-   - Save generated assets to `slides/<deck-id>/assets/` and use ESM `import` in `slides/<deck-id>/index.tsx`.
+4. `story-architecture` → `presentation-story-architecture`
 5. `story-grill` → `presentation-story-grill`
 6. `deck-prototype` → `presentation-prototype`
 7. `stage-grill` → `presentation-stage-grill`
@@ -67,4 +57,4 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke focus
 
 ## Handoff
 
-Report the chosen mode, current gate, reused artifacts, and next focused skill.
+Report the chosen mode, selected engine (once resolved at prototype), current gate, reused artifacts, and next focused skill.

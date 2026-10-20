@@ -30,6 +30,7 @@ Read repo instructions first. Route the project from the earliest unresolved gat
 Read `references/modes.md` before routing.
 
 - Choose `general` for internal, creative, or low-risk decks without consequential external claims.
+- Choose `fast-track` for lightweight, agile decks (< 10 slides) when speed is prioritized.
 - Choose `research-enhanced` when the deck depends on consequential external claims, research, citations, datasets, policy, law, medicine, psychology, finance, safety, or statistics.
 - Re-evaluate mode after source intake. If later evidence triggers research safeguards, run `node .agents/skills/make-presentation/scripts/status.mjs set-mode <work-root> research-enhanced "<reason>"`.
 - Read the current mode from `STATUS.md` before invoking Evidence or Finalization.
@@ -56,4 +57,4 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke exact
 
 ## Handoff
 
-Report the chosen mode, current gate, reused artifacts, and next focused skill.
+Report the chosen mode, selected engine (once resolved at prototype), current gate, reused artifacts, and next focused skill.

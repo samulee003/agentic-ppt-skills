@@ -12,20 +12,23 @@ Use when `deck-prototype` is the current gate.
 This gate renders slides, so it needs a **slide engine**. Resolve it before authoring:
 
 - If `PRESENTATION-BRIEF.md` (or the gate-1 intake) already records the engine, use it.
-- Otherwise ask the user, one question, with a recommended default. Offer installed engines first (see `adapters/`); the bundled reference adapter is `open-slide`. The user may also name a self-supplied engine.
+- Otherwise ask the user, one question, with a recommended default. Offer installed engines first (see `.agents/adapters/`: `open-slide`, `genoffice`, `marp`, `pptxgenjs`); the default reference adapter is `open-slide` (or `genoffice` when the user wants a native byte-preserving Office `.pptx` via GenOffice).
 - **Verify the adapter exists before recording the engine:** run `test -d .agents/adapters/<engine>` (or `ls .agents/adapters/` to list installed ones). If it fails, tell the user there is no adapter for that engine and offer the installed ones — do not record an engine with no adapter, and do not invent the adapter's rules inline.
-- Read `adapters/<engine>/README.md` **first** for that engine's prerequisites and setup, then `adapters/<engine>/prototype.md` for its authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
-- Record the choice so downstream gates (stage-grill, deck-qa) inherit it: set it in the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs set-engine <work-root> <engine>`, and add an `## Engine` line to `PRESENTATION-BRIEF.md`.
+- Read `.agents/adapters/<engine>/README.md` **first** for that engine's prerequisites and setup, then `.agents/adapters/<engine>/prototype.md` for its authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
+- Record the choice so downstream gates (`stage-grill`, `production-qa`) inherit it: set it in the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs set-engine <work-root> <engine>`, and add an `## Engine` line to `PRESENTATION-BRIEF.md`.
 
 ## Core design principles & anti-pitfall rules
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, cited source files, and existing slide files before editing.
 - Always explore the files instead of asking the user for discoverable facts.
 - Ask one question at a time when a consequential prototype decision is unresolved. Include a recommended answer.
-- Follow the engine's authoring rules (from `adapters/<engine>/prototype.md`) before editing any page in the real slide source.
+- Follow the engine's authoring rules (from `.agents/adapters/<engine>/prototype.md`) before editing any page in the real slide source.
 - **Flexible Deck Length (No Arbitrary Page Limit)**: The final presentation length is unconstrained by arbitrary page count caps (e.g. not fixed to 18 slides). The total slide count scales organically with lecture duration, audience interaction, and narrative depth. At the prototype gate, build the representative set in `references/prototype-set.md` (or the full draft if appropriate) to prove the visual language and page grammar.
 - Use real assets, real type scale, and the intended visual direction rather than placeholder visuals or compressed mini-layouts.
 - Author to the engine's canonical projector-safe typography and overflow rules. Do not create a separate type scale in this workflow.
+- Confirm one necessary job and one dominant message per slide.
+- Reject verbose paragraphs and nested text tiers.
+- Split the slide rather than shrink text or hide overflow.
 
 ### Aesthetic guardrails (learned from production)
 1. **Reject AI 3-tier text walls**: Do not generate `Title + Subtitle + 3-4 dense bullet paragraphs`. Maximize Signal-to-Noise Ratio (SNR). One dominant message per slide.
@@ -33,9 +36,17 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 3. **High-craft iconography**: Strictly forbid OS emojis (🚀, 💡, 🔥, 👶) and single-character boxed glyphs ("寫", "參"). Use vector Flat SVG icons or dedicated custom illustrations.
 4. **Integrated visual metaphors**: In complex diagrams (e.g. iceberg, funnel, 3-pillar framework), embed callouts directly into the visual structure; do not resort to lazy 50/50 side-by-side splits or crop critical diagram landmarks.
 5. **Balanced multi-item grids**: For 5 items, use 3-top / 2-bottom (or 2-top / 3-bottom), never a vertical stack of 5 narrow stripes.
-6. **Split over shrink**: When space is tight, split the concept across multiple slides rather than shrinking fonts below 28px–32px.
+6. **Split over shrink**: When space is tight, split the concept across multiple slides rather than shrinking fonts below projector-safe thresholds.
 7. **Instructional interaction layouts**: Provide clean visual templates for active audience engagement (e.g., audience polling/temperature cards, buzz-pair discussion prompts, step-by-step dialogue flows, and takeaway scaffolding).
-8. **Language purity**: Guarantee 100% target language consistency (zero stray untranslated characters).
+8. **Language discipline & purity**:
+   - Guarantee 100% target language consistency on-screen (zero stray untranslated characters).
+   - For Chinese presentations with oral delivery: keep on-screen slide copy in concise **standard written form**, while keeping spoken vernacular (e.g. Cantonese oral script) in the Speaker Notes.
+9. **4 Page Archetypes (Prohibit Uniform 2-Box Monotony)**:
+   Vary slide composition intentionally across four distinct archetypes:
+   - **Archetype 1 — Big Typography / Hero Statement (大字流)**: Dominant display typography or hero number with zero bullet lists for thesis statements, golden rules, and transitions.
+   - **Archetype 2 — Split Visual + Action Grid (半圖半文)**: Asymmetric 2-column layout pairing a framed visual/vignette on one side with structured action steps on the other.
+   - **Archetype 3 — Full-Canvas System Metaphor (大圖流)**: 70%+ of the content zone dedicated to a structured diagram or visual model with callouts embedded inside the nodes.
+   - **Archetype 4 — Distinct Multi-Card Grid (卡片流)**: 2–4 high-craft cards with committed borders/shadows and clear visual hierarchy (avoid generic 1px faint gray SaaS dashboard boxes).
 
 - Keep the prototype in the real slide source so later work can revise the actual pages instead of rebuilding from mockups.
 - Require a live review in the chosen engine before calling the gate passed.
