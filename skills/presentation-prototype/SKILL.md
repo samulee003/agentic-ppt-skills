@@ -21,7 +21,7 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, cited source files, and existing slide files before editing.
 - Always explore the files instead of asking the user for discoverable facts.
-- Ask one question at a time when a consequential prototype decision is unresolved. Include a recommended answer.
+- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential prototype decisions are unresolved: ask the whole frontier in one round, each question with a recommended answer worded so "yes" accepts it.
 - Follow the engine's authoring rules (from `.agents/adapters/<engine>/prototype.md`) before editing any page in the real slide source.
 - **Flexible Deck Length (No Arbitrary Page Limit)**: The final presentation length is unconstrained by arbitrary page count caps (e.g. not fixed to 18 slides). The total slide count scales organically with lecture duration, audience interaction, and narrative depth. At the prototype gate, build the representative set in `references/prototype-set.md` (or the full draft if appropriate) to prove the visual language and page grammar.
 - Use real assets, real type scale, and the intended visual direction rather than placeholder visuals or compressed mini-layouts.

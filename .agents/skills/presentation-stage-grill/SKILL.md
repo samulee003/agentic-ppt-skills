@@ -9,8 +9,8 @@ Use when `stage-grill` is the current gate.
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `STORY.md`, `STORYBOARD.md`, `GRILL-LOG.md`, current speaker notes, and actual page renders before judging the talk.
 - Always explore the files instead of asking the user for discoverable facts.
-- Ask one question at a time when a consequential stage decision is unresolved.
-- Include a recommended answer with each question.
+- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential stage decisions are unresolved: ask the whole frontier in one round.
+- Include a recommended answer with each question, worded so "yes" accepts it.
 - Use `references/autonomous-stage.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining stage decisions are resolvable from the deck and upstream artifacts — apply `references/stage-questions.md` yourself, resolve each finding with a concrete change and confidence level, and flag any low-confidence load-bearing edit for later human review instead of silently rewriting it.
 - When the user refers to the page they're currently viewing without naming it, resolve it through the engine's "current page" mechanism (e.g. `current-slide` for open-slide) before judging.
 - Use actual renders and current speaker notes, not outline-only summaries.

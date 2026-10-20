@@ -31,6 +31,7 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 
 | Reference | Use it when you need to… |
 | --- | --- |
+| [grilling-rounds.md](./make-presentation/references/grilling-rounds.md) | grill the user in frontier rounds instead of one question per turn (from [`mattpocock/skills`](https://github.com/mattpocock/skills)) |
 | [sharpen-playback.md](./make-presentation/references/sharpen-playback.md) | avoid interrogation fatigue at `product-grill` |
 | [unslop-copy.md](./make-presentation/references/unslop-copy.md) + [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | remove AI tells from slide copy and notes |
 | [review-buckets.md](./make-presentation/references/review-buckets.md) | turn review findings into Act on / Consider / Noted / Dismissed |

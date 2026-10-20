@@ -52,13 +52,14 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke exact
 - Do not skip ahead because a PPTX, PDF, or other artifact already exists.
 - Read `references/gate-results.md`, then translate a passed focused-skill result with `node .agents/skills/make-presentation/scripts/status.mjs result <work-root> <gate> passed "<reason>" --artifact <path> [--artifact <path>]... [--input <value>]... [--decision <value>]...`.
 - Use `node .agents/skills/make-presentation/scripts/status.mjs set` when recording a reviewed artifact path, inputs, or decisions outside the result handoff.
-- If product decisions remain unresolved, stop for one-question-at-a-time grilling with a recommended answer.
+- If product decisions remain unresolved, stop and grill in rounds per `references/grilling-rounds.md`: the whole frontier per round, each question with a recommended answer.
 - If upstream decisions change, invalidate downstream gates and resume from the earliest invalidated gate.
 
 ## Cross-cutting practices
 
 Read the named reference only when its trigger applies.
 
+- **Grilling rounds** (`references/grilling-rounds.md`): every grill gate asks the whole frontier of settled-prerequisite decisions per round, with "yes"-accepts recommendations, instead of one question per turn.
 - **Sharpen and play back** (`references/sharpen-playback.md`): at `product-grill`, play the goal back in one paragraph and proceed on recommended defaults for reversible choices instead of asking every question.
 - **Unslop** (`references/unslop-copy.md`): at `story-architecture`, `deck-prototype`, `stage-grill`, and `production-qa`, run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <path>... [--strict]` on slide copy and speaker notes, then rewrite by hand.
 - **Review buckets** (`references/review-buckets.md`): at `story-grill`, `stage-grill`, and `production-qa`, sort every review finding into Act on, Consider, Noted, or Dismissed.

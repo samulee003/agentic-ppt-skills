@@ -10,8 +10,8 @@ Use when `story-grill` is the current gate.
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, and cited source files before judging the story.
 - Always explore the files instead of asking the user for discoverable facts.
 - Use an interactive question path when a live consequential decision still needs human judgment.
-- Ask one question at a time when a consequential story decision is unresolved.
-- Include a recommended answer with each question.
+- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential story decisions are unresolved: ask the whole frontier in one round.
+- Include a recommended answer with each question, worded so "yes" accepts it.
 - Use `references/opposition-review.md` for the autonomous opposition-review fallback when the user is unavailable or the remaining challenge is clear from the files.
 - State the strongest reasonable case against the story and what the opposition must concede.
 - Pressure-test why the audience should care, whether the thesis answers the right problem, whether the evidence supports the interpretation, what counter-evidence is missing, whether slides repeat or decorate, and whether the conclusion really follows.

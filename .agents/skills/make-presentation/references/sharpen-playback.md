@@ -11,12 +11,12 @@ Adapted from the MIT-licensed `sharpen`, `in-your-own-words`, and `principle-nev
 
 | Situation | Mode |
 | --- | --- |
-| A decision would change audience, promise, evidence threshold, or what the deck must not say, and the sources cannot answer it | Ask one question at a time with a recommended answer (the existing grill behavior). |
+| A decision would change audience, promise, evidence threshold, or what the deck must not say, and the sources cannot answer it | Grill in rounds (`references/grilling-rounds.md`): ask the whole frontier at once, each with a recommended answer. |
 | The decision is reversible, stylistic, or easy to see on a slide | Proceed with the recommended default and record it as `Assumed` in the brief. The user corrects it on the prototype. |
 | `fast-track` mode, a headless run, or the user says "just do it" | Use `references/autonomous-brief.md`. Proceed on defaults with confidence levels and flag low-confidence load-bearing decisions. |
 
 ## Limits
 
-- Ask at most 5 blocking questions before showing something tangible (a one-page brief, an outline, or a prototype page). If more remain, bundle them under `Open questions` in the brief and keep moving.
+- Keep rounds small (about 8 questions at most). Move the rest to `Assumed` defaults or `Open questions` in the brief and keep moving.
 - Never invent audience facts, numbers, or sources. Defaults cover taste and structure, not evidence.
 - Every `Assumed` item names what it would invalidate downstream if wrong, so a later correction can use `status.mjs invalidate`.
