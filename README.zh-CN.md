@@ -27,7 +27,9 @@
 
 流程支持 `general`、`fast-track` 和 `research-enhanced` 模式。原型与生产环境 QA 使用
 adapter；内含 `open-slide`、`genoffice`、`marp` 和 `pptxgenjs`，并附带 `genoffice`
-技能供代理直接读取、创建、几何审计（audit）、渲染与转换本地 Office 文件。
+技能供代理直接读取、创建、几何审计（audit）、渲染与转换本地 Office 文件。支持跨引擎无头导出（`scripts/export-deck.mjs`）与自动化交付验收审计流水线（`scripts/qa-deck.mjs`）。
+
+`skills/make-presentation/references/` 中的实践吸收自 [`backnotprop/pstack`](https://github.com/backnotprop/pstack)（聚焦重放、去 AI 废话检查 `scripts/unslop-check.mjs`、审查分桶、原型擂台与经验编码）与 [`mattpocock/skills`](https://github.com/mattpocock/skills)（Frontier rounds 轮次式提问、“yes”采纳建议、问卷转换）。
 
 ### 安装
 

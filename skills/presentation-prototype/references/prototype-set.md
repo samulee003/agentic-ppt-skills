@@ -5,4 +5,4 @@
 - representative evidence
 - difficult / dense page
 - ending
-- live review in the chosen engine
+- live open-slide review

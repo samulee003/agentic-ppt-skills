@@ -32,19 +32,41 @@ If you are a headless agent, open-slide's dev-server canvas is a browser surface
 - Drive the running dev server with a headless browser (Playwright/Puppeteer): navigate to each slide route, capture a 1920×1080 screenshot per page, and inspect the PNGs with your image-inspection tool (vision capability). Confirm nothing is clipped below 1080px and type is projector-readable.
 - If your runtime cannot drive a browser, **do not claim the review passed** — record in QA-REPORT that the live-canvas review was not performed, or ask the user to review in their browser. The gate forbids skipping the review; an honest "not verified" beats a false "passed".
 
-## Exports — triggered from the dev-server UI (there is no export CLI command)
+## Exports — headless CLI or dev-server UI
 
-open-slide **does not have a CLI export subcommand.** PPTX and PDF are produced from the **running dev server's UI** — the export controls live in the canvas UI (an export / download affordance per deck). This matters for an automated agent: exporting is a **browser/UI action**, not a shell command.
+open-slide provides a **first-class headless CLI export subcommand** — no manual browser interaction or UI clicking required. Automated agents and CI/CD pipelines can export directly from the terminal:
 
-- For a **human-in-the-loop** run: tell the user to open the dev-server URL in a browser and use the in-canvas export to produce a visual-faithful PPTX and a matching PDF. Collect the downloaded file paths.
-- For a **fully automated (headless)** run: drive the dev server with a headless browser (e.g. Playwright/Puppeteer pointed at the served canvas URL) and trigger the export affordance programmatically, then read the produced files. If your runtime cannot drive a browser, **stop and ask the user to export manually** — do not fabricate an export command.
+```bash
+# Headless export to both PDF and native editable PPTX
+npx open-slide export <deck-id> --format=all --out-dir=exports
 
-"Visual-faithful" means the PPTX preserves the canvas layout rather than re-flowing it as native PowerPoint shapes — so the browser preview and the PPTX should agree pixel-for-pixel.
+# Or via the pipeline script:
+node .agents/skills/make-presentation/scripts/export-deck.mjs <deck-id> --format=pdf,pptx
+```
 
-- After deck or exporter changes, produce a **fresh** PPTX and PDF. Old downloads are not repaired by re-exporting.
-- **PPTX:** validate the archive integrity (a PPTX is a zip; a truncated/corrupt archive fails QA on its own) and confirm it opens cleanly.
-- **PDF:** confirm page count and **16:9 geometry** match the final deck. open-slide decks are 16:9 (1920×1080); a mismatched aspect ratio means the wrong export was used.
-- **PowerPoint:** open the PPTX in Microsoft PowerPoint and review wrapping, alignment, and notes. PPTX fidelity is high but PowerPoint's text engine differs from the browser — check that nothing re-wrapped or re-aligned.
+The CLI automatically connects to any running dev server or boots an ephemeral export server on a random port, renders the 1920×1080 CSS pages to vector PDF, and extracts native editable PPTX shapes, text, colors, tables, and speaker notes directly to disk.
+
+For interactive human workflows, the running dev server canvas also provides export buttons in the UI.
+
+### Visual-faithful & Native PPTX contract
+
+"Visual-faithful" means the PPTX export renders the visual slide layout into an authoritative high-resolution presentation surface so PowerPoint cannot reflow, re-wrap, or drift text boxes.
+- **Do not confuse with Native-editable PPTX**: A native-editable export would trade visual fidelity for freeform shape manipulation. Visual-faithful PPTX guarantees presentation stability when projected.
+- **Safety buffer & bounding box**: Verify that text containers include width safety buffers to prevent unexpected line wrapping on different OS font rendering engines.
+- **Font loading stability**: Confirm global Google Fonts load cleanly without hanging the export pipeline.
+
+### Mandatory QA verification checklist
+
+1. **Strict 1:1 Parity**:
+   - `Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`.
+   - Every slide (including title, transitions, and backup slides) must have a synchronized, speakable note in the PPTX notes pane.
+2. **Language Hygiene & Purity**:
+   - For English / International Summit presentations: 100% English check. Verify 0 stray non-English characters in slide titles, body cards, chart captions, and notes.
+3. **PowerPoint Native Spot-Check**:
+   - Open the PPTX in Microsoft PowerPoint (or inspect headless XML).
+   - Spot-check dense, multi-card, and visual metaphor slides (e.g. 3-pillar framework, iceberg diagram, large stat callouts) to confirm no text boxes shifted downward or truncated.
+4. **PDF 16:9 Geometry**:
+   - Confirm PDF export matches standard 16:9 (1920×1080) aspect ratio.
 
 ## Agreement check
 

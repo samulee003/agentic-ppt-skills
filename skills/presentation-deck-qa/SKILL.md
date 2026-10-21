@@ -30,7 +30,7 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - **Strict 1:1 Parity**: Confirm slide count equals note count, including backup pages (`Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`).
 - **Language Purity**: For target-language presentations (e.g. 100% English summit), verify zero stray secondary-language characters across all slides and notes.
 - Check factual consistency across slides, notes, references, and exports.
-- Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder-or-notes> --strict`. Fix every finding or record an exception with its reason in `QA-REPORT.md`. See `references/unslop-copy.md` in `make-presentation`.
+- Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder-or-notes> --strict`. Fix every finding or record an exception with its reason in `QA-REPORT.md`. See `../make-presentation/references/unslop-copy.md`.
 - Confirm the main-talk range, backup range, total timing, and per-slide timing.
 - Confirm one necessary job and one dominant message per slide.
 - In research-enhanced mode, require a per-slide fact check plus a reference and Q&A backup plan before export approval.
@@ -51,6 +51,8 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 ## Export and inspect
 
 - After deck or exporter changes, produce a fresh export in each chosen delivery format; old downloads are not repaired.
+- **Unified Export**: Run `node .agents/skills/make-presentation/scripts/export-deck.mjs <deck-id> --format=pdf,pptx` (or `npx open-slide export <deck-id> --format=all`) to automatically detect the engine and headlessly export fresh deliverables to `exports/`.
+- **Automated QA Audit Pipeline**: Run `node .agents/skills/make-presentation/scripts/qa-deck.mjs <deck-id> --export` (or `npx open-slide qa <deck-id> --export`) to execute an automated audit verifying 1:1 strict parity (`Slide Count === Note Count === PDF Page Count === PPTX Slide Count`), copy slop, text density, and PPTX OOXML structure. Pass `--record` to automatically update `STATUS.md` with the verified deliverables upon passing.
 - Follow `adapters/<engine>/qa.md` for the engine's export steps, archive integrity, geometry, and any native-application inspection.
 - **Visual-Faithful Verification**: Verify that the exported PPTX preserves visual layout without text box re-wrapping or bounding-box drift when opened in Microsoft PowerPoint.
 - **Speaker Notes Verification**: Confirm speaker notes are properly embedded in the exported PPTX notes pane for every slide.

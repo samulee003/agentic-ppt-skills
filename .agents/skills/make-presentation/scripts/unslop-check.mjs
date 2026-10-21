@@ -87,9 +87,114 @@ function hasCjk(line) {
   return /[\u3400-\u9fff]/.test(line);
 }
 
-export function scanText(text) {
+function stripCodeComments(code) {
+  let result = '';
+  let i = 0;
+  const len = code.length;
+  let state = 'normal';
+
+  while (i < len) {
+    const ch = code[i];
+    const next = code[i + 1];
+
+    if (state === 'normal') {
+      if (ch === '/' && next === '/') {
+        state = 'line_comment';
+        result += '  ';
+        i += 2;
+        continue;
+      }
+      if (ch === '/' && next === '*') {
+        state = 'block_comment';
+        result += '  ';
+        i += 2;
+        continue;
+      }
+      if (ch === "'") {
+        state = 'single_quote';
+        result += ch;
+        i++;
+        continue;
+      }
+      if (ch === '"') {
+        state = 'double_quote';
+        result += ch;
+        i++;
+        continue;
+      }
+      if (ch === '`') {
+        state = 'template';
+        result += ch;
+        i++;
+        continue;
+      }
+      result += ch;
+      i++;
+    } else if (state === 'line_comment') {
+      if (ch === '\n') {
+        state = 'normal';
+        result += '\n';
+      } else {
+        result += ' ';
+      }
+      i++;
+    } else if (state === 'block_comment') {
+      if (ch === '*' && next === '/') {
+        state = 'normal';
+        result += '  ';
+        i += 2;
+      } else {
+        result += ch === '\n' ? '\n' : ' ';
+        i++;
+      }
+    } else if (state === 'single_quote') {
+      if (ch === '\\') {
+        result += ch + (next || '');
+        i += 2;
+        continue;
+      }
+      if (ch === "'" || ch === '\n') state = 'normal';
+      result += ch;
+      i++;
+    } else if (state === 'double_quote') {
+      if (ch === '\\') {
+        result += ch + (next || '');
+        i += 2;
+        continue;
+      }
+      if (ch === '"' || ch === '\n') state = 'normal';
+      result += ch;
+      i++;
+    } else if (state === 'template') {
+      if (ch === '\\') {
+        result += ch + (next || '');
+        i += 2;
+        continue;
+      }
+      if (ch === '`') state = 'normal';
+      result += ch;
+      i++;
+    }
+  }
+  return result;
+}
+
+function stripHtmlComments(text) {
+  return text.replace(/<!--[\s\S]*?-->/g, (match) => match.replace(/[^\r\n]/g, ' '));
+}
+
+export function scanText(text, filePath = '') {
+  const isCode = Boolean(filePath && /\.(?:[jt]sx?|[mc]js)$/i.test(filePath));
+  const isHtmlOrMd = !filePath || /\.(?:md|html?)$/i.test(filePath);
+  let processed = text;
+  if (isCode) {
+    processed = stripCodeComments(processed);
+  }
+  if (isHtmlOrMd) {
+    processed = stripHtmlComments(processed);
+  }
   const findings = [];
-  const lines = text.split(/\r?\n/);
+  const lines = processed.split(/\r?\n/);
   let inFence = false;
   lines.forEach((line, index) => {
     if (/^\s*```/.test(line)) {
@@ -137,7 +242,7 @@ async function main(argv) {
 
   let total = 0;
   for (const file of files) {
-    const findings = scanText(await readFile(file, 'utf8'));
+    const findings = scanText(await readFile(file, 'utf8'), file);
     for (const finding of findings) {
       total += 1;
       process.stdout.write(

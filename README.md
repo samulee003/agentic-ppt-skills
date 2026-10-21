@@ -34,10 +34,11 @@ creating, reading, auditing, rendering, and converting local Office files.
 Shared practices in `skills/make-presentation/references/` are adapted from
 [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT): sharpen and
 playback, unslop copy checks (`scripts/unslop-check.mjs`), review buckets,
-prototype arena, and encode-lessons. Grilling in frontier rounds (the whole set
-of unblocked questions per round, "yes" accepts the recommendation) comes from
-[`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT), alongside
-`grill-me`, `grilling`, and `to-questionnaire`.
+prototype arena, and encode-lessons. Cross-engine headless export is handled via
+`scripts/export-deck.mjs` and automated parity/export audit via `scripts/qa-deck.mjs`.
+Grilling in frontier rounds (the whole set of unblocked questions per round, "yes"
+accepts the recommendation) comes from [`mattpocock/skills`](https://github.com/mattpocock/skills)
+(MIT), alongside `grill-me`, `grilling`, and `to-questionnaire`.
 
 ### Install
 

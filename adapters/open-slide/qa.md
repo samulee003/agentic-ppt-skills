@@ -32,14 +32,23 @@ If you are a headless agent, open-slide's dev-server canvas is a browser surface
 - Drive the running dev server with a headless browser (Playwright/Puppeteer): navigate to each slide route, capture a 1920×1080 screenshot per page, and inspect the PNGs with your image-inspection tool (vision capability). Confirm nothing is clipped below 1080px and type is projector-readable.
 - If your runtime cannot drive a browser, **do not claim the review passed** — record in QA-REPORT that the live-canvas review was not performed, or ask the user to review in their browser. The gate forbids skipping the review; an honest "not verified" beats a false "passed".
 
-## Exports — triggered from the dev-server UI (there is no export CLI command)
+## Exports — headless CLI or dev-server UI
 
-open-slide **does not have a CLI export subcommand.** PPTX and PDF are produced from the **running dev server's UI** — the export controls live in the canvas UI (an export / download affordance per deck). This matters for an automated agent: exporting is a **browser/UI action**, not a shell command.
+open-slide provides a **first-class headless CLI export subcommand** — no manual browser interaction or UI clicking required. Automated agents and CI/CD pipelines can export directly from the terminal:
 
-- For a **human-in-the-loop** run: tell the user to open the dev-server URL in a browser and use the in-canvas export to produce a visual-faithful PPTX and a matching PDF. Collect the downloaded file paths.
-- For a **fully automated (headless)** run: drive the dev server with a headless browser (e.g. Playwright/Puppeteer pointed at the served canvas URL) and trigger the export affordance programmatically, then read the produced files. If your runtime cannot drive a browser, **stop and ask the user to export manually** — do not fabricate an export command.
+```bash
+# Headless export to both PDF and native editable PPTX
+npx open-slide export <deck-id> --format=all --out-dir=exports
 
-### Visual-faithful PPTX contract
+# Or via the pipeline script:
+node .agents/skills/make-presentation/scripts/export-deck.mjs <deck-id> --format=pdf,pptx
+```
+
+The CLI automatically connects to any running dev server or boots an ephemeral export server on a random port, renders the 1920×1080 CSS pages to vector PDF, and extracts native editable PPTX shapes, text, colors, tables, and speaker notes directly to disk.
+
+For interactive human workflows, the running dev server canvas also provides export buttons in the UI.
+
+### Visual-faithful & Native PPTX contract
 
 "Visual-faithful" means the PPTX export renders the visual slide layout into an authoritative high-resolution presentation surface so PowerPoint cannot reflow, re-wrap, or drift text boxes.
 - **Do not confuse with Native-editable PPTX**: A native-editable export would trade visual fidelity for freeform shape manipulation. Visual-faithful PPTX guarantees presentation stability when projected.

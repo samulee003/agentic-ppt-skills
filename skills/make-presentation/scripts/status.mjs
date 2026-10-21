@@ -155,10 +155,12 @@ async function save(root, state, options = {}) {
 function createState(deckId, sourceRoot, mode, modeReason) {
   assertDeckId(deckId);
   assertRequiredString(sourceRoot, 'sourceRoot');
-  const resolvedMode = mode && mode.trim() ? mode : 'general';
+  const resolvedMode = mode?.trim() ? mode : 'general';
   assertOneOf(resolvedMode, MODES, 'mode');
-  const resolvedReason =
-    modeReason && modeReason.trim() ? modeReason : `Initial mode: ${resolvedMode}`;
+  if (modeReason !== undefined && modeReason !== null && modeReason !== '') {
+    assertRequiredString(modeReason, 'modeReason');
+  }
+  const resolvedReason = modeReason?.trim() ? modeReason : `Initial mode: ${resolvedMode}`;
   return {
     schemaVersion: SCHEMA_VERSION,
     deckId,
@@ -192,7 +194,7 @@ function validateState(state) {
     throw new Error('Unsupported presentation status schema');
   }
   assertDeckId(state.deckId);
-  const mode = state.mode && state.mode.trim() ? state.mode : 'general';
+  const mode = state.mode?.trim() ? state.mode : 'general';
   assertOneOf(mode, MODES, 'mode');
   if (!state.sourceRoot || typeof state.sourceRoot !== 'string' || state.sourceRoot.trim() === '') {
     throw new Error('Missing sourceRoot');
@@ -401,13 +403,13 @@ async function main(argv) {
     const positional = args.filter((a) => a !== '--force');
     const deckId = positional[0];
     const sourceRoot = positional[1];
-    const mode = positional[2] ?? 'general';
-    const modeReason = positional[3] ?? '';
-    if (!root || positional.length < 2 || positional.length > 4) {
+    if (!root || positional.length < 2 || positional.length === 3 || positional.length > 4) {
       throw new Error(
-        'Usage: status.mjs init <root> <deck-id> <source-root> [mode] [mode-reason] [--force]',
+        'Usage: status.mjs init <root> <deck-id> <source-root> [mode mode-reason] [--force]',
       );
     }
+    const mode = positional[2] ?? 'general';
+    const modeReason = positional[3] ?? `Initial mode: ${mode}`;
     await init(root, deckId, sourceRoot, mode, modeReason, hasForce);
   } else if (command === 'validate') {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs validate <root>');
