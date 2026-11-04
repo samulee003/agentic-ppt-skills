@@ -163,3 +163,27 @@ test('CLI exits 1 on errors and prints JSON on request', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('text at the documented floors passes; footer fields are ignored', () => {
+  // 8 pt on a 405 pt slide (10×5.625 in) is the documented hard floor.
+  const small = inspectPptx(deck([{ xml: slideXml([[800, 'Source: survey 2024']]), notes: 'n' }], { cy: 5143500 }));
+  assert.ok(!small.errors.some((e) => /hard floor/.test(e)), small.errors.join('; '));
+  // 14 pt on a 540 pt slide is the documented body floor.
+  const body = inspectPptx(deck([{ xml: slideXml([[1400, 'Body text at the floor']]), notes: 'n' }]));
+  assert.ok(!body.warnings.some((w) => /body floor/.test(w)), body.warnings.join('; '));
+  // A 9 pt slide-number field must not count as content.
+  const field = slideXml([[3200, 'Main point of the slide']]).replace(
+    '</a:p>',
+    '<a:fld id="{1}" type="slidenum"><a:rPr lang="en-US" sz="900"/><a:t>3</a:t></a:fld></a:p>',
+  );
+  const withField = inspectPptx(deck([{ xml: field, notes: 'n' }]));
+  assert.deepEqual(withField.errors, []);
+});
+
+test('PDF page count prefers the page tree over stray page objects', () => {
+  const pdf = Buffer.from(
+    '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >> << /Type /Page >> << /Type /Page >> << /Type /Page >>',
+  );
+  assert.equal(countPdfPages(pdf), 2);
+  assert.equal(countPdfPages(Buffer.from('<< /Count 3 /Kids [] /Type /Pages >>')), 3);
+});

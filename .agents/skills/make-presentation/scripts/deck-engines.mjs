@@ -139,10 +139,12 @@ export function planExport({ cwd, deckId, engine, formats, outDir }) {
       });
     }
   } else if (engine === 'pptxgenjs') {
+    // build.mjs reads DECK_OUT_DIR so --out-dir reaches the script.
     steps.push({
       label: 'pptxgenjs build (writes the .pptx)',
       cmd: process.execPath,
       args: [pptxgenjsScript(cwd, deckId)],
+      env: { DECK_OUT_DIR: outDir },
     });
     if (formats.includes('pdf')) {
       steps.push({
@@ -211,16 +213,53 @@ export function planQa({ cwd, deckId, engine, outDir }) {
   return [];
 }
 
-export function expectedExports({ deckId, formats, outDir }) {
-  return formats.map((format) => path.join(outDir, `${deckId}.${format}`));
+/**
+ * Each expected export lists the paths that satisfy it. HTML may be a single
+ * file or a folder with index.html, depending on the engine.
+ */
+export function expectedExports({ deckId, formats, outDir, optional = [] }) {
+  return formats.map((format) => ({
+    format,
+    optional: optional.includes(format),
+    candidates:
+      format === 'html'
+        ? [path.join(outDir, `${deckId}.html`), path.join(outDir, deckId, 'index.html')]
+        : [path.join(outDir, `${deckId}.${format}`)],
+  }));
 }
 
-export function checkExports(files) {
-  return files.map((file) => {
-    if (!existsSync(file)) return { file, ok: false, problem: 'missing' };
-    const size = statSync(file).size;
-    return size > 0 ? { file, ok: true, size } : { file, ok: false, problem: 'empty' };
+export function checkExports(expected) {
+  return expected.map(({ format, optional = false, candidates }) => {
+    const found = candidates.find((file) => existsSync(file));
+    if (!found) return { format, file: candidates[0], ok: false, optional, problem: 'missing' };
+    const size = statSync(found).size;
+    return size > 0
+      ? { format, file: found, ok: true, optional, size }
+      : { format, file: found, ok: false, optional, problem: 'empty' };
   });
+}
+
+/** Prints export results; returns true when every required export is present. */
+export function printExportResults(results, write = (line) => process.stdout.write(line)) {
+  for (const result of results) {
+    if (result.ok) write(`ok      ${result.file} (${result.size} bytes)\n`);
+    else if (result.optional) write(`skipped ${result.file} (${result.problem}; optional for this engine)\n`);
+    else write(`FAILED  ${result.file} (${result.problem})\n`);
+  }
+  return results.every((result) => result.ok || result.optional);
+}
+
+/**
+ * Formats to export or check. `auto` means pptx + pdf, except that PptxGenJS
+ * cannot write PDF itself: there the PDF is optional (made only when
+ * LibreOffice is installed), as adapters/pptxgenjs/qa.md allows.
+ */
+export function resolveRequest(engine, format) {
+  if (format !== 'auto') return { formats: resolveFormats(engine, format), optional: [] };
+  return {
+    formats: resolveFormats(engine, 'pdf,pptx'),
+    optional: engine === 'pptxgenjs' ? ['pdf'] : [],
+  };
 }
 
 export function hasBinary(cmd) {
@@ -236,7 +275,8 @@ export function formatStep(step) {
 
 export function runStep(step, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(step.cmd, step.args, { cwd, stdio: 'inherit' });
+    const env = step.env ? { ...process.env, ...step.env } : process.env;
+    const child = spawn(step.cmd, step.args, { cwd, stdio: 'inherit', env });
     child.on('error', (error) => {
       reject(new Error(`${step.label}: cannot run "${step.cmd}" (${error.message})`));
     });
@@ -255,7 +295,15 @@ export function parseFlags(args, defaults) {
     if (match) {
       const key = match[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       if (!(key in defaults)) throw new Error(`Unknown option "--${match[1]}"`);
-      flags[key] = match[2] === undefined ? true : match[2].trim();
+      if (typeof defaults[key] === 'boolean') {
+        if (match[2] !== undefined) throw new Error(`Option "--${match[1]}" takes no value`);
+        flags[key] = true;
+      } else {
+        if (match[2] === undefined || match[2].trim() === '') {
+          throw new Error(`Option "--${match[1]}" needs a value: --${match[1]}=<value>`);
+        }
+        flags[key] = match[2].trim();
+      }
     } else if (!deckId) {
       deckId = arg.trim();
     } else {

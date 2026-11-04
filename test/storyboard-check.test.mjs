@@ -94,3 +94,10 @@ test('the bundled example storyboard passes', async () => {
   const { stdout } = await execFileAsync(process.execPath, [script, root]);
   assert.match(stdout, /storyboard-check: no errors/);
 });
+
+test('talk length combines hours and minutes', () => {
+  assert.equal(briefMinutes('- Time: 1 hour 30 min'), 90);
+  assert.equal(briefMinutes('- Time: 1 小時 30 分鐘'), 90);
+  assert.equal(briefMinutes('- Time: 1 h talk, 10 min Q&A'), 60);
+  assert.equal(briefMinutes('- Time (talk length, Q&A length): 10 min talk, 5 min Q&A'), 10);
+});

@@ -8,6 +8,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   checkExports,
   detectEngine,
@@ -16,18 +17,19 @@ import {
   parseFlags,
   planExport,
   planQa,
-  resolveFormats,
+  printExportResults,
+  resolveRequest,
   runStep,
 } from './deck-engines.mjs';
-import { inspectPptx } from './pptx-check.mjs';
+import { formatReport, inspectPptx } from './pptx-check.mjs';
 
 const USAGE =
-  'Usage: qa-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<pdf,pptx,html|all>] [--export] [--out-dir=<dir>] [--dry-run]\n';
+  'Usage: qa-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<auto|pdf,pptx,html|all>] [--export] [--out-dir=<dir>] [--dry-run]\n';
 
 async function main() {
   const { deckId, flags } = parseFlags(process.argv.slice(2), {
     engine: 'auto',
-    format: 'pdf,pptx',
+    format: 'auto',
     outDir: 'exports',
     export: false,
     dryRun: false,
@@ -39,34 +41,43 @@ async function main() {
 
   const cwd = process.cwd();
   const engine = detectEngine(cwd, deckId, flags.engine);
-  const formats = resolveFormats(engine, flags.format);
+  const { formats, optional } = resolveRequest(engine, flags.format);
   const outDir = path.resolve(cwd, flags.outDir);
-  const steps = [
-    ...(flags.export ? planExport({ cwd, deckId, engine, formats, outDir }) : []),
-    ...planQa({ cwd, deckId, engine, outDir }),
-  ];
+  const qaSteps = planQa({ cwd, deckId, engine, outDir });
 
   process.stdout.write(`QA for "${deckId}" with engine [${engine}]\n`);
   if (flags.dryRun) {
-    for (const step of steps) process.stdout.write(`$ ${formatStep(step)}\n`);
+    if (flags.export) {
+      for (const step of planExport({ cwd, deckId, engine, formats, outDir })) {
+        process.stdout.write(`$ ${formatStep(step)}\n`);
+      }
+    }
+    for (const step of qaSteps) process.stdout.write(`$ ${formatStep(step)}\n`);
     process.stdout.write(`check exports: ${formats.join(', ')}\n`);
     if (formats.includes('pptx')) process.stdout.write('then: pptx-check on the exported .pptx\n');
     return;
   }
 
-  for (const step of steps) {
+  if (flags.export) {
+    // Reuse export-deck so optional formats and missing converters behave the same.
+    const exportArgs = [
+      path.join(path.dirname(fileURLToPath(import.meta.url)), 'export-deck.mjs'),
+      deckId,
+      `--engine=${engine}`,
+      `--format=${flags.format}`,
+      `--out-dir=${outDir}`,
+    ];
+    await runStep({ label: 'export-deck', cmd: process.execPath, args: exportArgs }, cwd);
+  }
+  for (const step of qaSteps) {
     process.stdout.write(`$ ${formatStep(step)}\n`);
     await runStep(step, cwd);
   }
 
-  const results = checkExports(expectedExports({ deckId, formats, outDir }));
-  for (const result of results) {
-    process.stdout.write(
-      result.ok
-        ? `ok      ${result.file} (${result.size} bytes)\n`
-        : `FAILED  ${result.file} (${result.problem})\n`,
-    );
-  }
+  const exportsOk = printExportResults(
+    checkExports(expectedExports({ deckId, formats, outDir, optional })),
+  );
+
   let pptxErrors = 0;
   const pptx = path.join(outDir, `${deckId}.pptx`);
   const pdf = path.join(outDir, `${deckId}.pdf`);
@@ -74,21 +85,13 @@ async function main() {
     const report = inspectPptx(readFileSync(pptx), {
       pdf: formats.includes('pdf') && existsSync(pdf) ? readFileSync(pdf) : undefined,
     });
-    process.stdout.write(
-      `pptx-check: ${report.slideCount} slides, ${report.notesCount} with notes` +
-        (report.pdfPages !== null ? `, PDF ${report.pdfPages} pages` : '') +
-        '\n',
-    );
-    for (const error of report.errors) process.stdout.write(`error    ${error}\n`);
-    for (const warning of report.warnings) process.stdout.write(`warning  ${warning}\n`);
+    process.stdout.write(formatReport(report, 'pptx-check'));
     pptxErrors = report.errors.length;
   }
   process.stdout.write(
     `Manual checks remain: see adapters/${engine}/qa.md (visual parity, PowerPoint inspection).\n`,
   );
-  if (results.some((result) => !result.ok)) {
-    throw new Error('Export integrity check failed');
-  }
+  if (!exportsOk) throw new Error('Export integrity check failed');
   if (pptxErrors > 0) throw new Error(`pptx-check found ${pptxErrors} error(s)`);
 }
 

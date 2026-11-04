@@ -19,7 +19,9 @@ values inside each range but never go below a floor.
 - Text under the body floor is allowed only for captions, axis labels, and
   source lines. Text under the hard floor is a defect.
 - `scripts/pptx-check.mjs` enforces both floors on exported `.pptx` files
-  (error below the hard floor, warning below the body floor).
+  (error below the hard floor, warning below the body floor), with half a
+  pixel of tolerance so the rounded values in this table pass. Slide numbers,
+  dates, and footers are not checked.
 - CJK text: use the upper half of the body range. CJK glyphs carry more detail
   per character and need the extra size at projector distance.
 - Line length: at most about 60 Latin characters or 28 CJK characters per line

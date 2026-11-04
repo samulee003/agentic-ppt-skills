@@ -18,6 +18,10 @@ import { inflateRawSync, inflateSync } from 'node:zlib';
 // 22px = 2.0%. See references/typography.md.
 export const BODY_FLOOR = 0.026;
 export const HARD_FLOOR = 0.02;
+// typography.md rounds each floor to a whole or half point/pixel (14 pt on a
+// 540 pt slide, 8 pt on a 405 pt slide), so text at a documented floor can sit
+// a hair under the exact ratio. Allow half a pixel at 1080 px.
+export const FLOOR_TOLERANCE = 0.0005;
 export const DENSITY_WORDS = 70;
 export const DENSITY_CJK = 120;
 
@@ -108,25 +112,41 @@ export function countWords(text) {
 }
 
 const PAGE_OBJECT = /\/Type\s*\/Page(?![s\w])/g;
+const DICT = /<<((?:(?!<<|>>)[\s\S])*?)>>/g;
 
-export function countPdfPages(buffer) {
+function pdfBodies(buffer) {
   const raw = buffer.toString('latin1');
-  let pages = raw.match(PAGE_OBJECT)?.length ?? 0;
-  // Page objects can sit inside compressed object streams (PDF 1.5+).
+  const bodies = [raw];
+  // Objects can sit inside compressed object streams (PDF 1.5+).
   for (const match of raw.matchAll(/\/Type\s*\/ObjStm\b[^]*?stream\r?\n/g)) {
     const start = match.index + match[0].length;
     const end = raw.indexOf('endstream', start);
     if (end < 0) continue;
     try {
-      const inflated = inflateSync(buffer.subarray(start, end)).toString('latin1');
-      pages += inflated.match(PAGE_OBJECT)?.length ?? 0;
+      bodies.push(inflateSync(buffer.subarray(start, end)).toString('latin1'));
     } catch {
-      // Not a Flate stream; the /Count fallback below still applies.
+      // Not a Flate stream; skip it.
     }
   }
-  if (pages > 0) return pages;
-  const counts = [...raw.matchAll(/\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)/g)].map((m) => Number(m[1]));
-  return counts.length ? Math.max(...counts) : null;
+  return bodies;
+}
+
+export function countPdfPages(buffer) {
+  const bodies = pdfBodies(buffer);
+  // Prefer the page tree's /Count: the root /Pages node holds the largest one.
+  // Counting /Type /Page objects overcounts files with incremental updates or
+  // orphaned pages, so it is only the fallback.
+  const counts = [];
+  for (const body of bodies) {
+    for (const dict of body.matchAll(DICT)) {
+      if (!/\/Type\s*\/Pages\b/.test(dict[1])) continue;
+      const count = dict[1].match(/\/Count\s+(\d+)/);
+      if (count) counts.push(Number(count[1]));
+    }
+  }
+  if (counts.length) return Math.max(...counts);
+  const pages = bodies.reduce((sum, body) => sum + (body.match(PAGE_OBJECT)?.length ?? 0), 0);
+  return pages > 0 ? pages : null;
 }
 
 export function inspectPptx(buffer, options = {}) {
@@ -160,7 +180,12 @@ export function inspectPptx(buffer, options = {}) {
     const slideTexts = texts(xml);
     const allText = slideTexts.join(' ').trim();
     const words = countWords(allText);
-    const sizes = [...xml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t>([^<]*)<\/a:t>/g)]
+    // Slide numbers, dates, and footers are utility text, not content: skip
+    // text fields and footer placeholders when checking the type floors.
+    const contentXml = xml
+      .replace(/<a:fld\b[\s\S]*?<\/a:fld>/g, '')
+      .replace(/<p:sp\b(?:(?!<\/p:sp>)[\s\S])*?<p:ph\b[^>]*type="(?:sldNum|dt|ftr|hdr)"[\s\S]*?<\/p:sp>/g, '');
+    const sizes = [...contentXml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t>([^<]*)<\/a:t>/g)]
       .filter((match) => match[2].trim() !== '')
       .map((match) => Number(match[1]) / 100);
     const minPt = sizes.length ? Math.min(...sizes) : null;
@@ -196,11 +221,11 @@ export function inspectPptx(buffer, options = {}) {
     if (requireNotes && !slide.hasNotes) errors.push(`Slide ${number}: no speaker notes`);
     if (minPt !== null && heightPt) {
       const ratio = minPt / heightPt;
-      if (ratio < HARD_FLOOR) {
+      if (ratio < HARD_FLOOR - FLOOR_TOLERANCE) {
         errors.push(
           `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height (hard floor ${HARD_FLOOR * 100}%)`,
         );
-      } else if (ratio < BODY_FLOOR) {
+      } else if (ratio < BODY_FLOOR - FLOOR_TOLERANCE) {
         warnings.push(
           `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height; keep it to captions or labels (body floor ${BODY_FLOOR * 100}%)`,
         );
@@ -241,6 +266,17 @@ export function inspectPptx(buffer, options = {}) {
   };
 }
 
+export function formatReport(report, label = 'pptx-check') {
+  const lines = [
+    `${label}: ${report.slideCount} slides, ${report.notesCount} with notes` +
+      (report.pdfPages !== null ? `, PDF ${report.pdfPages} pages` : ''),
+    ...report.errors.map((error) => `error    ${error}`),
+    ...report.warnings.map((warning) => `warning  ${warning}`),
+  ];
+  if (report.errors.length === 0) lines.push('pptx-check: no errors');
+  return `${lines.join('\n')}\n`;
+}
+
 function main(argv) {
   const files = argv.filter((arg) => !arg.startsWith('--'));
   const pdfFlag = argv.find((arg) => arg.startsWith('--pdf='));
@@ -259,14 +295,7 @@ function main(argv) {
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {
-    process.stdout.write(
-      `${files[0]}: ${report.slideCount} slides, ${report.notesCount} with notes` +
-        (report.pdfPages !== null ? `, PDF ${report.pdfPages} pages` : '') +
-        '\n',
-    );
-    for (const error of report.errors) process.stdout.write(`error    ${error}\n`);
-    for (const warning of report.warnings) process.stdout.write(`warning  ${warning}\n`);
-    if (report.errors.length === 0) process.stdout.write('pptx-check: no errors\n');
+    process.stdout.write(formatReport(report, files[0]));
   }
   if (report.errors.length > 0) process.exitCode = 1;
 }

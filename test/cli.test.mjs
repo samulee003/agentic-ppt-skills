@@ -171,3 +171,63 @@ test('qa-deck runs pptx-check on existing exports', async () => {
     },
   );
 });
+
+
+test('options that need a value reject a bare flag', async () => {
+  await withDeck({ 'slides/demo.md': '# Demo\n' }, async (root) => {
+    await assert.rejects(run(exportScript, root, 'demo', '--format', '--dry-run'), (err) => {
+      assert.match(err.stderr, /Option "--format" needs a value/);
+      return true;
+    });
+    await assert.rejects(run(qaScript, root, 'demo', '--dry-run=yes'), (err) => {
+      assert.match(err.stderr, /Option "--dry-run" takes no value/);
+      return true;
+    });
+  });
+});
+
+test('pptxgenjs build receives --out-dir as DECK_OUT_DIR', async () => {
+  const build = [
+    "import { writeFileSync, mkdirSync } from 'node:fs';",
+    "import path from 'node:path';",
+    'mkdirSync(process.env.DECK_OUT_DIR, { recursive: true });',
+    "writeFileSync(path.join(process.env.DECK_OUT_DIR, 'demo.pptx'), 'pptx');",
+  ].join('\n');
+  await withDeck({ 'slides/demo/build.mjs': build }, async (root) => {
+    const { stdout } = await run(exportScript, root, 'demo', '--format=pptx', '--out-dir=dist');
+    assert.match(stdout, /ok {6}.*dist\/demo\.pptx/);
+  });
+});
+
+test('pptxgenjs QA treats a missing PDF as optional by default', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const exportsDir = path.resolve(
+    new URL('../examples/agentic-coding-anatomy-pptxgenjs/exports', import.meta.url).pathname,
+  );
+  await withDeck(
+    {
+      'slides/agentic-coding-anatomy/build.mjs': '',
+      'exports/agentic-coding-anatomy.pptx': await readFile(
+        path.join(exportsDir, 'agentic-coding-anatomy.pptx'),
+      ),
+    },
+    async (root) => {
+      const { stdout } = await run(qaScript, root, 'agentic-coding-anatomy');
+      assert.match(stdout, /skipped .*agentic-coding-anatomy\.pdf \(missing; optional/);
+      await assert.rejects(run(qaScript, root, 'agentic-coding-anatomy', '--format=pdf,pptx'));
+    },
+  );
+});
+
+test('an HTML export may be a folder with index.html', async () => {
+  const { checkExports, expectedExports } = await import(
+    '../skills/make-presentation/scripts/deck-engines.mjs'
+  );
+  await withDeck({ 'out/demo/index.html': '<html></html>' }, async (root) => {
+    const [result] = checkExports(
+      expectedExports({ deckId: 'demo', formats: ['html'], outDir: path.join(root, 'out') }),
+    );
+    assert.equal(result.ok, true);
+    assert.match(result.file, /demo\/index\.html$/);
+  });
+});

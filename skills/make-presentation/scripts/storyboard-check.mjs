@@ -65,10 +65,17 @@ export function briefMinutes(brief) {
   const line = brief.split(/\r?\n/).find((l) => /^\s*-\s*Time\b/i.test(l));
   if (!line) return null;
   const value = line.slice(line.indexOf(':') + 1);
-  const match = value.match(/(\d+(?:\.\d+)?)\s*(?:min|minutes|分鐘|分钟|分|m\b)/i);
-  if (match) return Number(match[1]);
-  const hours = value.match(/(\d+(?:\.\d+)?)\s*(?:h|hr|hours|小時|小时)/i);
-  return hours ? Number(hours[1]) * 60 : null;
+  const MINUTES = String.raw`(?:minutes?|mins?|m\b|分鐘|分钟|分)`;
+  const hours = value.match(
+    new RegExp(String.raw`(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h\b|小時|小时)\s*(?:(\d+(?:\.\d+)?)\s*${MINUTES})?`, 'i'),
+  );
+  const minutes = value.match(new RegExp(String.raw`(\d+(?:\.\d+)?)\s*${MINUTES}`, 'i'));
+  // "1 hour 30 min" → 90; a lone hour count wins only if it comes first
+  // ("1 h talk, 10 min Q&A" → 60).
+  if (hours && (!minutes || hours.index <= minutes.index)) {
+    return Number(hours[1]) * 60 + (hours[2] ? Number(hours[2]) : 0);
+  }
+  return minutes ? Number(minutes[1]) : null;
 }
 
 function column(header, ...names) {

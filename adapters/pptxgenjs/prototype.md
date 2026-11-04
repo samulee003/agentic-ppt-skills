@@ -20,6 +20,7 @@ npm install pptxgenjs
 - The script imports PptxGenJS, configures the 16:9 layout, adds slides, and writes the file. Nothing else lives in the folder except `package.json` and `node_modules`.
 
 ```javascript
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pptxgen from 'pptxgenjs';
 
@@ -35,11 +36,11 @@ slide.addText('The Big Idea', {
 });
 slide.addNotes('Speaker notes for this slide.');
 
-// Resolve from this file, not the shell's cwd, so `node slides/<deck-id>/build.mjs`
-// and export-deck.mjs both write exports/<deck-id>.pptx at the workspace root.
-await pres.writeFile({
-  fileName: fileURLToPath(new URL('../../exports/<deck-id>.pptx', import.meta.url)),
-});
+// export-deck.mjs passes --out-dir as DECK_OUT_DIR. The fallback resolves from
+// this file, not the shell's cwd, so a plain `node slides/<deck-id>/build.mjs`
+// writes exports/<deck-id>.pptx at the workspace root.
+const outDir = process.env.DECK_OUT_DIR ?? fileURLToPath(new URL('../../exports/', import.meta.url));
+await pres.writeFile({ fileName: path.join(outDir, '<deck-id>.pptx') });
 ```
 
 - One `addSlide()` call per page, in order.

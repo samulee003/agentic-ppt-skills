@@ -13,17 +13,18 @@ import {
   hasBinary,
   parseFlags,
   planExport,
-  resolveFormats,
+  printExportResults,
+  resolveRequest,
   runStep,
 } from './deck-engines.mjs';
 
 const USAGE =
-  'Usage: export-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<pdf,pptx,html|all>] [--out-dir=<dir>] [--dry-run]\n';
+  'Usage: export-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<auto|pdf,pptx,html|all>] [--out-dir=<dir>] [--dry-run]\n';
 
 async function main() {
   const { deckId, flags } = parseFlags(process.argv.slice(2), {
     engine: 'auto',
-    format: 'pdf,pptx',
+    format: 'auto',
     outDir: 'exports',
     dryRun: false,
   });
@@ -34,7 +35,7 @@ async function main() {
 
   const cwd = process.cwd();
   const engine = detectEngine(cwd, deckId, flags.engine);
-  const formats = resolveFormats(engine, flags.format);
+  const { formats, optional } = resolveRequest(engine, flags.format);
   const outDir = path.resolve(cwd, flags.outDir);
   const steps = planExport({ cwd, deckId, engine, formats, outDir });
 
@@ -45,30 +46,33 @@ async function main() {
     return;
   }
 
+  const skipped = [];
   for (const step of steps) {
     if (step.requiresBinary && !hasBinary(step.cmd)) {
       const fallback = step.cmd === 'soffice' && hasBinary('libreoffice') ? 'libreoffice' : null;
-      if (!fallback) {
+      if (fallback) {
+        step.cmd = fallback;
+      } else if (optional.includes('pdf')) {
+        process.stdout.write(
+          `skip    ${step.label}: "${step.cmd}" is not installed. PptxGenJS writes PPTX only; tell the user the PDF was not produced.\n`,
+        );
+        skipped.push('pdf');
+        continue;
+      } else {
         throw new Error(
           `${step.label}: "${step.cmd}" is not installed. PptxGenJS writes PPTX only; install LibreOffice or export with --format=pptx. Do not fabricate a PDF.`,
         );
       }
-      step.cmd = fallback;
     }
     process.stdout.write(`$ ${formatStep(step)}\n`);
     await runStep(step, cwd);
   }
 
-  // open-slide writes into --out-dir itself; every engine must leave the files there.
-  const results = checkExports(expectedExports({ deckId, formats, outDir }));
-  for (const result of results) {
-    process.stdout.write(
-      result.ok
-        ? `ok      ${result.file} (${result.size} bytes)\n`
-        : `FAILED  ${result.file} (${result.problem})\n`,
-    );
-  }
-  if (results.some((result) => !result.ok)) {
+  // Every engine must leave its files in --out-dir.
+  const results = checkExports(
+    expectedExports({ deckId, formats, outDir, optional: [...optional, ...skipped] }),
+  );
+  if (!printExportResults(results)) {
     throw new Error('One or more expected export files are missing or empty');
   }
 }
