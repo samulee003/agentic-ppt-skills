@@ -1,0 +1,165 @@
+import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { promisify } from 'node:util';
+import { countPdfPages, countWords, inspectPptx } from '../skills/make-presentation/scripts/pptx-check.mjs';
+
+const execFileAsync = promisify(execFile);
+const repo = path.resolve(new URL('..', import.meta.url).pathname);
+const script = path.join(repo, 'skills/make-presentation/scripts/pptx-check.mjs');
+const example = (engine, ext) =>
+  path.join(repo, `examples/agentic-coding-anatomy-${engine}/exports/agentic-coding-anatomy.${ext}`);
+
+// Minimal stored (uncompressed) zip writer for synthetic decks.
+function crc32(buffer) {
+  let crc = ~0;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let k = 0; k < 8; k += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return ~crc >>> 0;
+}
+
+function zip(files) {
+  const locals = [];
+  const centrals = [];
+  let offset = 0;
+  for (const [name, content] of Object.entries(files)) {
+    const data = Buffer.from(content);
+    const nameBuf = Buffer.from(name);
+    const crc = crc32(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBuf.length, 26);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(nameBuf.length, 28);
+    central.writeUInt32LE(offset, 42);
+    locals.push(local, nameBuf, data);
+    centrals.push(central, nameBuf);
+    offset += 30 + nameBuf.length + data.length;
+  }
+  const centralBuf = Buffer.concat(centrals);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(Object.keys(files).length, 8);
+  end.writeUInt16LE(Object.keys(files).length, 10);
+  end.writeUInt32LE(centralBuf.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, centralBuf, end]);
+}
+
+const NS = 'xmlns:a="a" xmlns:p="p" xmlns:r="r"';
+function slideXml(runs, pic = '') {
+  const body = runs
+    .map(([sz, text]) => `<a:r><a:rPr lang="en-US" sz="${sz}"/><a:t>${text}</a:t></a:r>`)
+    .join('');
+  return `<p:sld ${NS}><p:cSld><p:spTree><p:sp><p:txBody><a:p>${body}</a:p></p:txBody></p:sp>${pic}</p:spTree></p:cSld></p:sld>`;
+}
+
+function deck(slides, { cy = 6858000 } = {}) {
+  const files = {
+    'ppt/presentation.xml': `<p:presentation ${NS}><p:sldIdLst>${slides
+      .map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 1}"/>`)
+      .join('')}</p:sldIdLst><p:sldSz cx="12192000" cy="${cy}"/></p:presentation>`,
+    'ppt/_rels/presentation.xml.rels': `<Relationships>${slides
+      .map((_, i) => `<Relationship Id="rId${i + 1}" Type="x/slide" Target="slides/slide${i + 1}.xml"/>`)
+      .join('')}</Relationships>`,
+  };
+  slides.forEach((slide, i) => {
+    const n = i + 1;
+    files[`ppt/slides/slide${n}.xml`] = slide.xml;
+    if (slide.notes !== undefined) {
+      files[`ppt/slides/_rels/slide${n}.xml.rels`] =
+        `<Relationships><Relationship Id="rId9" Type="x/notesSlide" Target="../notesSlides/notesSlide${n}.xml"/></Relationships>`;
+      files[`ppt/notesSlides/notesSlide${n}.xml`] =
+        `<p:notes ${NS}><p:sp><p:nvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr></p:sp><p:sp><p:txBody><a:p><a:r><a:t>${slide.notes}</a:t></a:r></a:p></p:txBody></p:sp></p:notes>`;
+    }
+  });
+  return zip(files);
+}
+
+test('example decks pass with slide, note, and PDF parity', async () => {
+  const pptxgen = inspectPptx(await readFile(example('pptxgenjs', 'pptx')), {
+    pdf: await readFile(example('pptxgenjs', 'pdf')),
+  });
+  assert.deepEqual(pptxgen.errors, []);
+  assert.equal(pptxgen.slideCount, 5);
+  assert.equal(pptxgen.notesCount, 5);
+  assert.equal(pptxgen.pdfPages, 5);
+
+  const marp = inspectPptx(await readFile(example('marp', 'pptx')), {
+    pdf: await readFile(example('marp', 'pdf')),
+  });
+  assert.deepEqual(marp.errors, []);
+  assert.equal(marp.pdfPages, 5, 'pages inside compressed object streams are counted');
+  assert.ok(marp.slides.every((slide) => slide.imageOnly));
+  assert.ok(marp.warnings.some((warning) => /image-only/.test(warning)));
+});
+
+test('missing notes, sub-floor text, and PDF mismatch are errors', () => {
+  const buffer = deck([
+    { xml: slideXml([[4400, 'Churn rose because of pricing']]), notes: 'Say why.' },
+    { xml: slideXml([[1000, 'tiny footnote']]) },
+  ]);
+  const report = inspectPptx(buffer, { pdf: Buffer.from('/Type /Page /Type /Page /Type /Page') });
+  assert.equal(report.slideCount, 2);
+  assert.ok(report.errors.some((e) => /Slide 2: no speaker notes/.test(e)));
+  assert.ok(report.errors.some((e) => /Slide 2: 10pt text .*hard floor/.test(e)));
+  assert.ok(report.errors.some((e) => /PDF has 3 page\(s\) but the PPTX has 2/.test(e)));
+  assert.ok(!report.errors.some((e) => /Slide 1/.test(e)));
+});
+
+test('caption-size text, missing alt text, and dense slides are warnings', () => {
+  const pic = '<p:pic><p:nvPicPr><p:cNvPr id="4" name="Picture"/></p:nvPicPr></p:pic>';
+  const words = Array.from({ length: 80 }, (_, i) => `word${i}`).join(' ');
+  const report = inspectPptx(
+    deck([{ xml: slideXml([[1200, 'label'], [2800, words]], pic), notes: 'ok' }]),
+  );
+  assert.deepEqual(report.errors, []);
+  assert.ok(report.warnings.some((w) => /12pt text .*body floor/.test(w)));
+  assert.ok(report.warnings.some((w) => /1 picture\(s\) without alt text/.test(w)));
+  assert.ok(report.warnings.some((w) => /dense text \(81 words/.test(w)));
+});
+
+test('--no-notes skips the notes requirement; 4:3 decks warn', () => {
+  const report = inspectPptx(deck([{ xml: slideXml([[3200, 'Hello']]) }], { cy: 9144000 }), {
+    requireNotes: false,
+  });
+  assert.deepEqual(report.errors, []);
+  assert.ok(report.warnings.some((w) => /not 16:9/.test(w)));
+});
+
+test('word counting separates CJK characters from Latin words', () => {
+  assert.deepEqual(countWords('流失率上升 because pricing'), { cjk: 5, latin: 2 });
+  assert.equal(countPdfPages(Buffer.from('nothing here')), null);
+});
+
+test('CLI exits 1 on errors and prints JSON on request', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'pptx-check-'));
+  try {
+    const file = path.join(dir, 'bad.pptx');
+    await writeFile(file, deck([{ xml: slideXml([[3200, 'No notes here']]) }]));
+    await assert.rejects(execFileAsync(process.execPath, [script, file]), (err) => {
+      assert.equal(err.code, 1);
+      assert.match(err.stdout, /error {4}Slide 1: no speaker notes/);
+      return true;
+    });
+    const { stdout } = await execFileAsync(process.execPath, [script, file, '--no-notes', '--json']);
+    assert.equal(JSON.parse(stdout).slideCount, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

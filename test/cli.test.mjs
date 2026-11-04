@@ -149,3 +149,25 @@ test('qa-deck fails when expected exports are missing', async () => {
     });
   });
 });
+
+test('qa-deck runs pptx-check on existing exports', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const exportsDir = path.resolve(
+    new URL('../examples/agentic-coding-anatomy-pptxgenjs/exports', import.meta.url).pathname,
+  );
+  await withDeck(
+    {
+      'slides/agentic-coding-anatomy/build.mjs': '',
+      'exports/agentic-coding-anatomy.pptx': await readFile(
+        path.join(exportsDir, 'agentic-coding-anatomy.pptx'),
+      ),
+      'exports/agentic-coding-anatomy.pdf': await readFile(
+        path.join(exportsDir, 'agentic-coding-anatomy.pdf'),
+      ),
+    },
+    async (root) => {
+      const { stdout } = await run(qaScript, root, 'agentic-coding-anatomy');
+      assert.match(stdout, /pptx-check: 5 slides, 5 with notes, PDF 5 pages/);
+    },
+  );
+});

@@ -1,0 +1,280 @@
+#!/usr/bin/env node
+// Engine-agnostic, zero-dependency inspection of an exported .pptx (and
+// optionally its companion .pdf). It checks what every engine must get right:
+//   - slide count, 16:9 geometry, and slide/speaker-note parity
+//   - explicit font sizes against the projector floor (relative to slide height)
+//   - pictures without alt text
+//   - text density per slide and image-only (non-editable) slides
+//   - PDF page count matching the slide count
+// Usage: pptx-check.mjs <deck.pptx> [--pdf=<deck.pdf>] [--no-notes] [--json]
+// Exit code 1 when any error is found; warnings never fail the run.
+
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { inflateRawSync, inflateSync } from 'node:zlib';
+
+// Floors as a fraction of slide height. 28px on a 1080px canvas = 2.6%;
+// 22px = 2.0%. See references/typography.md.
+export const BODY_FLOOR = 0.026;
+export const HARD_FLOOR = 0.02;
+export const DENSITY_WORDS = 70;
+export const DENSITY_CJK = 120;
+
+export function readZip(buffer) {
+  let eocd = -1;
+  for (let i = buffer.length - 22; i >= Math.max(0, buffer.length - 65557); i -= 1) {
+    if (buffer.readUInt32LE(i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) throw new Error('Not a zip archive (no end-of-central-directory record)');
+  const count = buffer.readUInt16LE(eocd + 10);
+  let offset = buffer.readUInt32LE(eocd + 16);
+  const entries = new Map();
+  for (let n = 0; n < count; n += 1) {
+    if (buffer.readUInt32LE(offset) !== 0x02014b50) throw new Error('Corrupt zip central directory');
+    const method = buffer.readUInt16LE(offset + 10);
+    const compressedSize = buffer.readUInt32LE(offset + 20);
+    const nameLength = buffer.readUInt16LE(offset + 28);
+    const extraLength = buffer.readUInt16LE(offset + 30);
+    const commentLength = buffer.readUInt16LE(offset + 32);
+    const localOffset = buffer.readUInt32LE(offset + 42);
+    const name = buffer.toString('utf8', offset + 46, offset + 46 + nameLength);
+    entries.set(name, { method, compressedSize, localOffset });
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  return {
+    names: [...entries.keys()],
+    has: (name) => entries.has(name),
+    read(name) {
+      const entry = entries.get(name);
+      if (!entry) return null;
+      const local = entry.localOffset;
+      if (buffer.readUInt32LE(local) !== 0x04034b50) throw new Error(`Corrupt zip entry ${name}`);
+      const start = local + 30 + buffer.readUInt16LE(local + 26) + buffer.readUInt16LE(local + 28);
+      const data = buffer.subarray(start, start + entry.compressedSize);
+      if (entry.method === 0) return data.toString('utf8');
+      if (entry.method === 8) return inflateRawSync(data).toString('utf8');
+      throw new Error(`Unsupported zip compression method ${entry.method} for ${name}`);
+    },
+  };
+}
+
+function decodeXml(text) {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&amp;/g, '&');
+}
+
+function texts(xml) {
+  return [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => decodeXml(match[1]));
+}
+
+function relsFor(zip, part) {
+  const relsPath = path.posix.join(
+    path.posix.dirname(part),
+    '_rels',
+    `${path.posix.basename(part)}.rels`,
+  );
+  const xml = zip.read(relsPath) ?? '';
+  const rels = new Map();
+  for (const match of xml.matchAll(/<Relationship\b([^>]*)\/?>/g)) {
+    const attrs = match[1];
+    const id = attrs.match(/\bId="([^"]+)"/)?.[1];
+    const type = attrs.match(/\bType="([^"]+)"/)?.[1] ?? '';
+    const target = attrs.match(/\bTarget="([^"]+)"/)?.[1];
+    if (!id || !target) continue;
+    const resolved = target.startsWith('/')
+      ? target.slice(1)
+      : path.posix.normalize(path.posix.join(path.posix.dirname(part), target));
+    rels.set(id, { type, target: resolved });
+  }
+  return rels;
+}
+
+export function countWords(text) {
+  const cjk = (text.match(/[぀-ヿ㐀-鿿豈-﫿가-힯]/g) ?? []).length;
+  const latin = (
+    text.replace(/[぀-ヿ㐀-鿿豈-﫿가-힯]/g, ' ').match(/[\p{L}\p{N}]+/gu) ??
+    []
+  ).length;
+  return { cjk, latin };
+}
+
+const PAGE_OBJECT = /\/Type\s*\/Page(?![s\w])/g;
+
+export function countPdfPages(buffer) {
+  const raw = buffer.toString('latin1');
+  let pages = raw.match(PAGE_OBJECT)?.length ?? 0;
+  // Page objects can sit inside compressed object streams (PDF 1.5+).
+  for (const match of raw.matchAll(/\/Type\s*\/ObjStm\b[^]*?stream\r?\n/g)) {
+    const start = match.index + match[0].length;
+    const end = raw.indexOf('endstream', start);
+    if (end < 0) continue;
+    try {
+      const inflated = inflateSync(buffer.subarray(start, end)).toString('latin1');
+      pages += inflated.match(PAGE_OBJECT)?.length ?? 0;
+    } catch {
+      // Not a Flate stream; the /Count fallback below still applies.
+    }
+  }
+  if (pages > 0) return pages;
+  const counts = [...raw.matchAll(/\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)/g)].map((m) => Number(m[1]));
+  return counts.length ? Math.max(...counts) : null;
+}
+
+export function inspectPptx(buffer, options = {}) {
+  const requireNotes = options.requireNotes ?? true;
+  const zip = readZip(buffer);
+  const presentation = zip.read('ppt/presentation.xml');
+  if (!presentation) throw new Error('Not a PowerPoint file (ppt/presentation.xml missing)');
+
+  const size = presentation.match(/<p:sldSz\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
+  const cx = size ? Number(size[1]) : null;
+  const cy = size ? Number(size[2]) : null;
+  const heightPt = cy ? cy / 12700 : null;
+
+  const presRels = relsFor(zip, 'ppt/presentation.xml');
+  const slideParts = [...presentation.matchAll(/<p:sldId\b[^>]*\br:id="([^"]+)"/g)]
+    .map((match) => presRels.get(match[1])?.target)
+    .filter(Boolean);
+
+  const errors = [];
+  const warnings = [];
+  const slides = [];
+
+  if (slideParts.length === 0) errors.push('The deck has no slides');
+  if (cx && cy && Math.abs(cx / cy - 16 / 9) > 0.01) {
+    warnings.push(`Slide size is ${(cx / cy).toFixed(3)}:1, not 16:9`);
+  }
+
+  slideParts.forEach((part, index) => {
+    const number = index + 1;
+    const xml = zip.read(part) ?? '';
+    const slideTexts = texts(xml);
+    const allText = slideTexts.join(' ').trim();
+    const words = countWords(allText);
+    const sizes = [...xml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t>([^<]*)<\/a:t>/g)]
+      .filter((match) => match[2].trim() !== '')
+      .map((match) => Number(match[1]) / 100);
+    const minPt = sizes.length ? Math.min(...sizes) : null;
+    const pictures = [...xml.matchAll(/<p:pic\b[\s\S]*?<\/p:pic>/g)];
+    const missingAlt = pictures.filter((pic) => {
+      const descr = pic[0].match(/<p:cNvPr\b[^>]*\bdescr="([^"]*)"/)?.[1];
+      return !descr || !descr.trim();
+    }).length;
+
+    const rels = relsFor(zip, part);
+    const notesPart = [...rels.values()].find((rel) => rel.type.endsWith('/notesSlide'))?.target;
+    let notes = '';
+    if (notesPart) {
+      const notesXml = zip.read(notesPart) ?? '';
+      const body = [...notesXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)]
+        .map((shape) => shape[0])
+        .filter((shape) => !/<p:ph\b[^>]*type="(?:sldImg|sldNum|hdr|ftr|dt)"/.test(shape));
+      notes = body.flatMap(texts).join(' ').trim();
+    }
+
+    const slide = {
+      number,
+      words: words.latin,
+      cjk: words.cjk,
+      minFontPt: minPt,
+      pictures: pictures.length,
+      missingAlt,
+      hasNotes: notes.length > 0,
+      imageOnly: allText === '' && (pictures.length > 0 || /<p:bg>[\s\S]*?<a:blip\b/.test(xml)),
+    };
+    slides.push(slide);
+
+    if (requireNotes && !slide.hasNotes) errors.push(`Slide ${number}: no speaker notes`);
+    if (minPt !== null && heightPt) {
+      const ratio = minPt / heightPt;
+      if (ratio < HARD_FLOOR) {
+        errors.push(
+          `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height (hard floor ${HARD_FLOOR * 100}%)`,
+        );
+      } else if (ratio < BODY_FLOOR) {
+        warnings.push(
+          `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height; keep it to captions or labels (body floor ${BODY_FLOOR * 100}%)`,
+        );
+      }
+    }
+    if (missingAlt > 0) warnings.push(`Slide ${number}: ${missingAlt} picture(s) without alt text`);
+    if (words.latin > DENSITY_WORDS || words.cjk > DENSITY_CJK) {
+      warnings.push(
+        `Slide ${number}: dense text (${words.latin} words, ${words.cjk} CJK characters); split the slide or move detail to notes`,
+      );
+    }
+  });
+
+  const imageOnly = slides.filter((slide) => slide.imageOnly).length;
+  if (imageOnly > 0) {
+    warnings.push(
+      `${imageOnly} of ${slides.length} slide(s) are image-only: text is not editable in PowerPoint and not readable by screen readers`,
+    );
+  }
+
+  let pdfPages;
+  if (options.pdf) {
+    pdfPages = countPdfPages(options.pdf);
+    if (pdfPages === null) warnings.push('Could not determine the PDF page count; check it by hand');
+    else if (pdfPages !== slides.length) {
+      errors.push(`PDF has ${pdfPages} page(s) but the PPTX has ${slides.length} slide(s)`);
+    }
+  }
+
+  return {
+    slideCount: slides.length,
+    notesCount: slides.filter((slide) => slide.hasNotes).length,
+    pdfPages: pdfPages ?? null,
+    slideSize: cx && cy ? { widthIn: cx / 914400, heightIn: cy / 914400 } : null,
+    slides,
+    errors,
+    warnings,
+  };
+}
+
+function main(argv) {
+  const files = argv.filter((arg) => !arg.startsWith('--'));
+  const pdfFlag = argv.find((arg) => arg.startsWith('--pdf='));
+  const unknown = argv.filter(
+    (arg) => arg.startsWith('--') && !['--json', '--no-notes'].includes(arg) && arg !== pdfFlag,
+  );
+  if (files.length !== 1 || unknown.length > 0) {
+    process.stderr.write('Usage: pptx-check.mjs <deck.pptx> [--pdf=<deck.pdf>] [--no-notes] [--json]\n');
+    process.exit(1);
+  }
+  const report = inspectPptx(readFileSync(files[0]), {
+    requireNotes: !argv.includes('--no-notes'),
+    pdf: pdfFlag ? readFileSync(pdfFlag.slice('--pdf='.length)) : undefined,
+  });
+
+  if (argv.includes('--json')) {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  } else {
+    process.stdout.write(
+      `${files[0]}: ${report.slideCount} slides, ${report.notesCount} with notes` +
+        (report.pdfPages !== null ? `, PDF ${report.pdfPages} pages` : '') +
+        '\n',
+    );
+    for (const error of report.errors) process.stdout.write(`error    ${error}\n`);
+    for (const warning of report.warnings) process.stdout.write(`warning  ${warning}\n`);
+    if (report.errors.length === 0) process.stdout.write('pptx-check: no errors\n');
+  }
+  if (report.errors.length > 0) process.exitCode = 1;
+}
+
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('pptx-check.mjs')) {
+  try {
+    main(process.argv.slice(2));
+  } catch (error) {
+    process.stderr.write(`pptx-check error: ${error instanceof Error ? error.message : error}\n`);
+    process.exit(1);
+  }
+}
