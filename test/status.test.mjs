@@ -118,3 +118,27 @@ test('passed results require an artifact and invalid result names fail', async (
     );
   });
 });
+
+test('fast-track consolidates paired gates; general mode does not', async () => {
+  await withWorkspace(async (root) => {
+    await runStatus(root, 'init', 'demo-deck', './notes', 'fast-track', 'Sprint review');
+    await runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief',
+      '--artifact', 'PRESENTATION-BRIEF.md');
+    assert.equal((await runStatus(root, 'next')).stdout.trim(), 'evidence');
+
+    await runStatus(root, 'result', 'evidence', 'passed', 'Top metrics', '--artifact', 'EVIDENCE-LEDGER.md');
+    await runStatus(root, 'result', 'story-architecture', 'passed', 'Story + opposition',
+      '--artifact', 'STORY.md');
+    assert.equal((await runStatus(root, 'next')).stdout.trim(), 'deck-prototype');
+
+    const status = await readFile(path.join(root, 'STATUS.md'), 'utf8');
+    assert.match(status, /fast-track: consolidated with story-architecture/);
+  });
+
+  await withWorkspace(async (root) => {
+    await runStatus(root, 'init', 'demo-deck', './notes');
+    await runStatus(root, 'result', 'source-intake', 'passed', 'Inventory',
+      '--artifact', 'SOURCE-INVENTORY.md');
+    assert.equal((await runStatus(root, 'next')).stdout.trim(), 'product-grill');
+  });
+});

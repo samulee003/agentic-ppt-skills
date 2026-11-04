@@ -20,6 +20,7 @@ npm install pptxgenjs
 - The script imports PptxGenJS, configures the 16:9 layout, adds slides, and writes the file. Nothing else lives in the folder except `package.json` and `node_modules`.
 
 ```javascript
+import { fileURLToPath } from 'node:url';
 import pptxgen from 'pptxgenjs';
 
 const pres = new pptxgen();
@@ -34,7 +35,11 @@ slide.addText('The Big Idea', {
 });
 slide.addNotes('Speaker notes for this slide.');
 
-await pres.writeFile({ fileName: '../../exports/<deck-id>.pptx' });
+// Resolve from this file, not the shell's cwd, so `node slides/<deck-id>/build.mjs`
+// and export-deck.mjs both write exports/<deck-id>.pptx at the workspace root.
+await pres.writeFile({
+  fileName: fileURLToPath(new URL('../../exports/<deck-id>.pptx', import.meta.url)),
+});
 ```
 
 - One `addSlide()` call per page, in order.

@@ -10,7 +10,7 @@ into a finished, stage-ready presentation.
 The repository provides an eight-gate workflow:
 
 ```text
-source → product → evidence → story → prototype → stage → delivery
+source → product → evidence → story → story review → prototype → stage → delivery
 ```
 
 Each gate has one focused skill and a named deliverable:
@@ -34,11 +34,34 @@ creating, reading, auditing, rendering, and converting local Office files.
 Shared practices in `skills/make-presentation/references/` are adapted from
 [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT): sharpen and
 playback, unslop copy checks (`scripts/unslop-check.mjs`), review buckets,
-prototype arena, and encode-lessons. Cross-engine headless export is handled via
-`scripts/export-deck.mjs` and automated parity/export audit via `scripts/qa-deck.mjs`.
+prototype arena, and encode-lessons. Headless export runs each engine's own CLI through
+`scripts/export-deck.mjs`; `scripts/qa-deck.mjs` runs the engine's audit (open-slide,
+GenOffice) and checks export integrity for every engine.
 Grilling in frontier rounds (the whole set of unblocked questions per round, "yes"
 accepts the recommendation) comes from [`mattpocock/skills`](https://github.com/mattpocock/skills)
 (MIT), alongside `grill-me`, `grilling`, and `to-questionnaire`.
+
+### Pairing with platform PPT skills
+
+These skills decide *what* the deck says and *whether it is ready*; they can
+work alongside a runtime's own PowerPoint skill, which handles *how the file
+is built*:
+
+| Runtime | Platform skill | Where it fits |
+| --- | --- | --- |
+| Claude Code | `pptx` from [`anthropics/skills`](https://github.com/anthropics/skills) (`document-skills` plugin; source-available, not open source) | `source-intake`: read text and structure from an existing `.pptx`. `deck-prototype` / `production-qa`: build and edit the file under the `pptxgenjs` adapter, which uses the same library. |
+| Codex | `slides` from [`openai/skills`](https://github.com/openai/skills) (PptxGenJS plus render and overflow checks) | Same slots. Its render and overflow checks can supply evidence for `QA-REPORT.md`. |
+
+Rules when combining them:
+
+- The orchestrator still owns the gates. A platform skill never marks a gate
+  passed and never skips evidence, story, or stage review.
+- Record the engine as `pptxgenjs` with `set-engine` and follow
+  `adapters/pptxgenjs/` for canvas budgets, typography, and notes. The platform
+  skill's own design defaults give way to those rules.
+- Choose one runtime directory (`.agents/skills/` or `.claude/skills/`) and keep
+  only one presentation-building skill active per gate, so two skills do not
+  write the same file.
 
 ### Install
 
@@ -60,10 +83,10 @@ The orchestrator resumes from the earliest unresolved gate and records state in
 
 ### Repository layout
 
-- `skills/` — distributable, engine-agnostic skills (including `genoffice`)
+- `skills/` — distributable, engine-agnostic skills (including `genoffice`, `grilling`, `grill-me`, and `to-questionnaire`)
 - `adapters/` — engine-specific prototype and export instructions (`open-slide`, `genoffice`, `marp`, `pptxgenjs`)
 - `examples/` — a complete pipeline run
-- `.agents/` — bundled development/reference copies
+- `.agents/` — the maintainers' own agent setup: mirrors of `skills/` and `adapters/` (checked by `npm test`) plus third-party skills that are not installed; see [`.agents/README.md`](./.agents/README.md)
 
 ## For AI agents
 
@@ -78,7 +101,7 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Tests
 
-Run the zero-dependency status helper and unslop checker tests with:
+Run the zero-dependency tests (status helper, export/QA dispatch, unslop checker, and `.agents/` mirror checks) with:
 
 ```bash
 npm test

@@ -19,6 +19,13 @@ const SCHEMA_VERSION = 3;
 const MODES = ['general', 'research-enhanced', 'fast-track'];
 const RESULTS = ['passed', 'blocked', 'needs_revision: product-grill', 'needs_revision: evidence'];
 
+// In fast-track mode one focused pass produces the artifacts for both gates of
+// each pair, so passing the lead gate also passes its partner.
+export const FAST_TRACK_PAIRS = {
+  'source-intake': 'product-grill',
+  'story-architecture': 'story-grill',
+};
+
 function statusPath(root) {
   return path.join(path.resolve(root), 'STATUS.md');
 }
@@ -366,6 +373,11 @@ async function applyResult(root, gate, result, reason, metadata) {
   const state = validateState(await load(root));
   if (result === 'passed' || result === 'blocked') {
     applyGateState(state, gate, result, reason, metadata);
+    const partner = FAST_TRACK_PAIRS[gate];
+    if (result === 'passed' && state.mode === 'fast-track' && partner) {
+      const partnerReason = `fast-track: consolidated with ${gate}. ${reason}`;
+      applyGateState(state, partner, 'passed', partnerReason, metadata);
+    }
   } else if (result === 'needs_revision: product-grill') {
     invalidateFrom(state, 'product-grill', reason, gate);
   } else if (result === 'needs_revision: evidence') {

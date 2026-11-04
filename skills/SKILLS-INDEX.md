@@ -23,7 +23,14 @@ Shared references and templates contain the detailed domain material.
 | Skill | Use it when you need to… |
 | --- | --- |
 | [genoffice](./genoffice/SKILL.md) | create, convert, read, audit, render, and edit native `.pptx`, `.docx`, `.xlsx`, and `.pdf` files locally via the GenOffice CLI or MCP server |
-| [open-slide-deck-finalization](./open-slide-deck-finalization/SKILL.md) | standalone finalization shortcut specifically for `open-slide` workspaces |
+
+## Grilling skills (from [`mattpocock/skills`](https://github.com/mattpocock/skills), MIT)
+
+| Skill | Use it when you need to… |
+| --- | --- |
+| [grilling](./grilling/SKILL.md) | stress-test a plan in frontier rounds, each question with a recommended answer |
+| [grill-me](./grill-me/SKILL.md) | run the same interview on demand (user-invoked only) |
+| [to-questionnaire](./to-questionnaire/SKILL.md) | turn open decisions that someone else must answer into a fill-in questionnaire |
 
 ## Shared practices (`make-presentation/references/`)
 
@@ -38,7 +45,9 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 | [arena-prototype.md](./make-presentation/references/arena-prototype.md) | compare 2 to 3 prototype directions and graft the best parts |
 | [encode-lessons.md](./make-presentation/references/encode-lessons.md) | stop repeated mistakes with checks instead of docs |
 
-## Bundled engine adapters (`.agents/adapters/`)
+Scripts: [`export-deck.mjs`](./make-presentation/scripts/export-deck.mjs) exports any engine through its own CLI and [`qa-deck.mjs`](./make-presentation/scripts/qa-deck.mjs) runs the automated QA checks; both accept `--dry-run`.
+
+## Engine adapters (`adapters/`)
 
 | Engine | Adapter | Output |
 | --- | --- | --- |

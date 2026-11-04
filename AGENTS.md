@@ -55,7 +55,7 @@ Initialize the tracker, then load `make-presentation/SKILL.md`:
 
 ```bash
 node .agents/skills/make-presentation/scripts/status.mjs \
-  init presentation-work/<deck-id> <deck-id> <source-root>
+  init presentation-work/<deck-id> <deck-id> <source-root> [<mode> "<mode-reason>"]
 node .agents/skills/make-presentation/scripts/status.mjs \
   next presentation-work/<deck-id>
 ```
@@ -65,8 +65,9 @@ the agent contract; `skills/SKILLS-INDEX.md` is the human-facing catalog.
 Create each named artifact yourself from its template. Never skip a gate
 because an output already exists.
 
-Never hand-edit `STATUS.md`. Use only `init`, `next`, `result`, `invalidate`,
-`set-mode`, `set-engine`, and `summary` from the status helper. Mark a gate
+Never hand-edit `STATUS.md`. Use only `init`, `validate`, `next`, `set`,
+`result`, `invalidate`, `set-mode`, `set-engine`, and `summary` from the status
+helper. Mark a gate
 passed only with real `--artifact` paths.
 
 At the prototype gate, ask the user to choose an installed adapter (default:

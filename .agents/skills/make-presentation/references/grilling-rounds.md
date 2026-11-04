@@ -1,6 +1,6 @@
 # Grilling in rounds
 
-Adapted from the MIT-licensed [`grilling`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) skill in `mattpocock/skills`. It replaces the older "one question at a time" loop. Standalone use: `grill-me` or `grilling` in `skills/`.
+Adapted from the MIT-licensed [`grilling`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) skill in `mattpocock/skills`. It replaces the older "one question at a time" loop. Standalone use: `grill-me` or `grilling` in `skills/` (installed with the other skills).
 
 ## The model
 
