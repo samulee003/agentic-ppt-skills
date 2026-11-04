@@ -3,33 +3,55 @@
 ## Context
 
 - Mode:
+- Profile / deck type:
 - Pipeline or standalone:
 - Purpose / audience:
 - Main / backup range:
 
 ## Content
 
+- Headline test (titles alone carry the argument):
+- Archetypes match the storyboard:
+
 ## Evidence
 
 - Per-slide fact check:
 - Reference and Q&A backup:
+- Assets and licences:
 
 ## Notes
 
+- Slide / note parity:
 - Unslop scan (`unslop-check.mjs --strict`) result and exceptions:
 
 ## Timing
 
-## Visual & Aesthetic Integrity
+- Main talk vs brief:
+- Measured or estimated:
 
-- Declared Theme / Archetype:
-- Card & surface mechanics verified (hard shadow / 3px ink / organic tilts):
-- Typography scale verified (Hero 120px+, Section 72px+):
-- Diagram & illustration craft verified:
+## Visual integrity
+
+- Theme or brand template:
+- Rendering contract verified (palette, surfaces, anti-patterns):
+- Type floors (`pptx-check.mjs` result):
+- Data slides (one point per chart, source lines, honest axes):
+- Diagram and illustration craft:
+
+## Accessibility
+
+- Contrast:
+- Alt text:
+- Colour-independent meaning:
+- Unique titles and reading order:
 
 ## Preview
 
 ## Exports
+
+- Files, slide / note / PDF page counts:
+- `qa-deck.mjs` / `pptx-check.mjs` output:
+- PowerPoint inspection:
+- Reading deck (if requested):
 
 ## Review findings
 

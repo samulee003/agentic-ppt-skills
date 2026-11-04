@@ -15,6 +15,9 @@ Use when `story-grill` is the current gate.
 - Use `references/opposition-review.md` for the autonomous opposition-review fallback when the user is unavailable or the remaining challenge is clear from the files.
 - State the strongest reasonable case against the story and what the opposition must concede.
 - Pressure-test why the audience should care, whether the thesis answers the right problem, whether the evidence supports the interpretation, what counter-evidence is missing, whether slides repeat or decorate, and whether the conclusion really follows.
+- Run the **headline test** from `../make-presentation/references/deck-types.md`: list only the action titles in order and confirm they carry the whole argument. Each title that adds nothing is a cut candidate; each gap is a missing slide.
+- Check the structure against the deck type's default; a deviation needs a reason recorded in `STORY.md`.
+- Re-run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>` after any storyboard change.
 - Sort every finding into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`. An unresolved Act on finding blocks `passed`.
 - Return `needs_revision: product-grill` when the story exposes the wrong audience, problem, outcome, promise, or success test.
 - Return `needs_revision: evidence` when the story needs unsupported claims, missing counter-evidence, or weaker wording.

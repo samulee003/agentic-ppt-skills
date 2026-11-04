@@ -36,6 +36,13 @@ Read `references/modes.md` before routing.
 - Read the current mode from `STATUS.md` before invoking Evidence or Finalization.
 - Under deadline pressure, reduce scope; never silently waive evidence, readability, or export integrity.
 
+## Profile, deck type, and theme
+
+- A **profile** (`profiles/`) bundles defaults for a recurring kind of work (language, deck type, theme, extra checks). Use `default` unless the user or the source names one; record it in `PRESENTATION-BRIEF.md`.
+- The **deck type** (`references/deck-types.md`) sets the story structure and whether a reading deck is needed.
+- The **theme** (`themes/`) is the visual rendering contract; a brand template overrides its palette and fonts.
+- All engines share one type scale (`references/typography.md`).
+
 ## Route one gate at a time
 
 Read `references/gates.md` for pass conditions and artifact owners. Invoke exactly one focused skill for the earliest unresolved gate:
@@ -64,8 +71,11 @@ Read the named reference only when its trigger applies.
 - **Unslop** (`references/unslop-copy.md`): at `story-architecture`, `deck-prototype`, `stage-grill`, and `production-qa`, run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <path>... [--strict]` on slide copy and speaker notes, then rewrite by hand.
 - **Review buckets** (`references/review-buckets.md`): at `story-grill`, `stage-grill`, and `production-qa`, sort every review finding into Act on, Consider, Noted, or Dismissed.
 - **Arena** (`references/arena-prototype.md`): at `deck-prototype`, build 2 to 3 competing directions for high-stakes or unsettled visual direction, pick a base, and graft the best parts. Skip in `fast-track`.
+- **Deterministic checks** (`scripts/`): `storyboard-check.mjs` at `story-architecture` and `story-grill`; `theme-check.mjs` when a theme is added or changed; `pptx-check.mjs` at `deck-prototype` (when a `.pptx` exists) and `production-qa` (through `qa-deck.mjs`). An error from any of them blocks the gate.
+- **Data slides** (`references/data-slides.md`): at `evidence`, `story-architecture`, `deck-prototype`, and `production-qa` whenever a slide shows numbers.
+- **Revising an existing deck** (`references/revise-existing.md`): when the source is a finished deck and the user wants it improved rather than rebuilt.
 - **Encode lessons** (`references/encode-lessons.md`): when the user corrects the same mistake twice, fix it in the template or a check first, a test next, and a doc last. Keep the rule table current.
 
 ## Handoff
 
-Report the chosen mode, selected engine (once resolved at prototype), current gate, reused artifacts, and next focused skill.
+Report the chosen mode, profile, deck type, theme, selected engine (once resolved at prototype), current gate, reused artifacts, and next focused skill.

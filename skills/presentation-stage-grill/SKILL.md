@@ -18,10 +18,12 @@ Use when `stage-grill` is the current gate.
 - Enforce presenter-language constraints, timed trimming, and existing-versus-remaining distinction.
 - **Speakability & Spoken-First Phrasing**: Speaker notes must be written in natural, fluent spoken phrasing that the presenter can deliver aloud comfortably without stumbling (no dense academic paper sentences).
 - **Strict 1:1 Note Parity**: Every slide must have exactly one corresponding speaker note matching its dominant message.
-- **Adult Attention Management & Active Learning Resets**: In presentations longer than 30 minutes, verify that the delivery incorporates structured attention reset switches (e.g. audience polling/temperature checks, buzz-pair sharing, dialogue choral rehearsal, silent reflection) to combat the natural 15–20 minute adult attention decay.
-- **Behavioral Scaffolding (Kirkpatrick Level 3 Transfer)**: Ensure actionable tools include verbal rehearsal opportunities and take-home scaffolds (checklists, pocket cards) so knowledge bridges into daily behavioral change.
-- **Language Purity**: For international presentations (e.g. English summit), confirm 100% target language consistency across all notes and visible cues with zero stray translation leftovers.
-- **Constructive Context Framing ("Not starting from zero")**: When presenting local policy or regional case studies, clearly separate what the community/system has already established from the next challenge, avoiding nihilistic or accusatory framing.
+- **Attention resets**: in talks over 30 minutes, verify an attention reset (question, poll, pair discussion, demo, short pause) at least every 15–20 minutes.
+- **Deck type**: check the talk against its deck type in `../make-presentation/references/deck-types.md`: a `decision` deck states the recommendation and the ask in the first two minutes; a `training` deck gives every tool a practice moment; a `pitch` ends on a specific next step.
+- **Headline test**: read only the slide titles aloud, in order. If they do not carry the argument, return the affected pages.
+- **Language**: one language per surface, in the register the profile sets, with no stray untranslated words in notes or visible cues.
+- **Profile**: apply the profile's *Stage grill* section (for example, behaviour-transfer scaffolds and constructive framing for `training-zh-hant`).
+- **Rehearsal timing**: when a rehearsal recording or timed read-through exists, use the measured time per slide instead of estimates, and trim to fit the brief's time with the "Trim if short on time" column.
 - Separate what the audience can see immediately from what only works after narration.
 - Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <work-root>/SPEAKER-SCRIPT.md <slide-folder>` and rewrite flagged notes using `../make-presentation/references/unslop-copy.md`. Spoken phrasing still comes first.
 - Sort audience-challenge and trimming findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`.

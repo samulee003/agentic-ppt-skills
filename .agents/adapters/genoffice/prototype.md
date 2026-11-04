@@ -137,7 +137,10 @@ Text boxes have zero inner padding. Count wrapped lines and size every box befor
 | Hero number / stat | up to 80pt |
 | Big / cover title | 32–48pt |
 | Subtitle / card title | 18–24pt |
-| Body copy | 12–15pt |
+| Body copy | 16–20pt (floor 14pt) |
+| Caption / source line | 11–14pt (floor 11pt) |
+
+These follow the canonical scale in `skills/make-presentation/references/typography.md` (540 pt slide height). GenOffice's own guide allows 12pt body copy; that is under the projector body floor and `pptx-check.mjs` warns on it.
 
 #### Validate each page immediately
 
@@ -160,3 +163,9 @@ genoffice slides audit exports/<deck-id>.pptx --json
 ```
 
 Inspect `slides/<deck-id>/shots/<deck-id>-grid.png` and individual slide PNGs with your vision tool. Confirm `detail.issues` in `slides audit` is empty, no text overflows or collides, and visual weight sits comfortably across the 1280×720 canvas.
+
+## Canonical scale and brand template
+
+- Sizes above follow the canonical scale at 540 pt slide height; the 1280×720 px canvas is the same page.
+- Theme contracts map to `style.md` colours and fonts; run `genoffice slides check` to catch off-palette colours.
+- Brand template: read its layouts with `genoffice slides read <template.pptx> --layouts`, match its palette and fonts in `style.md`, and after building apply the brand theme fonts and colours with the `applyTheme` op (`genoffice slides apply`). For a template with `{{placeholders}}`, `genoffice merge` fills it directly.

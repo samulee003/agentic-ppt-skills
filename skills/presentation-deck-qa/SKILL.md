@@ -27,8 +27,9 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - Read repo instructions, the full deck, notes, and unresolved QA risks. In pipeline mode also read available `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, `GRILL-LOG.md`, and `SPEAKER-SCRIPT.md`.
 - Check visible claims, notes, timing, and delivery wording for consistency with the approved brief, evidence ledger, story, and script.
 - Reject stale, unsupported, or contradictory claims instead of polishing around them.
-- **Strict 1:1 Parity**: Confirm slide count equals note count, including backup pages (`Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`).
-- **Language Purity**: For target-language presentations (e.g. 100% English summit), verify zero stray secondary-language characters across all slides and notes.
+- **Strict 1:1 Parity**: Confirm slide count equals note count, including backup pages (`Slide Count === Speaker Note Count === PDF Page Count === PPTX Slide Count`). `pptx-check.mjs` verifies this on the exported files.
+- **Language**: one language per surface, in the register the profile sets; no stray untranslated words across slides and notes.
+- **Assets**: every non-original image, icon set, and font appears in the ledger's *Assets* table with a licence that allows this use, and required attributions are on the slide or in a credits page.
 - Check factual consistency across slides, notes, references, and exports.
 - Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder-or-notes> --strict`. Fix every finding or record an exception with its reason in `QA-REPORT.md`. See `../make-presentation/references/unslop-copy.md`.
 - Confirm the main-talk range, backup range, total timing, and per-slide timing.
@@ -41,18 +42,25 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 - Review the complete deck in the engine's live preview surface.
 - Inspect full-page renders or a contact sheet, then inspect changed, dense, and image-heavy pages at full size.
 - Reject verbose paragraphs and nested text tiers. Split the slide rather than shrink text or hide overflow.
-- **Aesthetic & Rendering Contract Verification**:
-  - Verify compliance with the declared `Visual Direction & Rendering DNA` in `PRESENTATION-BRIEF.md`.
-  - Verify typography hierarchy (Hero titles reach 120px+, section headers 72px+, prominent display scale).
-  - If Sticker Pop / Sketch archetype was declared, verify all cards carry 3px ink borders and hard offset shadows (`8px 8px 0px`), not generic diffuse soft shadows or 1px faint borders.
-  - Verify visual diagram craft (SVGs match the aesthetic DNA, no raw generic boxes).
+- **Rendering contract**:
+  - Verify every page against the theme in `PRESENTATION-BRIEF.md` (`../make-presentation/themes/<id>.md`): palette, surfaces, and anti-patterns. When a brand template is named, verify its palette, fonts, logo, and title area instead.
+  - Verify the type scale against `../make-presentation/references/typography.md`: no body text under the body floor, nothing under the hard floor.
+  - Verify diagrams and illustrations follow the theme, with no raw generic boxes.
+  - Verify each slide is built in its storyboard archetype and data slides follow `../make-presentation/references/data-slides.md`.
+- **Accessibility**:
+  - Body text and background reach 4.5:1 contrast; large display text 3:1 (`theme-check.mjs` covers the theme palette; check overrides and text on photos by eye).
+  - Every meaningful image and chart has alt text; decorative images are marked decorative.
+  - Meaning never depends on colour alone (labels or patterns on chart series, icons with text).
+  - Slide titles are unique, so the outline and screen readers can navigate the deck.
+  - Reading order on dense pages follows the visual order (check in PowerPoint's Selection Pane or the engine's equivalent).
 - Treat clipping, unreadable type, generic AI slop styling, inconsistent page grammar, or notes drift as failed QA.
 
 ## Export and inspect
 
 - After deck or exporter changes, produce a fresh export in each chosen delivery format; old downloads are not repaired.
 - **Unified Export**: Run `node .agents/skills/make-presentation/scripts/export-deck.mjs <deck-id> --format=pdf,pptx` to export fresh deliverables to `exports/`. The engine comes from `STATUS.md` (or `--engine=<name>`), and each engine runs its own CLI: `open-slide export`, the Marp CLI, `node slides/<deck-id>/build.mjs` plus `soffice` for a PptxGenJS PDF, or `genoffice create`/`convert`. Add `--dry-run` to print the commands first. The script fails if an expected file is missing or empty.
-- **Automated QA checks**: Run `node .agents/skills/make-presentation/scripts/qa-deck.mjs <deck-id> [--export]`. It runs `open-slide qa` for open-slide and `genoffice slides audit` + `slides read --full` for genoffice, and checks export integrity for every engine. It does not replace the slide/note/page parity, unslop, and PowerPoint checks in this skill and `adapters/<engine>/qa.md`; record the gate yourself with `status.mjs result`.
+- **Automated QA checks**: Run `node .agents/skills/make-presentation/scripts/qa-deck.mjs <deck-id> [--export]`. It runs `open-slide qa` for open-slide and `genoffice slides audit` + `slides read --full` for genoffice, checks export integrity for every engine, and runs `pptx-check.mjs` on the `.pptx` (slide/note/PDF parity, type floors, alt text, density, image-only slides). Every error blocks the gate. It does not replace the visual, unslop, and PowerPoint checks in this skill and `adapters/<engine>/qa.md`; record the gate yourself with `status.mjs result`.
+- **Reading deck**: when the brief asks for one, export it as its own file (`exports/<deck-id>-reading.pptx`/`.pdf`) and check it with `pptx-check.mjs --no-notes`.
 - Follow `adapters/<engine>/qa.md` for the engine's export steps, archive integrity, geometry, and any native-application inspection.
 - **Visual-Faithful Verification**: Verify that the exported PPTX preserves visual layout without text box re-wrapping or bounding-box drift when opened in Microsoft PowerPoint.
 - **Speaker Notes Verification**: Confirm speaker notes are properly embedded in the exported PPTX notes pane for every slide.

@@ -1,4 +1,7 @@
 # STORYBOARD
 
-| Slide | Audience job | Main claim | Evidence ID | Visual role | Speaker transition | Time | Main / backup |
+Archetypes: `hero`, `split`, `diagram`, `cards`, `data`, `section`, `interaction`.
+Action titles are full-sentence takeaways (see `references/deck-types.md`).
+
+| Slide | Action title | Archetype | Audience job | Evidence ID | Speaker transition | Time | Main / backup |
 | --- | --- | --- | --- | --- | --- | --- | --- |

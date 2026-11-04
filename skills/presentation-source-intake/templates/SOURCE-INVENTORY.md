@@ -47,3 +47,14 @@ Use `draft`, `revision`, `export`, `derivative`, or `duplicate` for `Lineage cla
 
 | Blocked item | Why blocked | Impact | Help needed |
 | --- | --- | --- | --- |
+
+## Existing deck (if the source is a finished deck)
+
+- File and `pptx-check.mjs` summary:
+- Revision scope: (`polish`, `rebrand`, `translate`, `restructure`; see `references/revise-existing.md`)
+- Slides to reuse as-is:
+
+## Hints for the product grill
+
+- Brand template or guide:
+- Profile hints (language, audience, venue, deck type):
