@@ -11,6 +11,7 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { inflateRawSync, inflateSync } from 'node:zlib';
 
 // Floors as a fraction of slide height. 28px on a 1080px canvas = 2.6%;
@@ -270,7 +271,7 @@ function main(argv) {
   if (report.errors.length > 0) process.exitCode = 1;
 }
 
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('pptx-check.mjs')) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
     main(process.argv.slice(2));
   } catch (error) {

@@ -32,6 +32,17 @@ Shared references and templates contain the detailed domain material.
 | [grill-me](./grill-me/SKILL.md) | run the same interview on demand (user-invoked only) |
 | [to-questionnaire](./to-questionnaire/SKILL.md) | turn open decisions that someone else must answer into a fill-in questionnaire |
 
+## Profiles, deck types, and themes
+
+| Path | Use it when you need to… |
+| --- | --- |
+| [`make-presentation/profiles/`](./make-presentation/profiles/README.md) | apply a bundle of defaults for recurring work (`default`, `training-zh-hant`) |
+| [`references/deck-types.md`](./make-presentation/references/deck-types.md) | pick the story structure for a decision, update, pitch, training, keynote, or technical deck; presenting vs reading deck; action titles |
+| [`make-presentation/themes/`](./make-presentation/themes/README.md) | choose a visual rendering contract (`editorial-minimal`, `bright-sans`, `aurora`, `sticker-pop`) |
+| [`references/typography.md`](./make-presentation/references/typography.md) | one type scale and two floors for every engine, as a share of slide height |
+| [`references/data-slides.md`](./make-presentation/references/data-slides.md) | turn numbers into honest, one-point charts |
+| [`references/revise-existing.md`](./make-presentation/references/revise-existing.md) | polish, rebrand, translate, or restructure an existing deck |
+
 ## Shared practices (`make-presentation/references/`)
 
 Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT).
@@ -45,7 +56,17 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 | [arena-prototype.md](./make-presentation/references/arena-prototype.md) | compare 2 to 3 prototype directions and graft the best parts |
 | [encode-lessons.md](./make-presentation/references/encode-lessons.md) | stop repeated mistakes with checks instead of docs |
 
-Scripts: [`export-deck.mjs`](./make-presentation/scripts/export-deck.mjs) exports any engine through its own CLI and [`qa-deck.mjs`](./make-presentation/scripts/qa-deck.mjs) runs the automated QA checks; both accept `--dry-run`.
+## Scripts (`make-presentation/scripts/`, zero dependencies)
+
+| Script | Gate | What it checks or does |
+| --- | --- | --- |
+| [`status.mjs`](./make-presentation/scripts/status.mjs) | all | pipeline state, gate order, invalidation |
+| [`storyboard-check.mjs`](./make-presentation/scripts/storyboard-check.mjs) | story-architecture, story-grill | action titles, archetypes, archetype runs, evidence IDs, timing vs brief |
+| [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | story through QA | AI-tell phrasing in slide copy and notes |
+| [`theme-check.mjs`](./make-presentation/scripts/theme-check.mjs) | when a theme changes | theme fields and WCAG contrast |
+| [`pptx-check.mjs`](./make-presentation/scripts/pptx-check.mjs) | deck-prototype, production-qa | slide/note/PDF parity, type floors, alt text, density, image-only slides |
+| [`export-deck.mjs`](./make-presentation/scripts/export-deck.mjs) | production-qa | export through each engine's own CLI (`--dry-run` to preview) |
+| [`qa-deck.mjs`](./make-presentation/scripts/qa-deck.mjs) | production-qa | engine audit + export integrity + `pptx-check` |
 
 ## Engine adapters (`adapters/`)
 

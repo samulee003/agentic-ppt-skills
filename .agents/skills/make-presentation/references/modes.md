@@ -12,7 +12,7 @@ Use `fast-track` when producing lightweight, agile presentations (< 10 slides, i
 - Streamlines Gate 3 (Evidence) to focus only on top critical metrics. Evidence is still its own gate.
 - Combines Story & Opposition pass (Gate 4 & 5). Record it once on `story-architecture`; the helper passes `story-grill` with the same artifacts.
 - Runs the prototype (Gate 6), a short stage pass (Gate 7: timing and readability only), and fast-path QA (Gate 8). Each is still recorded separately.
-- Preserves all canvas budgets, CJK typography rules, and export defect checks.
+- Preserves all canvas budgets, the typography floors, the deterministic checks (`storyboard-check.mjs`, `pptx-check.mjs`), and export defect checks.
 - Skips the arena. Playback and recommended defaults replace extended grilling, capped at one grilling round. The unslop scan and review buckets still run at their gates.
 
 ## Research-enhanced

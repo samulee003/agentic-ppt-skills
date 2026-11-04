@@ -88,3 +88,9 @@ test('CLI reads the work root and exits 1 on errors', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('the bundled example storyboard passes', async () => {
+  const root = path.resolve(new URL('../examples/agentic-coding-anatomy/work', import.meta.url).pathname);
+  const { stdout } = await execFileAsync(process.execPath, [script, root]);
+  assert.match(stdout, /storyboard-check: no errors/);
+});

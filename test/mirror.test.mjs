@@ -57,3 +57,27 @@ test('docs only link to skills that exist', async () => {
     );
   }
 });
+
+test('relative links and ../ paths in docs resolve', async () => {
+  const { existsSync } = await import('node:fs');
+  const roots = ['skills', 'adapters'];
+  const files = ['README.md', 'README.zh-TW.md', 'README.zh-CN.md', 'AGENTS.md', '.agents/README.md'];
+  for (const root of roots) {
+    for (const file of await listFiles(path.join(repo, root))) {
+      if (file.endsWith('.md')) files.push(path.join(root, file));
+    }
+  }
+  const broken = [];
+  for (const file of files) {
+    const text = await readFile(path.join(repo, file), 'utf8');
+    const dir = path.dirname(path.join(repo, file));
+    const targets = [
+      ...[...text.matchAll(/\]\((?!https?:|#|mailto:)([^)\s#]+)(?:#[^)]*)?\)/g)].map((m) => m[1]),
+      ...[...text.matchAll(/`(\.\.\/[^`\s<>*]+\.(?:md|mjs))`/g)].map((m) => m[1]),
+    ];
+    for (const target of targets) {
+      if (!existsSync(path.resolve(dir, target))) broken.push(`${file} → ${target}`);
+    }
+  }
+  assert.deepEqual(broken, []);
+});

@@ -26,6 +26,24 @@ Each gate has one focused skill and a named deliverable:
 | Stage review | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
 | Production QA | `presentation-deck-qa` | `QA-REPORT.md`, exports |
 
+### What makes it different
+
+- **Product first.** The brief fixes the deck type (decision, update, pitch,
+  training, keynote, technical), audience, promise, deliverables (presenting or
+  reading deck, editable `.pptx` or not), brand template, and theme before any
+  slide exists.
+- **Every claim has a source.** The evidence ledger holds one row per claim and
+  one row per non-original asset with its licence.
+- **Titles carry the argument.** Each slide has a full-sentence action title and
+  a layout archetype; reading the titles alone must tell the story.
+- **Machine-checked, not self-certified.** Zero-dependency scripts check the
+  storyboard (titles, archetypes, evidence IDs, timing), theme contrast, and the
+  exported `.pptx` (slide/note/PDF parity, type floors, alt text, density).
+- **Neutral core, pluggable style.** Language rules, story structure, and visual
+  style live in profiles (`default`, `training-zh-hant`) and themes
+  (`editorial-minimal`, `bright-sans`, `aurora`, `sticker-pop`), on one
+  engine-independent type scale.
+
 The pipeline supports `general`, `fast-track`, and `research-enhanced` modes.
 Prototype and production QA use an adapter; `open-slide`, `genoffice`, `marp`,
 and `pptxgenjs` are included, alongside the standalone `genoffice` skill for
@@ -101,7 +119,7 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Tests
 
-Run the zero-dependency tests (status helper, export/QA dispatch, unslop checker, and `.agents/` mirror checks) with:
+Run the zero-dependency tests (status helper, storyboard/theme/PPTX checks, export/QA dispatch, unslop checker, and `.agents/` mirror checks) with:
 
 ```bash
 npm test

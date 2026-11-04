@@ -25,6 +25,14 @@
 | 上台审查 | `presentation-stage-grill` | `SPEAKER-SCRIPT.md` |
 | 生产环境 QA | `presentation-deck-qa` | `QA-REPORT.md`、导出文件 |
 
+### 特色
+
+- **产品优先。** 在任何幻灯片出现之前，演示需求书（brief）先确定演示类型（决策、进度、提案、培训、主题演讲、技术）、听众、承诺、交付物（演讲版或阅读版、`.pptx` 是否需可编辑）、品牌模板与主题。
+- **每个论点都有出处。** 证据表一个论点一行，每个非原创素材也一行并记录授权。
+- **标题就是论点。** 每页都有完整句子的结论式标题与版式；只读标题也能看懂整个故事。
+- **由程序检查，而非自我认证。** 零依赖脚本检查故事板（标题、版式、证据编号、时间）、主题色彩对比，以及导出的 `.pptx`（幻灯片／讲稿／PDF 页数一致、字号下限、替代文字、文字密度）。
+- **中立核心，风格可插拔。** 语言规则、故事结构与视觉风格放在配置档（`default`、`training-zh-hant`）与主题（`editorial-minimal`、`bright-sans`、`aurora`、`sticker-pop`）中，共用一套不分引擎的字号系统。
+
 流程支持 `general`、`fast-track` 和 `research-enhanced` 模式。原型与生产环境 QA 使用
 adapter；内含 `open-slide`、`genoffice`、`marp` 和 `pptxgenjs`，并附带 `genoffice`
 技能供代理直接读取、创建、几何审计（audit）、渲染与转换本地 Office 文件。`scripts/export-deck.mjs` 以各引擎自己的 CLI 无头导出；`scripts/qa-deck.mjs` 运行引擎的自动审计（open-slide、GenOffice），并对所有引擎检查导出文件是否完整。

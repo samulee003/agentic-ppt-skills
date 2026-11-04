@@ -1,5 +1,10 @@
 # PRESENTATION-BRIEF
 
+## Profile and deck type
+
+- Profile: `default`
+- Deck type: `technical` (short explainer)
+
 ## Audience
 
 - Primary audience: Software Developers and Tech Leads

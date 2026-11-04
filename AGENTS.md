@@ -47,7 +47,9 @@ Before starting, ask one question and wait:
 > a URL, or a topic. Default: notes in the current folder.
 
 Do not ask for mode or engine yet. Mode is evaluated after source intake and the
-engine is selected at the prototype gate.
+engine is selected at the prototype gate. If the user names a profile (for
+example `training-zh-hant`), deck type, theme, or brand template, note it for
+the product grill; do not ask for them now.
 
 ## 4. Run the orchestrator
 
@@ -67,12 +69,17 @@ because an output already exists.
 
 Never hand-edit `STATUS.md`. Use only `init`, `validate`, `next`, `set`,
 `result`, `invalidate`, `set-mode`, `set-engine`, and `summary` from the status
-helper. Mark a gate
-passed only with real `--artifact` paths.
+helper. Mark a gate passed only with real `--artifact` paths.
 
-At the prototype gate, ask the user to choose an installed adapter (default:
-`open-slide`, or `genoffice` when generating a native byte-preserving Office
-`.pptx` via GenOffice), verify its directory, record it with `set-engine`, and
+The deterministic checks in `make-presentation/scripts/` (`storyboard-check.mjs`,
+`pptx-check.mjs`, `theme-check.mjs`, `unslop-check.mjs`, `qa-deck.mjs`) run at
+the gates their skills name. An error from any of them blocks the gate; do not
+pass a gate over a failing check.
+
+At the prototype gate, ask the user to choose an installed adapter. Recommend
+from the brief's *Deliverables*: a natively editable `.pptx` → `pptxgenjs` or
+`genoffice` (also `genoffice` to keep an existing deck's master); otherwise
+`open-slide`. Then verify its directory, record it with `set-engine`, and
 read that adapter's `README.md` and `prototype.md`. Production QA inherits the
 choice and must also read `qa.md`.
 
@@ -83,6 +90,7 @@ Do not claim success until `next` reports `complete`. Then provide:
 - `presentation-work/<deck-id>/STATUS.md`
 - every exported file path
 - the pipeline work directory
+- the final `qa-deck.mjs` output (no errors)
 
 Do not skip evidence, readability, or export checks. If the environment or a
 verification step is unclear, stop and ask instead of guessing.

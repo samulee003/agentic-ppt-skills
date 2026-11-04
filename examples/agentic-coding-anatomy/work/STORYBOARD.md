@@ -1,9 +1,12 @@
 # STORYBOARD
 
-| Slide | Audience job | Main claim | Evidence ID | Visual role | Speaker transition | Time | Main / backup |
+Archetypes: `hero`, `split`, `diagram`, `cards`, `data`, `section`, `interaction`.
+Action titles are full-sentence takeaways (see `references/deck-types.md`).
+
+| Slide | Action title | Archetype | Audience job | Evidence ID | Speaker transition | Time | Main / backup |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Welcome | The Anatomy of Agentic Coding | None | Title slide | "Let's explore..." | 0.5m | Main |
-| 2 | Understand loop | The Prompt Loop: Read, Plan, Write, Verify | None | Diagram / loop cards | "How does the agent..." | 1m | Main |
-| 3 | Understand tools | Tools connect the model to files, commands, search, and tests; the shown interface is illustrative | None | Illustrative tool panel | "To do this, it needs..." | 1m | Main |
-| 4 | Interpret evidence | The 2023 Claude 2 result is a historical 1.96% BM25 baseline; iterative loops can use feedback to retry without implying a fixed uplift | claim-01, claim-02 | Historical baseline plus qualitative loop contrast | "This feedback loop changes what the next attempt can use..." | 1.5m | Main |
-| 5 | Accept safety | Human review should match the action's consequence, reversibility, and scope | None | Risk-based safety callout | "Ultimately, autonomy needs boundaries..." | 1m | Main |
+| 1 | Agentic coding is a loop, not a single answer | hero | Welcome | — | "Let's explore..." | 0.5m | Main |
+| 2 | The agent reads, plans, writes, and verifies in a repeating loop | diagram | Understand loop | claim-02 | "How does the agent..." | 1m | Main |
+| 3 | Tools connect the model to files, commands, search, and tests | split | Understand tools | claim-02 | "To do this, it needs..." | 1m | Main |
+| 4 | Feedback lets each retry build on the last attempt, beyond the 1.96% 2023 baseline | data | Interpret evidence | claim-01, claim-02 | "This feedback loop changes what the next attempt can use..." | 1.5m | Main |
+| 5 | Human review should match each action's consequence, reversibility, and scope | cards | Accept safety | — | "Ultimately, autonomy needs boundaries..." | 1m | Main |
