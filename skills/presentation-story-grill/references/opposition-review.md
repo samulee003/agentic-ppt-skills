@@ -1,6 +1,6 @@
 # Opposition review
 
-Use this when the user is unavailable (headless/autonomous run) or the remaining story challenge is clear from the files. Instead of asking one question at a time, work through the opposition yourself.
+Use this only when no person can answer (headless/autonomous run) or the user explicitly says to stop asking. Run the interrogation (`../../make-presentation/references/interrogate.md`) yourself, then settle each `story-grill` node and log it `Assumed` with reason and confidence.
 
 - Strongest reasonable case against the story
 - What the opposition must concede

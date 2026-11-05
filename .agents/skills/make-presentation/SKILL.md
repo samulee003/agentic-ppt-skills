@@ -67,19 +67,20 @@ Read `references/gates.md` for pass conditions and artifact owners. Invoke exact
 - Do not skip ahead because a PPTX, PDF, or other artifact already exists.
 - Read `references/gate-results.md`, then translate a passed focused-skill result with `node .agents/skills/make-presentation/scripts/status.mjs result <work-root> <gate> passed "<reason>" --artifact <path> [--artifact <path>]... [--input <value>]... [--decision <value>]...`.
 - Use `node .agents/skills/make-presentation/scripts/status.mjs set` when recording a reviewed artifact path, inputs, or decisions outside the result handoff.
-- If product decisions remain unresolved, stop and grill in rounds per `references/grilling-rounds.md`: the whole frontier per round, each question with a recommended answer.
+- If product decisions remain unresolved, stop and grill in rounds over `references/grill-tree.md` per `references/grilling-rounds.md`: the whole frontier per round, each question with a recommended answer.
 - If upstream decisions change, invalidate downstream gates and resume from the earliest invalidated gate.
 
 ## Cross-cutting practices
 
 Read the named reference only when its trigger applies.
 
-- **Grilling rounds** (`references/grilling-rounds.md`): every grill gate asks the whole frontier of settled-prerequisite decisions per round, with "yes"-accepts recommendations, instead of one question per turn.
+- **Grilling rounds** (`references/grilling-rounds.md` over the tree in `references/grill-tree.md`): the core of the pipeline. Every grill gate asks the whole frontier of the tree per round, with "yes"-accepts recommendations. Load-bearing decisions are asked, never silently assumed.
+- **Interrogation** (`references/interrogate.md`): at `story-grill` and `stage-grill`, adversarial audience members attack the deck; only findings with a verified proof survive.
 - **Sharpen and play back** (`references/sharpen-playback.md`): at `product-grill`, play the goal back in one paragraph and proceed on recommended defaults for reversible choices instead of asking every question.
 - **Unslop** (`references/unslop-copy.md`): at `story-architecture`, `deck-prototype`, `stage-grill`, and `production-qa`, run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <path>... [--strict]` on slide copy and speaker notes, then rewrite by hand.
 - **Review buckets** (`references/review-buckets.md`): at `story-grill`, `stage-grill`, and `production-qa`, sort every review finding into Act on, Consider, Noted, or Dismissed.
 - **Arena** (`references/arena-prototype.md`): at `deck-prototype`, build 2 to 3 competing directions for high-stakes or unsettled visual direction, pick a base, and graft the best parts. Skip in `fast-track`.
-- **Deterministic checks** (`scripts/`): `storyboard-check.mjs` at `story-architecture` and `story-grill`; `theme-check.mjs` when a theme is added or changed; `pptx-check.mjs` at `deck-prototype` (when a `.pptx` exists) and `production-qa` (through `qa-deck.mjs`). `build-packet.mjs` at `deck-prototype` for the `handoff` engine (and `google-slides` when a person builds the slides). An error from any check blocks the gate.
+- **Deterministic checks** (`scripts/`): `grill-check.mjs` at every grill gate and at `production-qa`; `interrogation-check.mjs` at `story-grill` and `stage-grill`; `storyboard-check.mjs` at `story-architecture` and `story-grill`; `theme-check.mjs` when a theme is added or changed; `pptx-check.mjs` at `deck-prototype` (when a `.pptx` exists) and `production-qa` (through `qa-deck.mjs`). `build-packet.mjs` at `deck-prototype` for the `handoff` engine (and `google-slides` when a person builds the slides). An error from any check blocks the gate.
 - **Data slides** (`references/data-slides.md`): at `evidence`, `story-architecture`, `deck-prototype`, and `production-qa` whenever a slide shows numbers.
 - **Revising an existing deck** (`references/revise-existing.md`): when the source is a finished deck and the user wants it improved rather than rebuilt.
 - **Encode lessons** (`references/encode-lessons.md`): when the user corrects the same mistake twice, fix it in the template or a check first, a test next, and a doc last. Keep the rule table current.

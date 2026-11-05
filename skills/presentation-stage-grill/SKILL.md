@@ -9,9 +9,9 @@ Use when `stage-grill` is the current gate.
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `STORY.md`, `STORYBOARD.md`, `GRILL-LOG.md`, current speaker notes, and actual page renders before judging the talk.
 - Always explore the files instead of asking the user for discoverable facts.
-- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential stage decisions are unresolved: ask the whole frontier in one round.
-- Include a recommended answer with each question, worded so "yes" accepts it.
-- Use `references/autonomous-stage.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining stage decisions are resolvable from the deck and upstream artifacts — apply `references/stage-questions.md` yourself, resolve each finding with a concrete change and confidence level, and flag any low-confidence load-bearing edit for later human review instead of silently rewriting it.
+- Settle the `stage-grill` nodes in `../make-presentation/references/grill-tree.md` (opening, timing, challenges, language, and resets for talks over 30 minutes, plus any profile nodes) in one round per `../make-presentation/references/grilling-rounds.md`, each question with a recommended answer worded so "yes" accepts it.
+- Before the round, run the stage interrogation (`../make-presentation/references/interrogate.md`) on the renders, the current notes, and the exported file, and append it to `INTERROGATION.md` as `## Round: stage-grill`. Its kept findings drive the `challenges` node.
+- Headless, or the user says "stop asking": use `references/autonomous-stage.md` and log the nodes `Assumed`; the load-bearing ones (opening, timing, challenges) must be confirmed before `production-qa`.
 - When the user refers to the page they're currently viewing without naming it, resolve it through the engine's "current page" mechanism (e.g. `current-slide` for open-slide) before judging.
 - Use actual renders and current speaker notes, not outline-only summaries.
 - Apply `references/stage-questions.md` to representative prototype pages first, then to the full deck when available.
@@ -29,10 +29,6 @@ Use when `stage-grill` is the current gate.
 - Sort audience-challenge and trimming findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`.
 - Produce `SPEAKER-SCRIPT.md` from `templates/SPEAKER-SCRIPT.md` with approved wording, timing, likely audience challenge, and Q&A risk.
 - Return pages for revision when density, wording, transition logic, or defensibility breaks the live talk.
-- Return `passed` only when the talk is readable, speakable, timed, defensible, and audience-appropriate.
+- Return `passed` only when the talk is readable, speakable, timed, defensible, and audience-appropriate, and `interrogation-check.mjs <work-root> --round=stage-grill` and `grill-check.mjs <work-root> stage-grill` report no errors.
 
-Write only consequential decisions to `GRILL-LOG.md` from `../presentation-product-grill/templates/GRILL-LOG.md`.
-
-- Append new decisions without deleting or rewriting entries from other grill phases or earlier runs.
-- Preserve existing decisions when revisiting the stage-grill gate.
-- Log only changes that materially affect wording, timing, page order, trims, likely objections, or presenter language.
+Log one `GRILL-LOG.md` row per stage node (template: `../presentation-product-grill/templates/GRILL-LOG.md`). Append; never delete rows from other phases or earlier runs.

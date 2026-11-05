@@ -1,36 +1,49 @@
 ---
 name: presentation-product-grill
-description: Turns a source inventory into a presentation brief by resolving audience, problem, outcome, promise, constraints, and success decisions through round-based product grilling. Use when the product-grill gate is current for a presentation project or when a router asks for the presentation brief and consequential decision log.
+description: Grills the user, in rounds over the presentation grill tree, until audience, deck type, outcome, promise, evidence threshold, constraints, deliverables, and success test are settled, then writes the presentation brief. Use when the product-grill gate is current for a presentation project or when a router asks for the presentation brief and consequential decision log.
 ---
 
 # Grill the presentation product
 
-Use when `product-grill` is the current gate.
+Use when `product-grill` is the current gate. This gate is the heart of the
+pipeline: the deck is only as good as the decisions made here, and the agent
+must not guess them.
 
-- Read repo instructions, `SOURCE-INVENTORY.md`, and the cited source files before asking anything.
-- Investigate discoverable answers in the sources instead of asking the user.
+## Before the first question
+
+- Read repo instructions, `SOURCE-INVENTORY.md`, and the cited source files.
 - Read the profile named by the user or the source (default: `../make-presentation/profiles/default.md`) and apply its *Product grill* section.
-- Cover the full product model: deck type (`../make-presentation/references/deck-types.md`), audience, problem, outcome, promise, evidence threshold, constraints, deliverables (presenting deck, reading deck, or both; whether the `.pptx` must be natively editable), brand template, visual direction, success test, and out of scope.
-- **Editability decides the engine family**: if the audience must edit the delivered `.pptx` in PowerPoint, record "native editable" so the prototype gate offers a native engine first (`claude-pptx`, `codex-slides`, `pptxgenjs`, `genoffice`, or `google-slides`); Marp exports image-backed slides and open-slide favours visual fidelity. Ask where the team edits (PowerPoint, Google Slides, or another tool such as ChatGPT or Gamma) and record it.
-- **Brand template**: if the organisation has a `.potx`/`.pptx` master or brand guide, record its path. It overrides the theme's palette and fonts.
-- **Visual direction must be a contract**: when it is unconfirmed, offer the themes in `../make-presentation/themes/README.md` (or a benchmark deck the user supplies) with a recommendation. Never let vague adjectives ("warm", "clean", "modern") pass without binding them to a theme or a custom contract with the same fields.
-- Before the first question, follow `../make-presentation/references/sharpen-playback.md`: sharpen the task, write a one-paragraph `## Playback` at the top of the brief, and proceed on recommended defaults (recorded as `Assumed`) for reversible choices.
-- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when a consequential decision is still unresolved and the sources cannot answer it: ask the whole frontier (every decision whose prerequisites are settled) in one round, numbered, each with a recommended answer worded so "yes" accepts it. Never ask a question that depends on another open one in the same round. Honor "ask one question at a time" if the user requests it.
-- Include a recommended answer with each question, worded so "yes" accepts it.
-- Explain what the decision would invalidate downstream when that impact exists.
-- Use `references/autonomous-brief.md` for the autonomous fallback when the user is unavailable (headless run) or the remaining product decisions are resolvable from the sources — resolve each open field with a defensible value, its rationale, and a confidence level (defaulting visual direction to the profile's theme, or `editorial-minimal`, rather than generic unstyled UI), and flag any low-confidence load-bearing decision for later human review instead of silently guessing.
-- Let any consequential change to Deck type, Audience, Problem, Outcome, Promise, Evidence threshold, Constraints, Deliverables, Brand template, Visual direction, Success test, or Out of scope invalidate downstream gates.
+- Open `../make-presentation/references/grill-tree.md`. Every `product-grill` node must end with a row in `GRILL-LOG.md`.
+- Settle what the sources answer. Log those nodes `Decided`, naming the source in *Reason*, and confirm the load-bearing ones in one line in round 1 ("From the email: the audience is the leadership team. Right?").
+- Play back the goal in one paragraph per `../make-presentation/references/sharpen-playback.md` and put it at the top of the brief as `## Playback`.
 
-Write `PRESENTATION-BRIEF.md` from `templates/PRESENTATION-BRIEF.md`.
+## Grill in rounds
 
-- Update the brief as soon as a question is resolved.
-- Keep the brief decision-oriented and concrete.
-- Prefer short sentences, explicit tradeoffs, and measurable success tests.
+- Work the tree per `../make-presentation/references/grilling-rounds.md`. Round 1 is every unsettled node with no open prerequisite (usually profile, deck type, audience, and anything the sources made answerable). Each later round is the new frontier.
+- Number every question, give a recommended answer worded so "yes" accepts it, and say what it would change downstream.
+- Ask, do not assume, every load-bearing node (deck type, audience, outcome, promise, evidence threshold, constraints, success test) while a person can answer.
+- Reversible nodes (profile, deliverables, brand, visual, out of scope) may carry a recommended default the user can accept with "yes to all". Log them `Assumed` only when the user did not answer that question, with the reason.
+- Honor "ask one question at a time" if the user requests it.
+- When an answer must come from someone else, log the node `Deferred` and use the `to-questionnaire` skill. A `Deferred` node blocks the gate.
 
-Write only consequential decisions to `GRILL-LOG.md` from `templates/GRILL-LOG.md`.
+## Domain rules while grilling
 
-- Append new decisions without deleting or rewriting entries from other grill phases or earlier runs.
-- Preserve existing decisions from story or stage grilling.
-- Log decisions that materially change evidence, story, prototype, stage, or production work.
-- Skip minor wording preferences and reversible drafting details.
-- Stop once the brief is coherent enough for the evidence or story gate to proceed.
+- **Deck type** sets the default structure (`../make-presentation/references/deck-types.md`); ask it early.
+- **Editability decides the engine family**: if the audience must edit the delivered `.pptx`, record "native editable" so the prototype gate offers `claude-pptx`, `codex-slides`, `pptxgenjs`, `genoffice`, or `google-slides` first; Marp exports image-backed slides and open-slide favours visual fidelity. Ask where the team edits (PowerPoint, Google Slides, or another tool such as ChatGPT or Gamma).
+- **Brand template**: record its path; it overrides the theme's palette and fonts.
+- **Visual direction is a contract**: offer the themes in `../make-presentation/themes/README.md` (or a benchmark deck) with a recommendation. Never let "clean", "warm", or "modern" pass without binding it to a theme.
+- **Evidence threshold**: ask which numbers or claims the audience will challenge; those become hard-support rows at the evidence gate.
+
+## Headless or "just do it"
+
+Only when no person can answer (headless run) or the user explicitly says to stop asking: resolve the remaining nodes per `references/autonomous-brief.md`, log each `Assumed` with its reason and confidence, and list the load-bearing ones at the top of the brief under `## Unconfirmed`. They must be confirmed before `production-qa` (`grill-check.mjs` enforces this).
+
+## Write the artifacts
+
+- `PRESENTATION-BRIEF.md` from `templates/PRESENTATION-BRIEF.md`, updated as each round settles nodes. Keep it decision-oriented, with explicit tradeoffs and a measurable success test.
+- `GRILL-LOG.md` from `templates/GRILL-LOG.md`: one row per node (`Phase`, `Node`, question, recommended answer, decision, `Status`, reason, invalidates). Append; never delete rows from other phases or earlier runs.
+- Any later change to a load-bearing node invalidates downstream gates (`status.mjs invalidate`).
+
+## Pass
+
+Run `node .agents/skills/make-presentation/scripts/grill-check.mjs <work-root> product-grill`. Pass only when it reports no errors and the user has confirmed the playback.

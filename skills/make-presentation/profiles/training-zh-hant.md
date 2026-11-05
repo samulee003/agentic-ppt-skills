@@ -45,6 +45,23 @@ production decks this repository was first developed for.
   or a take-home checklist.
 - Prefer drawn SVG illustrations in the sticker-pop stroke over photos.
 
+## Grill nodes
+
+Extra nodes this profile adds to `references/grill-tree.md`. `grill-check.mjs`
+requires them when the brief names this profile.
+
+```json grill-nodes
+{
+  "product-grill": [
+    { "id": "interaction-format", "title": "Interaction format", "question": "Is the session a lecture, a workshop, or mixed, and how many participants?", "deps": ["constraints"], "loadBearing": true }
+  ],
+  "stage-grill": [
+    { "id": "transfer", "title": "Behaviour transfer", "question": "For each tool taught, where is the rehearsal moment and what is the take-home scaffold?", "deps": [], "loadBearing": false },
+    { "id": "framing", "title": "Constructive framing", "question": "For local policy or community cases, is what already exists separated from the next challenge, without blaming the audience?", "deps": [], "loadBearing": false }
+  ]
+}
+```
+
 ## Stage grill
 
 - Attention reset at least every 15–20 minutes (poll, pair discussion, choral

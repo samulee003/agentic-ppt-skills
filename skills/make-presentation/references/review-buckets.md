@@ -1,6 +1,6 @@
 # Review buckets: lead judgment for opposition and QA reviews
 
-Adapted from the MIT-licensed [`interrogate`](https://github.com/backnotprop/pstack/tree/main/skills/interrogate) skill in `backnotprop/pstack`. Use it at `story-grill`, `stage-grill`, and `production-qa` so review output is actionable instead of a flat list of concerns.
+Adapted from the MIT-licensed [`interrogate`](https://github.com/backnotprop/pstack/tree/main/skills/interrogate) skill in `backnotprop/pstack`. Use it at `story-grill`, `stage-grill`, and `production-qa` so review output is actionable instead of a flat list of concerns. At the two grill gates the findings come from the interrogation (`interrogate.md`), where every finding already carries a verified proof; this file covers how to judge them.
 
 ## Reviewers
 

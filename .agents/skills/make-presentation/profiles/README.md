@@ -17,6 +17,7 @@ profile is recorded, use `default`.
 - When the brief and the profile disagree, the brief wins; log the override in
   `GRILL-LOG.md`.
 - Each focused skill reads the profile's section for its gate, if there is one.
+- A profile can add grill nodes in a `json grill-nodes` block (same shape as `references/grill-tree.md`). `grill-check.mjs` requires them when the brief names the profile.
 
 ## Adding a profile
 

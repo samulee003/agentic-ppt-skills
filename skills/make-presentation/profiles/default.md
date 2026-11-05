@@ -19,3 +19,7 @@
 
 - Talks over 30 minutes need an attention reset (question, poll, pair
   discussion, demo, or short pause) at least every 15–20 minutes.
+
+## Grill nodes
+
+None beyond `references/grill-tree.md`.

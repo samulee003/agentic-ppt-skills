@@ -1,17 +1,17 @@
 # Stage questions
 
-- three-second test: what the audience sees before narration starts
-- speakability: can the presenter say the line naturally in the intended language (spoken-first delivery)
-- Does the page contain one problem, example, or decision?
-- 1:1 slide/note parity: does every slide have a dedicated, synchronized speaker note?
-- attention reset & active engagement: does the delivery include active learning switches (polling, buzz-pairs, choral rehearsal) to maintain adult attention?
-- behavioral transfer: does the tool offer concrete dialogue rehearsal or take-home scaffolding to bridge knowledge into daily action?
-- visual balance check: is content centered on the eyeline without collapsing to the bottom border?
-- icon & visual craft: are all icons clean Flat SVGs / illustrations rather than emojis or character boxes?
-- language purity: is the text and note 100% in the target language with zero accidental leakage?
-- constructive framing ("not starting from zero"): does regional/policy analysis recognize existing infrastructure before outlining the next gap?
-- time value: is the page worth its share of the talk
-- existing-versus-remaining distinction: what already exists versus what gap remains
-- Does the spoken transition make the next page inevitable?
-- likely audience challenge: what hard question this page will trigger
-- timed trimming: what to cut first when rehearsal runs long
+Ask these of every page, on actual renders and current notes. The profile's
+*Stage grill* section may add more.
+
+- **Three-second test:** what does the audience see before narration starts?
+- **Speakability:** can the presenter say the line naturally, in the spoken language, without stumbling?
+- **One job:** does the page carry one problem, example, or decision?
+- **Notes parity:** does every slide have its own speaker note that matches its dominant message?
+- **Headline:** does the action title still state the takeaway once the page is built?
+- **Visual balance:** does the content sit around the optical middle, without collapsing to the bottom edge?
+- **Craft:** are icons and diagrams drawn to the theme (no OS emoji, no generic boxes)?
+- **Language:** is every surface in its target language and register, with no stray untranslated words?
+- **Time value:** is the page worth its share of the talk?
+- **Transition:** does the spoken transition make the next page inevitable?
+- **Audience challenge:** what hard question will this page trigger, and where is it answered?
+- **Trim order:** what is cut first when rehearsal runs long?

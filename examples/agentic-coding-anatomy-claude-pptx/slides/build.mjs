@@ -114,7 +114,7 @@ const source = (slide, value) =>
     text(s, rule, { x: x + 0.25, y: 2.65, w: w - 0.5, h: 0.85, fontSize: 20, bold: true });
     text(s, example, { x: x + 0.25, y: 3.6, w: w - 0.5, h: 0.7, fontSize: 13, color: T.muted });
   });
-  s.addNotes('Safety should follow the risk of the action. Consequential, irreversible, or out-of-scope actions should trigger human review. Routine, reversible work can stay autonomous when permissions and rollback are clear.');
+  s.addNotes('Safety should follow the risk of the action. Consequential, irreversible, or out-of-scope actions should trigger human review. Routine, reversible work can stay autonomous when permissions and rollback are clear. So: agentic coding is a loop, with review matched to risk.');
 }
 
 const outDir = process.env.DECK_OUT_DIR ?? fileURLToPath(new URL('../exports/', import.meta.url));

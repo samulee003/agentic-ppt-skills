@@ -25,7 +25,7 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, cited source files, and existing slide files before editing.
 - Always explore the files instead of asking the user for discoverable facts.
-- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential prototype decisions are unresolved: ask the whole frontier in one round, each question with a recommended answer worded so "yes" accepts it.
+- Settle the `deck-prototype` nodes in `../make-presentation/references/grill-tree.md` (engine, visual direction confirmed on real pages, representative set) in one round per `../make-presentation/references/grilling-rounds.md`, each with a recommended answer worded so "yes" accepts it. Ask the visual question from the rendered pages, not in the abstract. Run `grill-check.mjs <work-root> deck-prototype` before passing.
 - Follow the engine's authoring rules (from `.agents/adapters/<engine>/prototype.md`) before editing any page in the real slide source.
 - **Flexible Deck Length (No Arbitrary Page Limit)**: The final presentation length is unconstrained by arbitrary page count caps (e.g. not fixed to 18 slides). The total slide count scales organically with lecture duration, audience interaction, and narrative depth. At the prototype gate, build the representative set in `references/prototype-set.md` (or the full draft if appropriate) to prove the visual language and page grammar.
 - Use real assets, real type scale, and the intended visual direction rather than placeholder visuals or compressed mini-layouts.
@@ -55,8 +55,4 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 - Require a live review in the chosen engine before calling the gate passed.
 - Return to story or evidence if representative pages fail because the narrative job, proof, or density is wrong rather than merely unpolished.
 
-Write only consequential decisions to `GRILL-LOG.md` from `../presentation-product-grill/templates/GRILL-LOG.md`.
-
-- Append new decisions without deleting or rewriting entries from other grill phases or earlier runs.
-- Preserve existing decisions when revisiting the prototype gate.
-- Log changes that materially affect visual system, page grammar, asset direction, representative scope, or what later full-deck work must preserve.
+Log one `GRILL-LOG.md` row per prototype node (template: `../presentation-product-grill/templates/GRILL-LOG.md`), plus any decision that changes the visual system, page grammar, or asset direction. Append; never delete rows from other phases or earlier runs.

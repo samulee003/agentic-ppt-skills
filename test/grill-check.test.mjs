@@ -90,3 +90,16 @@ test('the bundled example is fully grilled for every gate', async () => {
     assert.match(stdout, /grill-check: no errors/, gate);
   }
 });
+
+test('a profile can add required grill nodes', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { profileId, withProfile } = await import('../skills/make-presentation/scripts/grill-check.mjs');
+  assert.equal(profileId('- Profile: `training-zh-hant`'), 'training-zh-hant');
+  assert.equal(profileId('- Profile: (`default`, `training-zh-hant`, or another)'), null);
+  const profile = await readFile(path.join(repo, 'skills/make-presentation/profiles/training-zh-hant.md'), 'utf8');
+  const merged = withProfile(tree, profile);
+  const log = [header, ...merged['product-grill'].filter((n) => n.id !== 'interaction-format').map((n) => row('product-grill', n.id))].join('\n');
+  const { errors } = checkGrill({ log, gate: 'product-grill', tree: merged });
+  assert.ok(errors.some((e) => /product-grill\/interaction-format: not settled/.test(e)));
+  assert.deepEqual(checkGrill({ log, gate: 'product-grill' }).errors, [], 'default tree does not need it');
+});

@@ -208,6 +208,24 @@ export function estimateOverflow(shapeXml) {
     : null;
 }
 
+/** Returns the visible text and the speaker-note text of every slide, in order. */
+export function slideTexts(buffer) {
+  const zip = readZip(buffer);
+  const presentation = zip.read('ppt/presentation.xml') ?? '';
+  const presRels = relsFor(zip, 'ppt/presentation.xml');
+  return [...presentation.matchAll(/<p:sldId\b[^>]*\br:id="([^"]+)"/g)]
+    .map((match) => presRels.get(match[1])?.target)
+    .filter(Boolean)
+    .map((part) => {
+      const rels = relsFor(zip, part);
+      const notesPart = [...rels.values()].find((rel) => rel.type.endsWith('/notesSlide'))?.target;
+      return {
+        text: texts(zip.read(part) ?? '').join(' '),
+        notes: notesPart ? texts(zip.read(notesPart) ?? '').join(' ') : '',
+      };
+    });
+}
+
 export function inspectPptx(buffer, options = {}) {
   const requireNotes = options.requireNotes ?? true;
   const zip = readZip(buffer);

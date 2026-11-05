@@ -68,6 +68,7 @@ This gate renders and exports, so it needs the **slide engine** chosen at the pr
 
 ## Record and hand off
 
+- Run `node .agents/skills/make-presentation/scripts/grill-check.mjs <work-root> production-qa`. Every load-bearing decision must be `Decided` by the user before delivery; an unconfirmed assumption blocks the gate. Ask the open ones in one round.
 - Sort remaining findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`. Any Act on finding blocks the gate.
 - Complete `templates/QA-REPORT.md` with evidence for every section and any remaining caveats.
 - In pipeline mode, update the `production-qa` gate in `STATUS.md` through `.agents/skills/make-presentation/scripts/status.mjs`.

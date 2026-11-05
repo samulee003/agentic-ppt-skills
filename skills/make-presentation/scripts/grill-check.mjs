@@ -28,6 +28,21 @@ function column(header, ...names) {
   return header.find((name) => names.some((candidate) => name.startsWith(candidate)));
 }
 
+export function profileId(brief) {
+  const line = (brief ?? '').split(/\r?\n/).find((l) => /^\s*-\s*Profile\b/i.test(l));
+  return line?.slice(line.indexOf(':') + 1).match(/^\s*`?([a-z0-9]+(?:-[a-z0-9]+)*)`?(?=$|[\s,;(])/)?.[1] ?? null;
+}
+
+/** Adds the nodes a profile declares in its ```json grill-nodes block. */
+export function withProfile(tree, profileMarkdown) {
+  const match = profileMarkdown?.match(/```json grill-nodes\s*\n([\s\S]*?)```/);
+  if (!match) return tree;
+  const extra = JSON.parse(match[1]);
+  return Object.fromEntries(
+    Object.entries(tree).map(([phase, nodes]) => [phase, [...nodes, ...(extra[phase] ?? [])]]),
+  );
+}
+
 export function parseLog(markdown) {
   const table = parseTables(markdown).find((t) => column(t.header, 'phase'));
   if (!table) return { rows: [], schemaError: 'GRILL-LOG.md has no table with a "Phase" column' };
@@ -119,7 +134,14 @@ function main(argv) {
   };
   const log = read('GRILL-LOG.md');
   if (log === null) throw new Error(`No GRILL-LOG.md in ${root}`);
-  const report = checkGrill({ log, gate, brief: read('PRESENTATION-BRIEF.md') });
+  const brief = read('PRESENTATION-BRIEF.md');
+  const profile = profileId(brief);
+  const profileFile = profile ? path.join(here, '..', 'profiles', `${profile}.md`) : null;
+  if (profile && !existsSync(profileFile)) {
+    throw new Error(`The brief names profile "${profile}", but ${profileFile} does not exist`);
+  }
+  const tree = withProfile(loadTree(), profileFile ? readFileSync(profileFile, 'utf8') : null);
+  const report = checkGrill({ log, gate, brief, tree });
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {

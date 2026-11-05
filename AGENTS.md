@@ -73,6 +73,10 @@ node .agents/skills/make-presentation/scripts/status.mjs \
   next presentation-work/<deck-id>
 ```
 
+Grilling is the point: at every grill gate, ask the user the frontier of
+`make-presentation/references/grill-tree.md` in rounds, with recommended
+answers. Do not assume a load-bearing decision while the user can answer.
+
 Run exactly one focused skill for the earliest unresolved gate. `SKILL.md` is
 the agent contract; `skills/SKILLS-INDEX.md` is the human-facing catalog.
 Create each named artifact yourself from its template. Never skip a gate
@@ -82,8 +86,9 @@ Never hand-edit `STATUS.md`. Use only `init`, `validate`, `next`, `set`,
 `result`, `invalidate`, `set-mode`, `set-engine`, and `summary` from the status
 helper. Mark a gate passed only with real `--artifact` paths.
 
-The deterministic checks in `make-presentation/scripts/` (`storyboard-check.mjs`,
-`pptx-check.mjs`, `theme-check.mjs`, `unslop-check.mjs`, `qa-deck.mjs`) run at
+The deterministic checks in `make-presentation/scripts/` (`grill-check.mjs`,
+`interrogation-check.mjs`, `storyboard-check.mjs`, `pptx-check.mjs`,
+`theme-check.mjs`, `unslop-check.mjs`, `qa-deck.mjs`) run at
 the gates their skills name. An error from any of them blocks the gate; do not
 pass a gate over a failing check.
 
