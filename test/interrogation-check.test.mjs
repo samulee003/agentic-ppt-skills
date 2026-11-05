@@ -91,3 +91,14 @@ test('quotes are verified against this deck only, never another deck in exports/
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('a resolved Act-on finding may quote text its fix removed; an unresolved one may not', () => {
+  const md = round(cast, [
+    '| F1 | the CFO | 2 | Revenue tripled | ledger | `E1` has no denominator | kept | Act on | Reworded the title |',
+    '| F2 | the CFO | 3 | Revenue tripled again | ledger | `E1` has no denominator | kept | Consider | |',
+  ]);
+  const { errors, warnings } = checkInterrogation({ interrogation: md, corpus, claimIds });
+  assert.ok(warnings.some((w) => /F1: quote "Revenue tripled" is no longer in the deck/.test(w)));
+  assert.ok(!errors.some((e) => /F1/.test(e)));
+  assert.ok(errors.some((e) => /F2: quote "Revenue tripled again" is not in the deck/.test(e)));
+});

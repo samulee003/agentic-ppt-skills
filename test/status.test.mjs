@@ -47,7 +47,7 @@ test('init creates a valid pipeline and next reports the first gate', async () =
 
     const status = await readFile(path.join(root, 'STATUS.md'), 'utf8');
     assert.match(status, /"schemaVersion": 3/);
-    assert.match(status, /"sourceRoot": ".*notes"/);
+    assert.match(status, /"sourceRoot": "notes"/, 'stored relative to the work root');
 
     const next = await runStatus(root, 'next');
     assert.equal(next.stdout.trim(), 'source-intake');

@@ -1,0 +1,8 @@
+{
+  "name": "simulated-training-zh-hant",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}

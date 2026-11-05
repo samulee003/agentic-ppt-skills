@@ -86,7 +86,28 @@ export function column(header, ...names) {
   );
 }
 
-export function checkStoryboard({ storyboard, ledger = null, brief = null }) {
+/** Seconds to say a passage aloud: about 4 CJK characters or 2.5 Latin words a second. */
+export function spokenSeconds(text) {
+  const cjk = (text.match(CJK) ?? []).length;
+  const words = (text.replace(CJK, ' ').match(/[\p{L}\p{N}]+/gu) ?? []).length;
+  return cjk / 4 + words / 2.5;
+}
+
+const CN_DIGITS = { 一: 1, 兩: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 半: 0.5 };
+
+/** Minutes of activity the notes schedule explicitly ("about two minutes", 「大約兩分鐘」). */
+export function plannedActivitySeconds(text) {
+  let seconds = 0;
+  // Only durations marked as scheduled ("about", "for", 大約, 約): "talk for five
+  // minutes at the door" inside the content must not count as activity time.
+  const marked = /(?:大約|大概|約|约|about|around|approx\.?|for)\s*(\d+(?:\.\d+)?|[一兩二三四五六七八九十半])\s*(?:分鐘|分钟|minutes?|mins?)/gi;
+  for (const m of text.matchAll(marked)) {
+    seconds += (CN_DIGITS[m[1]] ?? Number(m[1])) * 60;
+  }
+  return seconds;
+}
+
+export function checkStoryboard({ storyboard, ledger = null, brief = null, script = null }) {
   const errors = [];
   const warnings = [];
   const table = parseTables(storyboard).find((t) => column(t.header, 'slide'));
@@ -161,6 +182,29 @@ export function checkStoryboard({ storyboard, ledger = null, brief = null }) {
     }
   });
 
+  // Once SPEAKER-SCRIPT.md exists, each slot should be filled by its notes:
+  // far shorter means unplanned minutes, far longer means the slot overruns.
+  const scriptTable = script ? parseTables(script).find((t) => column(t.header, 'page', 'slide')) : null;
+  if (scriptTable && timeCol) {
+    const pageCol = column(scriptTable.header, 'page', 'slide');
+    const wordCol = column(scriptTable.header, 'approved wording', 'notes');
+    const wording = new Map(scriptTable.rows.map((r) => [String(r[pageCol]).trim(), wordCol ? r[wordCol] : '']));
+    for (const row of table.rows) {
+      const label = row[column(table.header, 'slide')];
+      const minutes = parseMinutes(row[timeCol] ?? '');
+      const words = wording.get(String(label).trim());
+      const archetype = archetypeCol ? row[archetypeCol].replace(/[`*]/g, '').trim().toLowerCase() : '';
+      const backup = rangeCol ? /backup|備|备|q&a/i.test(row[rangeCol]) : false;
+      if (minutes === null || !words || archetype === 'interaction' || backup) continue;
+      const seconds = spokenSeconds(words) + plannedActivitySeconds(words);
+      if (minutes >= 2 && seconds < minutes * 60 * 0.25) {
+        warnings.push(`Slide ${label}: the notes take about ${Math.round(seconds)} s for a ${minutes}-minute slot; plan what fills the rest (a prompt, an activity) or shorten the slot`);
+      } else if (seconds > minutes * 60 * 1.25) {
+        warnings.push(`Slide ${label}: the notes take about ${Math.round(seconds)} s, more than the ${minutes}-minute slot`);
+      }
+    }
+  }
+
   const target = brief ? briefMinutes(brief) : null;
   if (timeCol && timedRows > 0 && target) {
     if (mainMinutes > target) {
@@ -191,6 +235,7 @@ function main(argv) {
     storyboard,
     ledger: read('EVIDENCE-LEDGER.md'),
     brief: read('PRESENTATION-BRIEF.md'),
+    script: read('SPEAKER-SCRIPT.md'),
   });
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

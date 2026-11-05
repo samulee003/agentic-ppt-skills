@@ -45,6 +45,7 @@
 ## Deliverables
 
 - Presenting deck / reading deck / both:
+- Handouts (pocket card, checklist, worksheet), if any, and where they live (a printable slide or a separate file):
 - Formats: (`.pptx`, `.pdf`, `.html`)
 - Must the `.pptx` be natively editable in PowerPoint? (yes → `claude-pptx`, `codex-slides`, `pptxgenjs`, or `genoffice`)
 - Where will the team edit it? (PowerPoint, Google Slides → `google-slides`, another tool such as ChatGPT/Gamma/Canva → `handoff`)

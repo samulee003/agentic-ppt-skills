@@ -45,9 +45,9 @@
 
 ## Missing
 
-| Needed item | Why needed | Likely owner or location | Next step |
-| --- | --- | --- | --- |
-| Current agent benchmark comparison | Would be needed for a present-day numerical claim | Current benchmark paper or official leaderboard with variant and date | Out of scope; the deck intentionally uses no current comparison number |
+| Needed item | Why needed | Likely owner or location | Next step | Status |
+| --- | --- | --- | --- | --- |
+| Current agent benchmark comparison | Would be needed for a present-day numerical claim | Current benchmark paper or official leaderboard with variant and date | Out of scope; the deck intentionally uses no current comparison number | Accepted |
 
 ## Access issue
 

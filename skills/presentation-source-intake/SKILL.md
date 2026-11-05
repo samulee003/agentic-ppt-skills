@@ -19,7 +19,7 @@ Use when `source-intake` is the current gate.
 - Mark the most authoritative source for each topic, chart, claim set, and visual asset.
 - Record reusable assets that can move forward without rework.
 - Record stale materials that should not drive current decisions.
-- Record conflicts, missing files, and access blockers explicitly.
+- Record conflicts, missing files, and access blockers explicitly. Every *Missing* row starts `Open`; the product grill asks for each one, and delivery waits until each is `Resolved` or `Accepted`.
 
 Write `SOURCE-INVENTORY.md` from `templates/SOURCE-INVENTORY.md`.
 

@@ -24,6 +24,7 @@ import {
 import { checkGrillAt } from './grill-check.mjs';
 import { checkLedgerAt } from './ledger-check.mjs';
 import { checkPlanAt } from './plan-check.mjs';
+import { checkSourcesAt } from './source-check.mjs';
 import { formatReport, inspectPptx } from './pptx-check.mjs';
 
 const USAGE =
@@ -100,6 +101,7 @@ async function main() {
       ['plan-check', existsSync(pptx) ? checkPlanAt(work, pptx) : null],
       ['ledger-check', checkLedgerAt(work)],
       ['grill-check production-qa', checkGrillAt(work, 'production-qa')],
+      ['source-check --final', existsSync(path.join(work, 'SOURCE-INVENTORY.md')) ? checkSourcesAt(work, true) : null],
     ];
     for (const [name, report] of reports) {
       if (!report) continue;
@@ -116,7 +118,7 @@ async function main() {
   );
   if (!exportsOk) throw new Error('Export integrity check failed');
   if (pptxErrors > 0) throw new Error(`pptx-check found ${pptxErrors} error(s)`);
-  if (pipelineErrors > 0) throw new Error(`plan, ledger, or grill checks found ${pipelineErrors} error(s)`);
+  if (pipelineErrors > 0) throw new Error(`plan, ledger, grill, or source checks found ${pipelineErrors} error(s)`);
 }
 
 main().catch((error) => {

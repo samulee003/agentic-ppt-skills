@@ -15,9 +15,13 @@ that every node for the gate is covered.
 1. Settle what the sources already answer. Log those nodes as `Decided` with
    the source as the reason ("brief from client email, 3 May"), or ask a
    one-line confirmation in round 1.
-2. Round 1 is every remaining node with no unsettled prerequisite. For the
-   product grill that is usually profile, deck type, and audience, plus any
-   later node the sources made answerable.
+2. Round 1 is every remaining node with no unsettled prerequisite (for the
+   product grill: profile, deck type, audience, and brand), **plus every node
+   the sources already answer**, asked as a confirmation with the source's
+   answer as the recommendation, whatever its prerequisites. Confirmations do
+   not depend on each other: the user is checking one consistent proposal.
+   With the shared tree the product grill takes at most three rounds, and
+   usually two when the notes are good.
 3. Each later round is the new frontier. Do not ask a node whose
    prerequisite is still open in the same round.
 4. Every question carries a recommended answer worded so "yes" accepts it.
@@ -48,11 +52,11 @@ works on the day. They are asked, not assumed, whenever a person can answer.
     { "id": "promise", "title": "Promise", "question": "In one sentence, what does the deck promise the audience?", "deps": ["outcome"], "loadBearing": true },
     { "id": "evidence-threshold", "title": "Evidence threshold", "question": "How much proof will this audience demand, and which claims need hard support?", "deps": ["audience", "outcome"], "loadBearing": true },
     { "id": "constraints", "title": "Constraints", "question": "Talk length, Q&A, venue and screen, on-screen and spoken language?", "deps": ["deck-type"], "loadBearing": true },
-    { "id": "deliverables", "title": "Deliverables", "question": "Presenting deck, reading deck, or both; formats; must the .pptx be editable, and where will the team edit it?", "deps": ["audience", "constraints"], "loadBearing": false },
-    { "id": "brand", "title": "Brand template", "question": "Is there a brand template or guide (or none)?", "deps": ["deliverables"], "loadBearing": false },
+    { "id": "deliverables", "title": "Deliverables", "question": "Presenting deck, reading deck, or both; formats; must the .pptx be editable, and where will the team edit it?", "deps": ["audience"], "loadBearing": false },
+    { "id": "brand", "title": "Brand template", "question": "Is there a brand template or guide (or none)?", "deps": [], "loadBearing": false },
     { "id": "visual", "title": "Visual direction", "question": "Which theme, or which benchmark deck?", "deps": ["deck-type", "brand"], "loadBearing": false },
-    { "id": "success-test", "title": "Success test", "question": "What observable signal will show the deck worked?", "deps": ["outcome", "promise"], "loadBearing": true },
-    { "id": "out-of-scope", "title": "Out of scope", "question": "What must the deck not cover or claim?", "deps": ["promise"], "loadBearing": false }
+    { "id": "success-test", "title": "Success test", "question": "What observable signal will show the deck worked?", "deps": ["outcome"], "loadBearing": true },
+    { "id": "out-of-scope", "title": "Out of scope", "question": "What must the deck not cover or claim?", "deps": ["outcome"], "loadBearing": false }
   ],
   "story-grill": [
     { "id": "opposition", "title": "Strongest objection", "question": "What is the strongest case against the thesis, and does the story answer it?", "deps": [], "loadBearing": true },

@@ -291,6 +291,10 @@ test('qa-deck runs plan, ledger, and grill checks when the work folder exists', 
   for (const name of await readdir(workSrc)) {
     layout[`presentation-work/agentic-coding-anatomy/${name}`] = await readFile(path.join(workSrc, name));
   }
+  // STATUS.md's sourceRoot is ../source relative to the work folder.
+  layout['presentation-work/source/raw_notes.md'] = await readFile(
+    path.join(repoRoot, 'examples/agentic-coding-anatomy/source/raw_notes.md'),
+  );
   const showcase = path.join(repoRoot, 'examples/agentic-coding-anatomy-claude-pptx/exports/agentic-coding-anatomy');
   const drifted = path.join(repoRoot, 'examples/agentic-coding-anatomy-pptxgenjs/exports/agentic-coding-anatomy');
   await withDeck(
@@ -315,9 +319,17 @@ test('qa-deck runs plan, ledger, and grill checks when the work folder exists', 
     async (root) => {
       await assert.rejects(run(qaScript, root, 'agentic-coding-anatomy', '--engine=handoff'), (err) => {
         assert.match(err.stdout, /storyboard title .* is not on the slide/);
-        assert.match(err.stderr, /plan, ledger, or grill checks found/);
+        assert.match(err.stderr, /plan, ledger, grill, or source checks found/);
         return true;
       });
     },
   );
+});
+
+test('the simulated training example passes every check from its own folder', async () => {
+  const example = path.resolve(new URL('../examples/simulated-training-zh-hant', import.meta.url).pathname);
+  const { stdout } = await run(qaScript, example, 'refusal-trust-workshop');
+  for (const check of ['pptx-check', 'plan-check', 'ledger-check', 'grill-check production-qa', 'source-check --final']) {
+    assert.match(stdout, new RegExp(`${check}: no errors`), check);
+  }
 });

@@ -90,8 +90,14 @@ export function checkInterrogation({ interrogation, corpus, claimIds, round = nu
         errors.push(`${label}: proof type "${f.proofType}" is not one of ${PROOF_TYPES.join(', ')}`);
       }
       if (!f.proof) errors.push(`${label}: kept without a proof`);
+      const resolved = f.bucket === 'Act on' && f.resolution.replace(/[-—\s]/g, '') !== '';
       if (!found(f.quote)) {
-        errors.push(`${label}: quote "${f.quote.slice(0, 60)}" is not in the deck's artifacts; copy it verbatim`);
+        // A fixed finding's quote is expected to be gone; anything else is a misquote.
+        if (resolved) {
+          warnings.push(`${label}: quote "${f.quote.slice(0, 60)}" is no longer in the deck; confirm the resolution removed it`);
+        } else {
+          errors.push(`${label}: quote "${f.quote.slice(0, 60)}" is not in the deck's artifacts; copy it verbatim`);
+        }
       }
       if (f.proofType === 'ledger' && !/no row/i.test(f.proof)) {
         const ids = [...f.proof.matchAll(/`?([A-Za-z]+-?\d+[A-Za-z0-9-]*)`?/g)].map((m) => m[1]);

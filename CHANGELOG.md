@@ -2,6 +2,13 @@
 
 ## 1.0.0
 
+- A simulated end-to-end run (`examples/simulated-training-zh-hant/`) found
+  and fixed eight problems: a 5-round grill tree (now at most 3), rejected
+  claims failing `ledger-check`, Cantonese dialogue vs the written-Chinese
+  rule, fixed findings failing `interrogation-check`, promised inputs never
+  re-checked (now `source-check --final` and placeholder detection), notes
+  that cannot fill their slots (now timed by `storyboard-check`), an absolute
+  `sourceRoot`, and no place for take-home handouts.
 - Grilling at the core: a presentation grill tree (`grill-tree.md`) worked in
   frontier rounds at the brief, story, prototype, and stage gates;
   `grill-check.mjs` blocks a gate with unsettled nodes and blocks delivery

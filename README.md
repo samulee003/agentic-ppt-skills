@@ -197,6 +197,11 @@ built with the `claude-pptx` engine in the `editorial-minimal` theme.
 The same story is also built with [Marp](./examples/agentic-coding-anatomy-marp/)
 and [PptxGenJS](./examples/agentic-coding-anatomy-pptxgenjs/).
 
+[`examples/simulated-training-zh-hant/`](./examples/simulated-training-zh-hant/)
+is a full run with a simulated user: a 45-minute Traditional Chinese workshop
+with Cantonese notes in the `sticker-pop` theme. Its [run log](./examples/simulated-training-zh-hant/RUN-LOG.md)
+lists the eight problems the run exposed in these skills and how each was fixed.
+
 ## Make it yours
 
 - **Profiles** ([`profiles/`](./skills/make-presentation/profiles/)) bundle the

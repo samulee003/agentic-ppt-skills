@@ -7,7 +7,9 @@ production decks this repository was first developed for.
 ## Language
 
 - On-screen copy: standard Traditional written Chinese (繁體書面語). No
-  colloquial Cantonese characters on slides.
+  colloquial Cantonese characters on slides, with one exception: quoted
+  dialogue the audience will say aloud (opening lines, scripts for role-play)
+  stays in spoken Cantonese inside 「」, because that is what they will say.
 - Speaker notes: natural spoken Cantonese the presenter can say aloud without
   stumbling.
 - Translate or remove every stray English term on screen unless the audience
@@ -53,7 +55,7 @@ requires them when the brief names this profile.
 ```json grill-nodes
 {
   "product-grill": [
-    { "id": "interaction-format", "title": "Interaction format", "question": "Is the session a lecture, a workshop, or mixed, and how many participants?", "deps": ["constraints"], "loadBearing": true }
+    { "id": "interaction-format", "title": "Interaction format", "question": "Is the session a lecture, a workshop, or mixed, and how many participants?", "deps": ["deck-type"], "loadBearing": true }
   ],
   "stage-grill": [
     { "id": "transfer", "title": "Behaviour transfer", "question": "For each tool taught, where is the rehearsal moment and what is the take-home scaffold?", "deps": [], "loadBearing": false },
@@ -68,7 +70,9 @@ requires them when the brief names this profile.
   rehearsal of a dialogue line, silent reflection).
 - Every tool taught on screen gets a rehearsal moment and a take-home scaffold
   (pocket card, checklist), aiming at behaviour change after the session
-  (Kirkpatrick level 3).
+  (Kirkpatrick level 3). Build the scaffold as the last content slide, laid
+  out to print and cut (a `cards` slide with a dashed cut line), and list it
+  under *Deliverables* in the brief.
 - For local policy or community cases, separate what is already in place from
   the next challenge. Avoid framing that blames the audience or their
   community.

@@ -9,7 +9,7 @@ default type; the brief can override it.
 | `decision` (board, exec, investment committee) | the answer and what you need from them | Answer first (pyramid): recommendation → 3 supporting reasons → risks → the ask | the recommendation and the decision requested | the decision, owner, and date |
 | `update` (status, QBR, project review) | what changed and what needs attention | Headline → progress vs plan → issues and asks → next period | the one-line status | asks and owners |
 | `pitch` (sales, fundraising, partnership) | why this, why you, why now | SCQA or problem → stakes → solution → proof → plan → ask | the customer's problem in their words | the specific next step |
-| `training` (workshop, course, onboarding) | to be able to do something new | 4MAT: Why → How it works → What to do → Practice and transfer | the learner's real situation | practice, take-home scaffold, commitment |
+| `training` (workshop, course, onboarding) | to be able to do something new | 4MAT: Why → How it works → What to do → Practice and transfer | the learner's real situation | practice, a take-home scaffold (a printable last slide or a one-page handout listed under *Deliverables*), commitment |
 | `keynote` (conference, all-hands, launch) | one idea worth remembering | Tension → journey → revelation → call to action | a story, image, or question | the one idea, restated |
 | `technical` (design review, research talk, architecture) | to understand and challenge the reasoning | Problem → constraints → options considered → decision → evidence → open questions | the problem and why it is hard | open questions and what feedback is needed |
 

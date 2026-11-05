@@ -19,6 +19,7 @@ const ledger = `| Claim ID | Claim | Source | Source type | Date | Safety |
 | E1 | Churn rose 4 points | CRM export | primary | 2026-03 | A |
 | E2 | Competitors cut prices | blog post | secondary | 2025 | C |
 | E3 | Price is the only cause | — | opinion | | D |
+| E4 | Discounts always work | | opinion | | |
 
 ## Assets
 
@@ -42,7 +43,8 @@ test('ledger-check: main slides may cite only A/B claims; D nowhere; numbers nee
   assert.ok(errors.some((e) => /Slide 2: cites E2, a safety C claim, in the main talk/.test(e)));
   assert.ok(errors.some((e) => /Slide 3: cites E3, a safety D claim/.test(e)));
   assert.ok(!errors.some((e) => /Slide 5/.test(e)), 'C in backup is allowed');
-  assert.ok(errors.some((e) => /Ledger E3: no source/.test(e)));
+  assert.ok(!errors.some((e) => /Ledger E3: no source/.test(e)), 'a rejected D claim may have no source');
+  assert.ok(errors.some((e) => /Ledger E4: no source/.test(e)), 'an unrated claim still needs a source');
   assert.ok(errors.some((e) => /Asset A2: no licence recorded/.test(e)));
   assert.ok(warnings.some((w) => /Slide 4: the title states a number .* cites no evidence/.test(w)));
 });
@@ -129,5 +131,38 @@ test('ledger-check and source-check pass the bundled example', async () => {
   for (const name of ['ledger-check.mjs', 'source-check.mjs']) {
     const { stdout } = await execFileAsync(process.execPath, [path.join(scripts, name), work]);
     assert.match(stdout, /: no errors/, name);
+  }
+});
+
+test('source-check --final blocks delivery while a Missing item is still Open', async () => {
+  const { missingItems } = await import('../skills/make-presentation/scripts/source-check.mjs');
+  const inventory = `## Missing
+
+| Needed item | Why needed | Likely owner or location | Next step | Status |
+| --- | --- | --- | --- | --- |
+| logo.png | cover | client | ask | Open |
+| survey.xlsx | figures | client | received 3 May | Resolved |
+| old deck | context | client | user said go without it | Accepted |
+| interview notes | quotes | client | ask | |`;
+  assert.deepEqual(
+    missingItems(inventory).map((r) => r.status),
+    ['Open', 'Resolved', 'Accepted', 'Open'],
+  );
+  const during = checkSources({ inventory, bases: ['.'] });
+  assert.deepEqual(during.errors, []);
+  assert.equal(during.warnings.length, 2);
+  const final = checkSources({ inventory, bases: ['.'], final: true });
+  assert.ok(final.errors.some((e) => /"logo\.png" is still Open/.test(e)));
+  assert.ok(final.errors.some((e) => /"interview notes" is still Open/.test(e)));
+  assert.equal(final.errors.length, 2);
+});
+
+test('pptx-check flags placeholder text left on a slide', async () => {
+  const { PLACEHOLDER } = await import('../skills/make-presentation/scripts/pptx-check.mjs');
+  for (const text of ['TODO: add chart', 'Revenue TBD', '[Insert logo]', '數字待補', 'XXXX', 'lorem ipsum dolor']) {
+    assert.match(text, PLACEHOLDER, text);
+  }
+  for (const text of ['Today we decide', 'TBDs are gone', 'Max 3 items', '中心標誌']) {
+    assert.doesNotMatch(text, PLACEHOLDER, text);
   }
 });

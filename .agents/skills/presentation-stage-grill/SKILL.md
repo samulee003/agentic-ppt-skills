@@ -29,6 +29,7 @@ Use when `stage-grill` is the current gate.
 - Sort audience-challenge and trimming findings into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`.
 - Produce `SPEAKER-SCRIPT.md` from `templates/SPEAKER-SCRIPT.md` with approved wording, timing, likely audience challenge, and Q&A risk.
 - Return pages for revision when density, wording, transition logic, or defensibility breaks the live talk.
+- After writing `SPEAKER-SCRIPT.md`, run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>`: it compares each slide's time slot with how long its notes take to say. A slot the notes cannot fill needs a planned activity (write its length, 「大約兩分鐘」) or a shorter slot; settle the change on the `timing` node.
 - Return `passed` only when the talk is readable, speakable, timed, defensible, and audience-appropriate, and `interrogation-check.mjs <work-root> --round=stage-grill` and `grill-check.mjs <work-root> stage-grill` report no errors.
 
 Log one `GRILL-LOG.md` row per stage node (template: `../presentation-product-grill/templates/GRILL-LOG.md`). Append; never delete rows from other phases or earlier runs.

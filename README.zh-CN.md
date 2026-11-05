@@ -154,6 +154,8 @@ pptx-check: no errors
 
 同一个故事也用 [Marp](./examples/agentic-coding-anatomy-marp/) 和 [PptxGenJS](./examples/agentic-coding-anatomy-pptxgenjs/) 各做了一份。
 
+[`examples/simulated-training-zh-hant/`](./examples/simulated-training-zh-hant/) 是以模拟用户完整跑一次的示例：45 分钟的繁体中文工作坊，配粤语讲稿，使用 `sticker-pop` 主题。它的[运行记录](./examples/simulated-training-zh-hant/RUN-LOG.md)列出这次模拟暴露的 8 个问题，以及各自的修正。
+
 ## 定制
 
 - **配置档**（[`profiles/`](./skills/make-presentation/profiles/)）：把一类工作的默认值打包，例如 `default`，或繁体中文培训、粤语讲稿用的 `training-zh-hant`。可以自己新增。

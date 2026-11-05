@@ -160,7 +160,7 @@ async function save(root, state, options = {}) {
   await writeFile(statusPath(root), render(state), { flag: options.exclusive ? 'wx' : 'w' });
 }
 
-function createState(deckId, sourceRoot, mode, modeReason) {
+function createState(deckId, sourceRoot, mode, modeReason, root = '.') {
   assertDeckId(deckId);
   assertRequiredString(sourceRoot, 'sourceRoot');
   const resolvedMode = mode?.trim() ? mode : 'general';
@@ -176,7 +176,8 @@ function createState(deckId, sourceRoot, mode, modeReason) {
     modeReviewedAt: new Date().toISOString(),
     modeReason: resolvedReason,
     engine: null,
-    sourceRoot: path.resolve(sourceRoot),
+    // Stored relative to the work root so the project can move between machines.
+    sourceRoot: path.relative(path.resolve(root), path.resolve(sourceRoot)) || '.',
     gates: Object.fromEntries(
       GATES.map((gate) => [
         gate,
@@ -239,7 +240,7 @@ function validateState(state) {
 }
 
 async function init(root, deckId, sourceRoot, mode, modeReason, force) {
-  const state = createState(deckId, sourceRoot, mode, modeReason);
+  const state = createState(deckId, sourceRoot, mode, modeReason, root);
   try {
     await save(root, state, { exclusive: !force });
   } catch (error) {

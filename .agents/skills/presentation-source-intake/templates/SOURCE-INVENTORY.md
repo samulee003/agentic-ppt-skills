@@ -40,8 +40,12 @@ Use `draft`, `revision`, `export`, `derivative`, or `duplicate` for `Lineage cla
 
 ## Missing
 
-| Needed item | Why needed | Likely owner or location | Next step |
-| --- | --- | --- | --- |
+`Status`: `Open` until the item arrives or the user accepts going without it,
+then `Resolved` or `Accepted` with the reason in *Next step*. `production-qa`
+fails while any row is `Open` (`source-check.mjs --final`).
+
+| Needed item | Why needed | Likely owner or location | Next step | Status |
+| --- | --- | --- | --- | --- |
 
 ## Access issue
 

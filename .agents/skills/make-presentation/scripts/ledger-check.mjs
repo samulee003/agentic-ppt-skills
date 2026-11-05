@@ -56,11 +56,13 @@ export function checkLedger({ ledger, storyboard = null, mode = 'general' }) {
     else if (byId.has(claim.id)) errors.push(`Ledger: claim ID "${claim.id}" is used twice`);
     else byId.set(claim.id, claim);
     if (!claim.claim) errors.push(`Ledger ${label}: no claim text`);
-    if (NONE.test(claim.source)) errors.push(`Ledger ${label}: no source`);
+    // A rejected (D) claim is recorded precisely because it has no usable source.
+    const rejected = claim.safety.startsWith('D');
+    if (NONE.test(claim.source) && !rejected) errors.push(`Ledger ${label}: no source`);
     if (claim.safety && !['A', 'B', 'C', 'D'].includes(claim.safety[0])) {
       errors.push(`Ledger ${label}: safety "${claim.safety}" is not A, B, C, or D`);
     }
-    if (research) {
+    if (research && !rejected) {
       if (NONE.test(claim.date)) errors.push(`Ledger ${label}: research-enhanced claims need a date`);
       if (!claim.safety) errors.push(`Ledger ${label}: research-enhanced claims need an A/B/C/D safety level`);
     }

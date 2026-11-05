@@ -23,6 +23,8 @@ export const HARD_FLOOR = 0.02;
 // a hair under the exact ratio. Allow half a pixel at 1080 px.
 export const FLOOR_TOLERANCE = 0.0005;
 export const DENSITY_WORDS = 70;
+// Text a builder leaves behind when content is still missing.
+export const PLACEHOLDER = /\b(?:TODO|TBD|TBC|FIXME|lorem ipsum|placeholder)\b|\bX{3,}\b|待補|待定|佔位|占位|\[(?:insert|add|logo|image)[^\]]*\]/i;
 export const DENSITY_CJK = 120;
 
 export function readZip(buffer) {
@@ -309,6 +311,8 @@ export function inspectPptx(buffer, options = {}) {
       }
     }
     if (missingAlt > 0) warnings.push(`Slide ${number}: ${missingAlt} picture(s) without alt text`);
+    const placeholder = allText.match(PLACEHOLDER);
+    if (placeholder) errors.push(`Slide ${number}: placeholder text "${placeholder[0]}" is still on the slide`);
     for (const shape of contentXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)) {
       const overflow = estimateOverflow(shape[0]);
       if (!overflow) continue;

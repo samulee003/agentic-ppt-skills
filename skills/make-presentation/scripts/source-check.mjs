@@ -4,7 +4,9 @@
 // sourceRoot), the work root, or the current folder. URLs and descriptive
 // cells ("raw_notes.md benchmark section") are skipped. Rows in the "Missing"
 // and "Access issue" sections are expected not to exist and are not checked.
-// Usage: source-check.mjs <work-root> [--json]
+// With --final (production-qa), every row in "Missing" must be Resolved or
+// Accepted: a deck must not ship while an input the user promised is still Open.
+// Usage: source-check.mjs <work-root> [--final] [--json]
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -32,7 +34,20 @@ export function sourceRootFor(root) {
   }
 }
 
-export function checkSources({ inventory, bases }) {
+/** Rows of the "Missing" section with their status (Open when the column is absent or blank). */
+export function missingItems(inventory) {
+  const section = inventory.split(/^##\s+/m).find((part) => /^Missing\b/i.test(part));
+  if (!section) return [];
+  const table = parseTables(section)[0];
+  if (!table) return [];
+  const itemCol = column(table.header, 'needed item', 'item');
+  const statusCol = column(table.header, 'status');
+  return table.rows
+    .map((row) => ({ item: clean(row[itemCol] ?? ''), status: clean(statusCol ? row[statusCol] : '') || 'Open' }))
+    .filter((row) => row.item && !/^(none|-|—|無|无)$/i.test(row.item));
+}
+
+export function checkSources({ inventory, bases, final = false }) {
   const errors = [];
   let checked = 0;
   // Only sections that claim the file is here; Missing and Access issue rows are not.
@@ -51,28 +66,36 @@ export function checkSources({ inventory, bases }) {
       }
     }
   }
-  return { errors, warnings: [], checked };
+  const warnings = [];
+  for (const { item, status } of missingItems(inventory)) {
+    if (/^(resolved|accepted)$/i.test(status)) continue;
+    const message = `Missing item "${item}" is still ${status}; get it, or record that the user accepts going without it`;
+    if (final) errors.push(message);
+    else warnings.push(message);
+  }
+  return { errors, warnings, checked };
 }
 
-export function checkSourcesAt(root) {
+export function checkSourcesAt(root, final = false) {
   const file = path.join(root, 'SOURCE-INVENTORY.md');
   if (!existsSync(file)) return { errors: [`No SOURCE-INVENTORY.md in ${root}`], warnings: [], checked: 0 };
   const bases = [sourceRootFor(root), path.resolve(root), process.cwd()].filter(Boolean);
-  return checkSources({ inventory: readFileSync(file, 'utf8'), bases: [...new Set(bases)] });
+  return checkSources({ inventory: readFileSync(file, 'utf8'), bases: [...new Set(bases)], final });
 }
 
 function main(argv) {
   const root = argv.find((arg) => !arg.startsWith('--'));
   if (!root) {
-    process.stderr.write('Usage: source-check.mjs <work-root> [--json]\n');
+    process.stderr.write('Usage: source-check.mjs <work-root> [--final] [--json]\n');
     process.exit(1);
   }
-  const report = checkSourcesAt(root);
+  const report = checkSourcesAt(root, argv.includes('--final'));
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {
     process.stdout.write(`source-check: ${report.checked} path(s) checked\n`);
     for (const error of report.errors) process.stdout.write(`error    ${error}\n`);
+    for (const warning of report.warnings) process.stdout.write(`warning  ${warning}\n`);
     if (report.errors.length === 0) process.stdout.write('source-check: no errors\n');
   }
   if (report.errors.length > 0) process.exitCode = 1;

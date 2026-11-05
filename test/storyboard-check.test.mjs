@@ -101,3 +101,34 @@ test('talk length combines hours and minutes', () => {
   assert.equal(briefMinutes('- Time: 1 h talk, 10 min Q&A'), 60);
   assert.equal(briefMinutes('- Time (talk length, Q&A length): 10 min talk, 5 min Q&A'), 10);
 });
+
+test('notes far shorter or longer than their slot are flagged once the script exists', async () => {
+  const { spokenSeconds } = await import('../skills/make-presentation/scripts/storyboard-check.mjs');
+  assert.equal(spokenSeconds('一二三四五六七八'), 2);
+  const storyboard = [
+    header,
+    row(1, 'Churn rose four points after the March price change', 'data', '', '3'),
+    row(2, 'Three levers can win back the lost customers', 'cards', '', '1'),
+    row(3, 'Pair up and practise the opening line', 'interaction', '', '10'),
+  ].join('\n');
+  const long = Array.from({ length: 200 }, () => 'word').join(' ');
+  const script = `| Page | Approved wording |\n| --- | --- |\n| 1 | Churn rose. |\n| 2 | ${long} |\n| 3 | Pair up. |`;
+  const { warnings } = checkStoryboard({ storyboard, script });
+  assert.ok(warnings.some((w) => /Slide 1: the notes take about 1 s for a 3-minute slot/.test(w)));
+  assert.ok(warnings.some((w) => /Slide 2: the notes take about 80 s, more than the 1-minute slot/.test(w)));
+  assert.ok(!warnings.some((w) => /Slide 3/.test(w)), 'interaction slides are filled by the activity');
+});
+
+test('activities the notes schedule count toward the slot; backup slides are not timed', async () => {
+  const { plannedActivitySeconds } = await import('../skills/make-presentation/scripts/storyboard-check.mjs');
+  assert.equal(plannedActivitySeconds('請兩三位分享，大約兩分鐘。'), 120);
+  assert.equal(plannedActivitySeconds('Discuss in pairs for 3 minutes'), 180);
+  assert.equal(plannedActivitySeconds('我淨係想喺門口同你傾五分鐘'), 0, 'content, not a scheduled activity');
+  const storyboard = [
+    header,
+    row(1, 'Churn rose four points after the March price change', 'data', '', '3'),
+    row(2, 'Regional detail for the curious', 'data', '', '3', 'backup'),
+  ].join('\n');
+  const script = '| Page | Approved wording |\n| --- | --- |\n| 1 | Churn rose. Discuss in pairs for 2 minutes. |\n| 2 | Short. |';
+  assert.deepEqual(checkStoryboard({ storyboard, script }).warnings, []);
+});

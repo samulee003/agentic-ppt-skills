@@ -112,3 +112,22 @@ test('status values are matched without regard to case or decoration', async () 
   const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | ok | — |`)].join('\n');
   assert.deepEqual(checkGrill({ log, gate: 'story-grill' }).errors, []);
 });
+
+test('the product grill needs at most three rounds, with or without the training profile', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { withProfile } = await import('../skills/make-presentation/scripts/grill-check.mjs');
+  const rounds = (nodes) => {
+    const done = new Set();
+    let count = 0;
+    while (done.size < nodes.length) {
+      const frontier = nodes.filter((n) => !done.has(n.id) && n.deps.every((d) => done.has(d)));
+      assert.ok(frontier.length > 0, 'no cycle');
+      frontier.forEach((n) => done.add(n.id));
+      count += 1;
+    }
+    return count;
+  };
+  const profile = await readFile(path.join(repo, 'skills/make-presentation/profiles/training-zh-hant.md'), 'utf8');
+  assert.ok(rounds(tree['product-grill']) <= 3, 'shared tree');
+  assert.ok(rounds(withProfile(tree, profile)['product-grill']) <= 3, 'with training-zh-hant');
+});
