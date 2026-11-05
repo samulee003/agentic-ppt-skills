@@ -7,13 +7,13 @@
 ![Node 18+](https://img.shields.io/badge/node-%E2%89%A518-brightgreen.svg)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
 
-**让 AI 代理把笔记做成“站得住脚”的演示文稿：先有需求书、每个论点有出处、标题本身就是论点，最后由程序检查导出的 `.pptx`。可搭配 Claude、Codex、Google 幻灯片、PptxGenJS，或交给任何你习惯的工具制作。**
+**把 [grill-me](https://github.com/mattpocock/skills) 用在演示文稿上。** 在做出任何一页幻灯片之前，AI 代理会先一轮一轮地追问你：这份演示给谁看、要改变什么、哪些论点会被质疑。接着由刁钻的听众攻击故事，只有拿得出证据的质疑才会留下。程序会检查追问确实做了，也会检查导出的 `.pptx` 经得起考验。可搭配 Claude、Codex、Google 幻灯片、PptxGenJS，或交给任何你习惯的工具制作。
 
 ![agentic-ppt-skills：从笔记到通过检查的演示文稿的八道关卡](./docs/images/hero.png)
 
 ## 为什么需要它
 
-请 AI“做一份关于 X 的 PPT”，通常会得到：
+请 AI“做一份关于 X 的 PPT”，它会立刻开始生成，从不问台下是谁、他们要做什么决定、财务总监会质疑哪个数字。所以通常会得到：
 
 - 每页都是标题、副标题加四段要点文字；
 - 没有出处的数字，或年份、分母错误的数字；
@@ -21,7 +21,33 @@
 - 文字溢出文本框，或被缩到没人看得清楚；
 - 讲稿缺漏，或和幻灯片内容对不上。
 
-这套技能让代理像一个演示团队那样工作：先写需求书、为每个论点建立证据表、逐页规划故事、先做原型再做整份、当成一场演讲来彩排，最后才导出。每一步都有程序检查，代理不能只靠自己说“做好了”。
+这套技能让代理像好的演讲教练一样先问，而且在决定一场演讲成败的三个时刻持续追问：故事之前（这份演示是为了什么？）、故事之后（经得起最刁钻的听众吗？）、上台之前（讲得出口、时间对、适合这群人吗？）。每一步都有程序检查，代理不能跳过提问，也不能自己宣布做好了。
+
+## 三次追问
+
+**1. 需求书。** 代理按照一棵[决策树](./skills/make-presentation/references/grill-tree.md)一轮一轮地问：所有前提已经确定的问题一次问完，每题附上建议答案，回“好”就采用。
+
+```text
+❓ Q1 - 演示类型：这是技术讲解，而不是决策汇报吧？
+➡️ 是，技术讲解：笔记在解释机制，没有要求任何决定。
+
+❓ Q2 - 证据门槛：要谈代理的评测数据吗？
+➡️ 要，但只用一个有原始出处的历史基准。笔记里“< 5% 对 30%+”的
+   SWE-bench Lite 对比没有出处，分母也不一致。
+```
+
+关键决定（听众、结果、承诺、证据门槛、限制、验收标准）只要你在场就一定会问。`grill-check.mjs` 会在任何节点缺漏时挡住该关卡，并在关键决定仍只是代理的假设时挡住交付。
+
+**2. 故事。** 按演示类型挑出的质疑者（财务总监、执行的人、安全审查者，以及一定会有的新手）攻击故事板。每条质疑都必须逐字引用演示内容并附上证据：证据表缺行、前后矛盾、检查失败、数字算不拢，或演示里没有任何地方回答的问题。`interrogation-check.mjs` 会重新核对引文与证据编号，捏造的质疑会被丢掉。
+
+| 质疑者 | 页 | 引文 | 证据 | 判定 |
+| --- | --- | --- | --- | --- |
+| 资深审查者 | 4 | "Feedback lets each retry build on the last, beyond a 1.96% baseline" | `claim-02` 不允许任何数字上的提升；“beyond”可能被听成有提升 | 保留，必须处理 → 已加上保留说明 |
+| 新手 | 2 | "…verifies in a repeating loop" | “循环什么时候停？” | 丢弃：讲稿已回答 |
+
+**3. 上台。** 开场、时间、最难的三个问题、语言，以及长时间演讲的注意力调整，都在实际画面与讲稿上提问，并再做一轮质疑演练。
+
+讲完之后，可选的[复盘](./skills/make-presentation/references/retro.md)会追问你现场发生了什么，把重复出现的教训变成新的提问、检查或配置档规则。
 
 ## 快速开始
 
@@ -55,6 +81,8 @@ npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 | `EVIDENCE-LEDGER.md` | 一个论点一行：出处、日期、定义、保留意见、可用在哪里；每个素材的授权 |
 | `STORY.md`、`STORYBOARD.md` | 核心论点、章节，以及每页一行：结论式标题、版式、证据、时间 |
 | `SPEAKER-SCRIPT.md` | 每页讲什么、时间、可能的质疑、时间不够时删哪里 |
+| `GRILL-LOG.md` | 每个决定、由谁决定（你 `Decided` 或代理 `Assumed`），以及它会牵动什么 |
+| `INTERROGATION.md` | 质疑者、他们经过验证的质疑，以及每条如何处理 |
 | `QA-REPORT.md` | 检查结果、无障碍、看过哪些页、剩下的保留事项 |
 | `exports/<deck-id>.pptx`／`.pdf` | 演示文稿本身，每页都有讲稿 |
 | `STATUS.md` | 哪些关卡已通过，依据哪些产出与决定 |
@@ -66,13 +94,13 @@ npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 | # | 关卡 | 回答的问题 | 检查工具 |
 | --- | --- | --- | --- |
 | 1 | 来源盘点 | 有哪些资料？哪个版本是最新的？ | |
-| 2 | 需求书 | 给谁看？要改变什么？哪些不做？ | |
+| 2 | 需求书 | 给谁看？要改变什么？哪些不做？ | `grill-check.mjs` |
 | 3 | 证据 | 哪些话可以说？要加什么保留？ | |
 | 4 | 故事 | 每一页要做什么？顺序是？ | `storyboard-check.mjs` |
-| 5 | 故事审查 | 经得起最强的反对意见吗？只读标题能看懂吗？ | `storyboard-check.mjs` |
+| 5 | 故事审查 | 经得起最刁钻的听众吗？只读标题能看懂吗？ | `interrogation-check.mjs`、`grill-check.mjs` |
 | 6 | 原型 | 代表页在实际工具和主题下行得通吗？ | `pptx-check.mjs` |
-| 7 | 上台审查 | 讲得出口、时间对、适合这群听众吗？ | `unslop-check.mjs` |
-| 8 | QA | 导出文件一致、好读、通过所有检查吗？ | `qa-deck.mjs` + `pptx-check.mjs` |
+| 7 | 上台审查 | 讲得出口、时间对、适合这群听众吗？ | `interrogation-check.mjs`、`grill-check.mjs`、`unslop-check.mjs` |
+| 8 | QA | 导出文件一致、好读、通过所有检查吗？每个关键决定都经你确认了吗？ | `qa-deck.mjs`、`pptx-check.mjs`、`grill-check.mjs` |
 
 三种模式：`general`；给小型内部汇报的 `fast-track`（第 1–2 关、第 4–5 关合并记录）；以及内容涉及重要统计、研究、法律、医疗或金融时的 `research-enhanced`（A/B/C/D 论点安全等级、原始来源、逐页核查）。
 
@@ -98,11 +126,14 @@ npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 
 | 脚本 | 抓出的问题 |
 | --- | --- |
+| `grill-check.mjs` | 没人确定的决策节点；没写理由的假设；仍在等别人回复的问题；只有代理自己决定的关键决定 |
+| `interrogation-check.mjs` | 错引演示、引用不存在的证据编号或没有证据的质疑；质疑者少于三位；必须处理却未处理的质疑 |
 | `pptx-check.mjs` | 缺讲稿；幻灯片、讲稿、PDF 页数不一致；字号低于投影下限；文字可能溢出文本框；图片缺替代文字；文字墙；整页是图片、无法编辑 |
 | `storyboard-check.mjs` | 主题式标题；缺少或未知的版式；连续三页同版式；证据表里不存在的证据编号；主讲时间超过时段 |
 | `theme-check.mjs` | 主题配色未达 WCAG AA 对比度 |
 | `unslop-check.mjs` | 幻灯片文字与讲稿里的 AI 腔 |
 | `qa-deck.mjs` | 运行引擎自己的检查、确认每个导出文件存在，再运行 `pptx-check` |
+| `status.mjs brief` | 不是检查：回到演示时显示的接续摘要（进度、未决事项、下一步） |
 
 任何一项报错都会挡住该关卡。这个仓库自带的示例演示文稿，原本就有没人发现的文字重叠，是新的溢出检查第一次运行时抓到的，现已修正。
 
@@ -133,7 +164,9 @@ pptx-check: no errors
 
 **可以继续用 ChatGPT、Gamma 或 Canva 做幻灯片吗？** 可以，用 `handoff` 引擎。代理准备好需求书、证据、故事板与讲稿，你把 `BUILD-PACKET.md` 贴进工具，导出的 `.pptx` 再拿回来 QA。只能导出图片的工具过不了讲稿与可编辑检查。
 
-**6 页的进度汇报用这套会不会太重？** 用 `fast-track`。关卡照跑，但提问只问一轮，成对的关卡合并记录。
+**问题这么多会不会拖慢速度？** 每一轮把能一起问的问题一次问完，并附上建议答案，一句“全部按建议，除了 Q3：……”就能解决大半。需求书通常两三轮就完成。你也可以说“一次问一题”或“别问了”；后者会让代理把选择记成假设，交付前要等你确认关键的那几项。
+
+**6 页的进度汇报用这套会不会太重？** 用 `fast-track`：每个追问关卡只问一轮，但仍涵盖所有关键决定，成对的关卡合并记录。
 
 **中文演示文稿可以吗？** 可以。中日韩文字有自己的密度与行长规则；简体中文用 `default` 配置档即可，`training-zh-hant` 配置档则涵盖繁体中文幻灯片配粤语讲稿。
 
@@ -149,7 +182,7 @@ pptx-check: no errors
 
 ## 致谢
 
-共用实践（聚焦重放、去 AI 腔、审查分桶、原型擂台、经验编码）改编自 [`backnotprop/pstack`](https://github.com/backnotprop/pstack)（MIT）。轮次式提问与 `grill-me`、`grilling`、`to-questionnaire` 技能来自 [`mattpocock/skills`](https://github.com/mattpocock/skills)（MIT）。
+追问模型（在决策树上一轮一轮地问、回“好”即采用建议）与 `grill-me`、`grilling`、`to-questionnaire` 技能来自 [`mattpocock/skills`](https://github.com/mattpocock/skills)（MIT）。需附证据的质疑演练、复盘、接续摘要、复述目标、去 AI 腔、审查分桶、原型擂台与经验编码，改编自 [`backnotprop/pstack`](https://github.com/backnotprop/pstack)（MIT）的 `interrogate`、`reflect`、`recall`、`in-your-own-words`、`unslop`、`arena` 与原则类技能。本项目自己的贡献是演示领域的部分：决策树、各类演示的质疑者、关卡与检查工具。
 
 ## 参与贡献
 

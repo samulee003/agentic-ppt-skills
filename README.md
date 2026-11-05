@@ -7,16 +7,20 @@
 ![Node 18+](https://img.shields.io/badge/node-%E2%89%A518-brightgreen.svg)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
 
-**Agent skills that turn notes into a presentation you can defend on stage:
-a real brief, sourced claims, slide titles that carry the argument, and
-machine checks on the exported `.pptx`. Works with Claude, Codex, Google
-Slides, PptxGenJS, and any tool you hand the slides to.**
+**[grill-me](https://github.com/mattpocock/skills) for presentations.** Before
+your agent makes a single slide, it grills you, in rounds, on who the deck is
+for, what it must change, and which claims will be challenged. Then adversarial
+audience members attack the story, and only proven objections survive. Scripts
+check that the grilling happened and that the exported `.pptx` holds up. Works
+with Claude, Codex, Google Slides, PptxGenJS, and any tool you hand the slides to.
 
 ![agentic-ppt-skills: eight gates from notes to a checked deck](./docs/images/hero.png)
 
 ## Why
 
-Ask an agent for "a deck about X" and you usually get:
+Ask an agent for "a deck about X" and it starts generating immediately. It
+never asks who is in the room, what they should decide, or which number the
+CFO will challenge. So you usually get:
 
 - slides with a title, a subtitle, and four bullet paragraphs each;
 - numbers with no source, or with the wrong year and denominator;
@@ -24,11 +28,52 @@ Ask an agent for "a deck about X" and you usually get:
 - text that overflows its box, or shrinks until nobody can read it;
 - speaker notes that are missing, or that don't match the slides.
 
-This repository makes the agent work like a presentation team instead. It
-writes a brief before any slide exists, keeps a ledger of every claim, plans
-the talk slide by slide, builds a prototype before the full deck, rehearses it
-as a talk, and only then exports. Scripts check the work at each step, so the
-agent cannot just declare the deck done.
+This repository makes the agent ask first, like a good presentation coach,
+and keep asking at the three moments that decide a talk: before the story
+(what is this deck for?), after the story (does it survive its harshest
+audience?), and before the stage (can it be said, on time, to these people?).
+Scripts check every step, so the agent cannot skip the questions or declare
+the deck done.
+
+## Grilled three times
+
+**1. The brief.** The agent works a [decision tree](./skills/make-presentation/references/grill-tree.md)
+in rounds: every question whose prerequisites are settled, each with a
+recommended answer you can accept with "yes".
+
+```text
+❓ Q1 - Deck type: Is this a technical explainer rather than a decision deck?
+➡️ Yes, technical: the notes teach a mechanism and ask for no decision.
+
+❓ Q2 - Evidence threshold: Should we cover agent benchmarks?
+➡️ Yes, but one primary-source historical baseline only. The notes' "< 5% vs
+   30%+" SWE-bench Lite comparison has no source or controlled denominator.
+```
+
+Load-bearing decisions (audience, outcome, promise, evidence threshold,
+constraints, success test) are always asked while you are there to answer.
+`grill-check.mjs` fails the gate if any node is missing, and blocks delivery
+while a load-bearing decision is still only the agent's assumption.
+
+**2. The story.** Adversaries chosen for the deck type (the CFO, the operator,
+the security reviewer, and always the newcomer) attack the storyboard. Every
+finding must quote the deck verbatim and carry a proof: a missing ledger row,
+a contradiction, a failed check, bad arithmetic, or a question nothing in the
+deck answers. `interrogation-check.mjs` re-verifies the quotes and claim IDs,
+so invented objections are dropped.
+
+| Adversary | Slide | Quote | Proof | Verdict |
+| --- | --- | --- | --- | --- |
+| the senior reviewer | 4 | "Feedback lets each retry build on the last, beyond a 1.96% baseline" | `claim-02` allows no numerical uplift; "beyond" can be heard as one | kept, Act on → caveat added |
+| the newcomer | 2 | "…verifies in a repeating loop" | "When does the loop stop?" | dropped: the script answers it |
+
+**3. The stage.** Opening, timing, the three hardest questions, language, and
+attention resets for long talks, asked on real renders and the speaker script,
+with a second interrogation round.
+
+After the talk, an optional [retro](./skills/make-presentation/references/retro.md)
+grills you about what happened and turns repeated lessons into new questions,
+checks, or profile rules.
 
 ## Quick start
 
@@ -66,6 +111,8 @@ For each deck, in `presentation-work/<deck-id>/`:
 | `EVIDENCE-LEDGER.md` | one row per claim with source, date, definition, caveat, and where it may be used; licences for every asset |
 | `STORY.md`, `STORYBOARD.md` | thesis, chapters, and one row per slide: action title, layout archetype, evidence, time |
 | `SPEAKER-SCRIPT.md` | what to say on every slide, timing, likely challenges, what to cut if short on time |
+| `GRILL-LOG.md` | every decision, who made it (`Decided` by you or `Assumed` by the agent), and what it invalidates |
+| `INTERROGATION.md` | the adversaries, their proven findings, and how each was resolved |
 | `QA-REPORT.md` | check output, accessibility, inspected pages, remaining caveats |
 | `exports/<deck-id>.pptx` / `.pdf` | the deck, with speaker notes on every slide |
 | `STATUS.md` | which gates passed, with which artifacts and decisions |
@@ -79,13 +126,13 @@ decision changes.
 | # | Gate | It answers | Checked by |
 | --- | --- | --- | --- |
 | 1 | Source intake | What material do we have, and which version is current? | |
-| 2 | Brief | Who is this for, what should change, what is out of scope? | |
+| 2 | Brief | Who is this for, what should change, what is out of scope? | `grill-check.mjs` |
 | 3 | Evidence | Which claims are safe to say, and with which caveats? | |
 | 4 | Story | What does each slide have to do, in what order? | `storyboard-check.mjs` |
-| 5 | Story review | Does it survive the strongest objection? Do the titles alone tell the story? | `storyboard-check.mjs` |
+| 5 | Story review | Does it survive its harshest audience? Do the titles alone tell the story? | `interrogation-check.mjs`, `grill-check.mjs` |
 | 6 | Prototype | Do representative slides work in the real tool and theme? | `pptx-check.mjs` |
-| 7 | Stage review | Can it be said aloud, on time, to this audience? | `unslop-check.mjs` |
-| 8 | QA | Do the exported files match, read well, and pass every check? | `qa-deck.mjs` + `pptx-check.mjs` |
+| 7 | Stage review | Can it be said aloud, on time, to this audience? | `interrogation-check.mjs`, `grill-check.mjs`, `unslop-check.mjs` |
+| 8 | QA | Do the exported files match, read well, and pass every check? Is every load-bearing decision confirmed by you? | `qa-deck.mjs`, `pptx-check.mjs`, `grill-check.mjs` |
 
 Three modes: `general`; `fast-track` for small internal decks (gates 1–2 and
 4–5 are recorded together); and `research-enhanced` for decks with
@@ -116,11 +163,14 @@ All scripts are zero-dependency Node 18+ and run on any engine's output.
 
 | Script | Catches |
 | --- | --- |
+| `grill-check.mjs` | decision-tree nodes nobody settled; assumptions without a reason; questions still waiting on someone; load-bearing decisions only the agent made |
+| `interrogation-check.mjs` | objections that misquote the deck, cite claim IDs that do not exist, or have no proof; fewer than three adversaries; Act-on findings left unresolved |
 | `pptx-check.mjs` | missing speaker notes; slide, notes, and PDF page counts that disagree; text under the projector floor; text likely to overflow its box; pictures without alt text; text walls; image-only slides that can't be edited |
 | `storyboard-check.mjs` | topic-label titles; missing or unknown layout archetypes; three identical layouts in a row; evidence IDs that are not in the ledger; a main talk longer than its slot |
 | `theme-check.mjs` | theme colour pairs that fail WCAG AA contrast |
 | `unslop-check.mjs` | AI-tell phrasing in slide copy and speaker notes |
 | `qa-deck.mjs` | runs the engine's own audit, checks every export exists, then runs `pptx-check` |
+| `status.mjs brief` | not a check: the resume capsule (progress, open decisions, next move) shown when you come back to a deck |
 
 An error from any check blocks its gate. On this repository's own example
 deck, the overflow check found overlapping text that had shipped unnoticed;
@@ -169,8 +219,15 @@ agent that reads `SKILL.md` files works; Codex reads `.agents/skills/` directly.
 you paste `BUILD-PACKET.md` into the tool; the exported `.pptx` comes back for QA.
 Tools that only export images cannot pass the notes and editability checks.
 
-**Is it overkill for a 6-slide update?** Use `fast-track`. The gates still run,
-but grilling is capped at one round and paired gates are recorded together.
+**Won't all the questions slow me down?** Each round asks every question that
+can be asked at once, with a recommended answer, so "yes to all, except Q3: …"
+settles most of a round. A brief usually takes two or three rounds. You can say
+"ask one question at a time" or "stop asking"; then the agent records its
+choices as assumptions, and delivery waits until you confirm the load-bearing ones.
+
+**Is it overkill for a 6-slide update?** Use `fast-track`: one grilling round
+per grill gate, still covering every load-bearing decision, and paired gates
+recorded together.
 
 **Does it work for Chinese decks?** Yes. CJK text gets its own density and
 line-length rules, and the `training-zh-hant` profile covers Traditional Chinese
@@ -191,11 +248,15 @@ file first and treats the request as polish, rebrand, translate, or restructure
 
 ## Credits
 
-Shared practices (sharpen and playback, unslop, review buckets, prototype arena,
-encode-lessons) are adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack)
-(MIT). Frontier-round grilling and the `grill-me`, `grilling`, and
-`to-questionnaire` skills come from [`mattpocock/skills`](https://github.com/mattpocock/skills)
-(MIT).
+The grilling model (frontier rounds over a design tree, "yes" accepts the
+recommendation) and the `grill-me`, `grilling`, and `to-questionnaire` skills
+come from [`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT).
+Interrogation with proven findings, the retro, the resume brief, playback,
+unslop, review buckets, the prototype arena, and encode-lessons are adapted
+from pstack's `interrogate`, `reflect`, `recall`, `in-your-own-words`,
+`unslop`, `arena`, and principle skills in [`backnotprop/pstack`](https://github.com/backnotprop/pstack)
+(MIT). This repository's own contribution is the presentation domain: the grill
+tree, the adversaries per deck type, the gates, and the checks.
 
 ## Contributing
 

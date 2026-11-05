@@ -1,10 +1,19 @@
 {
   "name": "agentic-ppt-skills",
   "version": "1.0.0",
-  "description": "Eight-gate presentation pipeline: brief, evidence, story, prototype, stage review, and machine-checked export in any slide tool.",
-  "author": { "name": "samulee003" },
+  "description": "grill-me for presentations: agent skills that grill you on audience, outcome, and claims before building the deck, then check the exported PPTX in any slide tool.",
+  "author": {
+    "name": "samulee003"
+  },
   "homepage": "https://github.com/samulee003/agentic-ppt-skills",
   "repository": "https://github.com/samulee003/agentic-ppt-skills",
   "license": "MIT",
-  "keywords": ["presentation", "pptx", "powerpoint", "google-slides", "slides", "deck"]
+  "keywords": [
+    "presentation",
+    "pptx",
+    "powerpoint",
+    "google-slides",
+    "slides",
+    "deck"
+  ]
 }

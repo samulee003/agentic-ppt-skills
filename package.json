@@ -2,7 +2,7 @@
   "name": "agentic-ppt-skills",
   "version": "1.0.0",
   "private": true,
-  "description": "Agent skills that take a presentation from notes to a stage-ready, machine-checked deck in any slide tool.",
+  "description": "grill-me for presentations: agent skills that grill you on audience, outcome, and claims before building the deck, then check the exported PPTX in any slide tool.",
   "type": "module",
   "bin": {
     "agentic-ppt-skills": "install.mjs"

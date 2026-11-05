@@ -34,6 +34,15 @@ Create `adapters/<engine>/` with `README.md`, `prototype.md`, and `qa.md`
 `test/cli.test.mjs`. The adapter must say how the deck reaches
 `exports/<deck-id>.pptx`, because every engine is checked by `pptx-check.mjs`.
 
+## Adding a grill node
+
+Add it to the `json grill-tree` block in
+`skills/make-presentation/references/grill-tree.md` (or to a profile's
+`json grill-nodes` block when it applies to one kind of work only), with its
+prerequisites and whether it is load-bearing. `test/grill-check.test.mjs`
+checks the tree has unique ids, known prerequisites, and no cycles. Update the
+example `GRILL-LOG.md` so `grill-check.mjs` still passes on it.
+
 ## Adding a theme or profile
 
 Copy an existing file, keep its headings, and run
