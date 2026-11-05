@@ -34,25 +34,30 @@
 - **中立核心，風格可插拔。** 語言規則、故事結構與視覺風格放在設定檔（`default`、`training-zh-hant`）與主題（`editorial-minimal`、`bright-sans`、`aurora`、`sticker-pop`）中，共用一套不分引擎的字級系統。
 
 流程支援 `general`、`fast-track` 與 `research-enhanced` 模式。原型與生產環境 QA 使用
-adapter；內含 `open-slide`、`genoffice`、`marp` 與 `pptxgenjs`，並內附 `genoffice`
+adapter；內含 `open-slide`、`genoffice`、`marp`、`pptxgenjs`、`claude-pptx`、`codex-slides`、`google-slides` 與 `handoff`，並內附 `genoffice`
 技能供代理直接讀取、建立、幾何審計（audit）、渲染與轉換本地 Office 檔案。`scripts/export-deck.mjs` 以各引擎自己的 CLI 無頭匯出；`scripts/qa-deck.mjs` 執行引擎的自動審計（open-slide、GenOffice），並對所有引擎檢查匯出檔是否完整。
 
 `skills/make-presentation/references/` 中的實踐吸收自 [`backnotprop/pstack`](https://github.com/backnotprop/pstack)（聚焦重播、去 AI 贅詞檢查 `scripts/unslop-check.mjs`、審查分桶、原型擂台與經驗編碼）與 [`mattpocock/skills`](https://github.com/mattpocock/skills)（Frontier rounds 輪次式提問、「yes」採納建議、問卷轉換）。
 
-### 搭配平台內建的 PPT 技能
+### 由哪個工具做投影片
 
-本專案的技能負責決定簡報「說什麼」與「是否可上台」；檔案「怎麼產生」可交給執行環境自己的 PowerPoint 技能：
+流程負責決定簡報「說什麼」與「能否上台」。投影片檔案可以來自下列任一工具，全部都用同一套檢查驗收匯出的 `.pptx`／`.pdf`：
 
-| 執行環境 | 平台技能 | 搭配位置 |
+| 你使用 | 引擎 | 投影片怎麼產生 |
 | --- | --- | --- |
-| Claude Code | [`anthropics/skills`](https://github.com/anthropics/skills) 的 `pptx`（`document-skills` 外掛；原始碼公開但非開源授權） | `source-intake`：讀取既有 `.pptx` 的文字與結構。`deck-prototype` / `production-qa`：在 `pptxgenjs` adapter 規則下建立與修改檔案（兩者使用同一套函式庫）。 |
-| Codex | [`openai/skills`](https://github.com/openai/skills) 的 `slides`（PptxGenJS 加上渲染與溢出檢查） | 同上。其渲染與溢出檢查結果可作為 `QA-REPORT.md` 的證據。 |
+| Claude（Claude Code 或 claude.ai） | `claude-pptx` | Claude 自己的 `pptx` 技能寫 PptxGenJS 腳本或修改範本，產出可編輯的原生 `.pptx`。Claude Code 以 `/plugin marketplace add anthropics/skills` 與 `/plugin install document-skills@anthropic-agent-skills` 安裝。 |
+| Codex | `codex-slides` | [`openai/skills`](https://github.com/openai/skills) 的 `slides` 技能，附渲染與溢出檢查 |
+| Google 簡報 | `google-slides` | 用 Slides API 或代理的 Google 簡報連接器建立，或把 `.pptx` 匯入 Google 簡報；再匯出 `.pptx`／`.pdf` 做 QA |
+| ChatGPT、Gamma、Canva、Copilot、Keynote、設計師 | `handoff` | `build-packet.mjs` 產生 `BUILD-PACKET.md` 貼給該工具；匯出的 `.pptx` 再拿回來驗收 |
+| 只用腳本，不用平台技能 | `pptxgenjs` | PptxGenJS 的 `build.mjs` |
+| 必須保留原檔母片的 Office 檔 | `genoffice` | GenOffice CLI |
+| 瀏覽器畫布／Markdown | `open-slide`／`marp` | 各自的 CLI |
 
-搭配規則：
+規則：
 
-- 關卡仍由協調器掌控。平台技能不得自行標記關卡通過，也不得跳過證據、故事或上台審查。
-- 以 `set-engine` 記錄引擎為 `pptxgenjs`，並遵循 `adapters/pptxgenjs/` 的版面預算、字級與備忘稿規則；平台技能自身的設計預設以這些規則為準。
-- 只選一個執行目錄（`.agents/skills/` 或 `.claude/skills/`），每個關卡只啟用一個產生簡報的技能，避免兩個技能寫同一個檔案。
+- 關卡由協調器掌控。製作工具不得自行標記關卡通過，也不得跳過證據、故事或上台審查。
+- 在原型關卡以 `status.mjs set-engine` 記錄引擎，並遵循 `adapters/<engine>/`。主題、字級與故事板優先於製作工具自己的設計預設。
+- 只能匯出圖片（或無法匯出 `.pptx`）的工具，無法通過講稿一致與可編輯檢查；選用前要先告知使用者。
 
 ### 安裝
 
@@ -75,7 +80,7 @@ cp -r "$SRC/adapters/." .agents/adapters/
 ### 儲存庫結構
 
 - `skills/` — 可發佈、與引擎無關的技能（含 `genoffice`、`grilling`、`grill-me`、`to-questionnaire`）
-- `adapters/` — 各引擎的原型與匯出指示（`open-slide`、`genoffice`、`marp`、`pptxgenjs`）
+- `adapters/` — 各引擎的原型與匯出指示（`open-slide`、`genoffice`、`marp`、`pptxgenjs`、`claude-pptx`、`codex-slides`、`google-slides`、`handoff`）
 - `examples/` — 完整的流程執行範例
 - `.agents/` — 維護者自用的代理設定：`skills/` 與 `adapters/` 的鏡像（由 `npm test` 檢查一致）以及不會被安裝的第三方技能；詳見 [`.agents/README.md`](./.agents/README.md)
 

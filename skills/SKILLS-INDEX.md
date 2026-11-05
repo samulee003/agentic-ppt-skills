@@ -65,6 +65,7 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 | [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | story through QA | AI-tell phrasing in slide copy and notes |
 | [`theme-check.mjs`](./make-presentation/scripts/theme-check.mjs) | when a theme changes | theme fields and WCAG contrast |
 | [`pptx-check.mjs`](./make-presentation/scripts/pptx-check.mjs) | deck-prototype, production-qa | slide/note/PDF parity, type floors, alt text, density, image-only slides |
+| [`build-packet.mjs`](./make-presentation/scripts/build-packet.mjs) | deck-prototype (`handoff`, `google-slides`) | writes `BUILD-PACKET.md` for an external slide tool |
 | [`export-deck.mjs`](./make-presentation/scripts/export-deck.mjs) | production-qa | export through each engine's own CLI (`--dry-run` to preview) |
 | [`qa-deck.mjs`](./make-presentation/scripts/qa-deck.mjs) | production-qa | engine audit + export integrity + `pptx-check` |
 
@@ -76,6 +77,10 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 | `genoffice` | [`adapters/genoffice/`](../adapters/genoffice/README.md) | Staged `style.md` + `outline.json` + `pages/NN.json` (`1280×720` px) → native byte-preserving `.pptx`, `slides audit`, grid PNGs, and `.pdf` |
 | `marp` | [`adapters/marp/`](../adapters/marp/README.md) | Markdown slide deck → Marp CLI `.pptx` & `.pdf` |
 | `pptxgenjs` | [`adapters/pptxgenjs/`](../adapters/pptxgenjs/README.md) | Node script (`build.mjs`) → native-shape `.pptx` |
+| `claude-pptx` | [`adapters/claude-pptx/`](../adapters/claude-pptx/README.md) | Claude's `pptx` skill: PptxGenJS script or template edit → native `.pptx`, validator, thumbnail grid |
+| `codex-slides` | [`adapters/codex-slides/`](../adapters/codex-slides/README.md) | Codex's `slides` skill: PptxGenJS → native `.pptx`, render and overflow checks |
+| `google-slides` | [`adapters/google-slides/`](../adapters/google-slides/README.md) | Slides API / connector or `.pptx` import → Google Slides file, exported `.pptx` + `.pdf` for QA |
+| `handoff` | [`adapters/handoff/`](../adapters/handoff/README.md) | `BUILD-PACKET.md` for ChatGPT, Gamma, Canva, Copilot, or a designer → their exported `.pptx` |
 
 ## How the two audiences use this repository
 

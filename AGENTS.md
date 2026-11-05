@@ -26,7 +26,7 @@ cp -r "$SRC/adapters/." .agents/adapters/
 ```
 
 Before continuing, verify Node 18+, the orchestrator, the status helper, and at
-least one adapter (`open-slide`, `genoffice`, `marp`, or `pptxgenjs`):
+least one adapter (for example `open-slide`, `genoffice`, `pptxgenjs`, or `claude-pptx`):
 
 ```bash
 node --version                                                # must be v18 or higher
@@ -77,9 +77,11 @@ the gates their skills name. An error from any of them blocks the gate; do not
 pass a gate over a failing check.
 
 At the prototype gate, ask the user to choose an installed adapter. Recommend
-from the brief's *Deliverables*: a natively editable `.pptx` → `pptxgenjs` or
-`genoffice` (also `genoffice` to keep an existing deck's master); otherwise
-`open-slide`. Then verify its directory, record it with `set-engine`, and
+from the brief's *Deliverables* and your runtime: a natively editable `.pptx` →
+`claude-pptx` (Claude with its `pptx` skill), `codex-slides` (Codex with its
+`slides` skill), or `pptxgenjs`; `genoffice` to keep an existing deck's master;
+`google-slides` when the team edits in Google Slides; `handoff` when ChatGPT,
+Gamma, Canva, or a person builds the slides; otherwise `open-slide`. Then verify its directory, record it with `set-engine`, and
 read that adapter's `README.md` and `prototype.md`. Production QA inherits the
 choice and must also read `qa.md`.
 

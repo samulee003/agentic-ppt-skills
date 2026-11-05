@@ -33,7 +33,7 @@ Every `STATUS.md` file contains a machine-readable state block between these mar
 <!-- presentation-status:end -->
 ````
 
-The helper validates the gate order and rewrites both the JSON block and the rendered table together. Each gate records `artifacts` as separate real paths, reviewed status, review time, inputs, decisions, invalidation time/cause, and review/invalidation reasons. The top-level state records `mode`, `modeReviewedAt`, `modeReason`, and `engine` (e.g. `open-slide`, `genoffice`, `marp`, `pptxgenjs`). Schema version 1 and 2 files are migrated deterministically to schema version 3 on load.
+The helper validates the gate order and rewrites both the JSON block and the rendered table together. Each gate records `artifacts` as separate real paths, reviewed status, review time, inputs, decisions, invalidation time/cause, and review/invalidation reasons. The top-level state records `mode`, `modeReviewedAt`, `modeReason`, and `engine` (`open-slide`, `genoffice`, `marp`, `pptxgenjs`, `claude-pptx`, `codex-slides`, `google-slides`, `handoff`). Schema version 1 and 2 files are migrated deterministically to schema version 3 on load.
 
 Invalidation changes reviewed gates at or after the selected gate to `needs_revision` (or only the target gate when `--selective` is passed). Untouched `pending` gates remain pending and unreviewed. Earlier gates stay unchanged. Invalidation preserves `reviewedAt` and the review reason, then records `invalidatedAt`, `invalidatedBy`, and `invalidationReason`. Passing the gate again clears all invalidation metadata.
 

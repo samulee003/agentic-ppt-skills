@@ -11,8 +11,12 @@ Use when `deck-prototype` is the current gate.
 
 This gate renders slides, so it needs a **slide engine**. Resolve it before authoring:
 
-- If `PRESENTATION-BRIEF.md` records an engine preference, confirm it against the *Deliverables* line (a natively editable `.pptx` needs `pptxgenjs` or `genoffice`).
-- Otherwise ask the user, one question, with a recommended default that follows the brief: natively editable `.pptx` → `pptxgenjs` or `genoffice`; otherwise `open-slide`. Offer installed engines first (see `.agents/adapters/`: `open-slide`, `genoffice`, `marp`, `pptxgenjs`); the default reference adapter is `open-slide` (or `genoffice` when the user wants a native byte-preserving Office `.pptx` via GenOffice).
+- If `PRESENTATION-BRIEF.md` records an engine preference, confirm it against the *Deliverables* line (a natively editable `.pptx` needs `pptxgenjs`, `claude-pptx`, `codex-slides`, `genoffice`, or `google-slides`).
+- Otherwise ask the user, one question, with a recommended default that follows the brief and the runtime. Offer installed engines first (see `.agents/adapters/`: `open-slide`, `genoffice`, `marp`, `pptxgenjs`, `claude-pptx`, `codex-slides`, `google-slides`, `handoff`):
+  - natively editable `.pptx`: `claude-pptx` when the agent is Claude with the `pptx` skill, `codex-slides` when it is Codex with the `slides` skill, otherwise `pptxgenjs`; `genoffice` to keep an existing deck's master byte for byte;
+  - the team works in Google Workspace: `google-slides`;
+  - the user wants ChatGPT, Gamma, Canva, Copilot, Keynote, or a designer to build the slides: `handoff`;
+  - a browser-rendered, visually exact deck: `open-slide`; the lightest Markdown deck: `marp`.
 - **Verify the adapter exists before recording the engine:** run `test -d .agents/adapters/<engine>` (or `ls .agents/adapters/` to list installed ones). If it fails, tell the user there is no adapter for that engine and offer the installed ones — do not record an engine with no adapter, and do not invent the adapter's rules inline.
 - Read `.agents/adapters/<engine>/README.md` **first** for that engine's prerequisites and setup, then `.agents/adapters/<engine>/prototype.md` for its authoring rules, canvas contract, and live-review surface. Author to that adapter — do not invent engine-specific rules here.
 - Record the choice so downstream gates (`stage-grill`, `production-qa`) inherit it: set it in the status tracker via `node .agents/skills/make-presentation/scripts/status.mjs set-engine <work-root> <engine>`, and add an `## Engine` line to `PRESENTATION-BRIEF.md`.

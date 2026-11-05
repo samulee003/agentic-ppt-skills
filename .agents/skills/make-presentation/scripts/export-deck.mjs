@@ -11,6 +11,7 @@ import {
   expectedExports,
   formatStep,
   hasBinary,
+  isExternalEngine,
   parseFlags,
   planExport,
   printExportResults,
@@ -40,6 +41,12 @@ async function main() {
   const steps = planExport({ cwd, deckId, engine, formats, outDir });
 
   process.stdout.write(`Exporting "${deckId}" with engine [${engine}] → ${formats.join(', ')}\n`);
+
+  if (isExternalEngine(engine) || steps.length === 0) {
+    process.stdout.write(
+      `The ${engine} deck is exported by its own tool: save the files in ${outDir} (see adapters/${engine}/qa.md). Checking them now.\n`,
+    );
+  }
 
   if (flags.dryRun) {
     for (const step of steps) process.stdout.write(`$ ${formatStep(step)}\n`);

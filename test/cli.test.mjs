@@ -231,3 +231,54 @@ test('an HTML export may be a folder with index.html', async () => {
     assert.match(result.file, /demo\/index\.html$/);
   });
 });
+
+test('claude-pptx and codex-slides rebuild from build.mjs like pptxgenjs', async () => {
+  await withDeck({ 'slides/demo/build.mjs': '' }, async (root) => {
+    for (const engine of ['claude-pptx', 'codex-slides']) {
+      const { stdout } = await run(exportScript, root, 'demo', `--engine=${engine}`, '--dry-run');
+      assert.match(stdout, new RegExp(`engine \\[${engine}\\]`));
+      assert.match(stdout, /slides\/demo\/build\.mjs/);
+    }
+  });
+});
+
+test('a template-edited claude-pptx deck skips the build step', async () => {
+  await withDeck({}, async (root) => {
+    const { stdout } = await run(exportScript, root, 'demo', '--engine=claude-pptx', '--dry-run');
+    assert.doesNotMatch(stdout, /build\.mjs/);
+    assert.match(stdout, /soffice --headless --convert-to pdf/);
+  });
+});
+
+test('google-slides and handoff decks are exported by their own tool', async () => {
+  await withDeck({}, async (root) => {
+    for (const engine of ['google-slides', 'handoff']) {
+      const { stdout } = await run(exportScript, root, 'demo', `--engine=${engine}`, '--dry-run');
+      assert.match(stdout, /is exported by its own tool/);
+      assert.doesNotMatch(stdout, /^\$ /m);
+    }
+  });
+});
+
+test('handoff QA accepts a PPTX without PDF; google-slides requires the PDF', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const pptx = await readFile(
+    path.resolve(
+      new URL(
+        '../examples/agentic-coding-anatomy-pptxgenjs/exports/agentic-coding-anatomy.pptx',
+        import.meta.url,
+      ).pathname,
+    ),
+  );
+  await withDeck({ 'exports/agentic-coding-anatomy.pptx': pptx }, async (root) => {
+    const { stdout } = await run(qaScript, root, 'agentic-coding-anatomy', '--engine=handoff');
+    assert.match(stdout, /pptx-check: 5 slides, 5 with notes/);
+    await assert.rejects(
+      run(qaScript, root, 'agentic-coding-anatomy', '--engine=google-slides'),
+      (err) => {
+        assert.match(err.stdout, /FAILED .*agentic-coding-anatomy\.pdf \(missing\)/);
+        return true;
+      },
+    );
+  });
+});

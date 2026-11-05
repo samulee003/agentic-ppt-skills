@@ -45,9 +45,12 @@ Each gate has one focused skill and a named deliverable:
   engine-independent type scale.
 
 The pipeline supports `general`, `fast-track`, and `research-enhanced` modes.
-Prototype and production QA use an adapter; `open-slide`, `genoffice`, `marp`,
-and `pptxgenjs` are included, alongside the standalone `genoffice` skill for
-creating, reading, auditing, rendering, and converting local Office files.
+Prototype and production QA use an adapter. Eight are included: `open-slide`,
+`genoffice`, `marp`, `pptxgenjs`, `claude-pptx` (Claude's own `pptx` skill),
+`codex-slides` (Codex's `slides` skill), `google-slides`, and `handoff` (any tool
+the agent cannot drive, such as ChatGPT, Gamma, or Canva). The standalone
+`genoffice` skill creates, reads, audits, renders, and converts local Office
+files.
 
 Shared practices in `skills/make-presentation/references/` are adapted from
 [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT): sharpen and
@@ -59,27 +62,31 @@ Grilling in frontier rounds (the whole set of unblocked questions per round, "ye
 accepts the recommendation) comes from [`mattpocock/skills`](https://github.com/mattpocock/skills)
 (MIT), alongside `grill-me`, `grilling`, and `to-questionnaire`.
 
-### Pairing with platform PPT skills
+### Which tool builds the slides
 
-These skills decide *what* the deck says and *whether it is ready*; they can
-work alongside a runtime's own PowerPoint skill, which handles *how the file
-is built*:
+The pipeline decides *what* the deck says and *whether it is ready*. The slide
+file can come from any of these, and every one goes through the same checks on
+the exported `.pptx`/`.pdf`:
 
-| Runtime | Platform skill | Where it fits |
+| You use | Engine | How the slides get built |
 | --- | --- | --- |
-| Claude Code | `pptx` from [`anthropics/skills`](https://github.com/anthropics/skills) (`document-skills` plugin; source-available, not open source) | `source-intake`: read text and structure from an existing `.pptx`. `deck-prototype` / `production-qa`: build and edit the file under the `pptxgenjs` adapter, which uses the same library. |
-| Codex | `slides` from [`openai/skills`](https://github.com/openai/skills) (PptxGenJS plus render and overflow checks) | Same slots. Its render and overflow checks can supply evidence for `QA-REPORT.md`. |
+| Claude (Claude Code or claude.ai) | `claude-pptx` | Claude's `pptx` skill writes a PptxGenJS script or edits a template; native, editable `.pptx`. In Claude Code, install it with `/plugin marketplace add anthropics/skills` and `/plugin install document-skills@anthropic-agent-skills`. |
+| Codex | `codex-slides` | the `slides` skill from [`openai/skills`](https://github.com/openai/skills), with its render and overflow checks |
+| Google Slides | `google-slides` | the Slides API or an agent's Google Slides connector, or a `.pptx` imported into Slides; exported back as `.pptx`/`.pdf` for QA |
+| ChatGPT, Gamma, Canva, Copilot, Keynote, a designer | `handoff` | `build-packet.mjs` writes a `BUILD-PACKET.md` to paste into the tool; its exported `.pptx` comes back for QA |
+| a script, no platform skill | `pptxgenjs` | a PptxGenJS `build.mjs` |
+| an existing Office file whose master must survive | `genoffice` | the GenOffice CLI |
+| a browser canvas / Markdown | `open-slide` / `marp` | their own CLIs |
 
-Rules when combining them:
+Rules:
 
-- The orchestrator still owns the gates. A platform skill never marks a gate
-  passed and never skips evidence, story, or stage review.
-- Record the engine as `pptxgenjs` with `set-engine` and follow
-  `adapters/pptxgenjs/` for canvas budgets, typography, and notes. The platform
-  skill's own design defaults give way to those rules.
-- Choose one runtime directory (`.agents/skills/` or `.claude/skills/`) and keep
-  only one presentation-building skill active per gate, so two skills do not
-  write the same file.
+- The orchestrator owns the gates. A builder never marks a gate passed and
+  never skips evidence, story, or stage review.
+- Record the engine with `status.mjs set-engine` at the prototype gate and
+  follow `adapters/<engine>/`. The theme, type scale, and storyboard win over a
+  builder's own design defaults.
+- Tools that export only images (or no `.pptx`) cannot pass note-parity and
+  editability checks; say so before choosing them.
 
 ### Install
 
@@ -102,7 +109,7 @@ The orchestrator resumes from the earliest unresolved gate and records state in
 ### Repository layout
 
 - `skills/` — distributable, engine-agnostic skills (including `genoffice`, `grilling`, `grill-me`, and `to-questionnaire`)
-- `adapters/` — engine-specific prototype and export instructions (`open-slide`, `genoffice`, `marp`, `pptxgenjs`)
+- `adapters/` — engine-specific prototype and QA instructions (`open-slide`, `genoffice`, `marp`, `pptxgenjs`, `claude-pptx`, `codex-slides`, `google-slides`, `handoff`)
 - `examples/` — a complete pipeline run
 - `.agents/` — the maintainers' own agent setup: mirrors of `skills/` and `adapters/` (checked by `npm test`) plus third-party skills that are not installed; see [`.agents/README.md`](./.agents/README.md)
 

@@ -5,9 +5,30 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-export const ENGINES = ['open-slide', 'genoffice', 'marp', 'pptxgenjs'];
+export const ENGINES = [
+  'open-slide',
+  'genoffice',
+  'marp',
+  'pptxgenjs',
+  'claude-pptx',
+  'codex-slides',
+  'google-slides',
+  'handoff',
+];
+
+// Engines whose deck is a PptxGenJS build script (slides/<id>/build.mjs).
+const SCRIPT_ENGINES = ['pptxgenjs', 'claude-pptx', 'codex-slides'];
+// Engines where a person or an outside tool exports the files; the pipeline
+// only checks what lands in --out-dir.
+const EXTERNAL_ENGINES = ['google-slides', 'handoff'];
+// Engines that cannot always produce a PDF themselves.
+const OPTIONAL_PDF = ['pptxgenjs', 'claude-pptx', 'codex-slides', 'handoff'];
 
 const ENGINE_FORMATS = {
+  'claude-pptx': ['pdf', 'pptx'],
+  'codex-slides': ['pdf', 'pptx'],
+  'google-slides': ['pdf', 'pptx'],
+  handoff: ['pdf', 'pptx'],
   'open-slide': ['pdf', 'pptx', 'html'],
   marp: ['pdf', 'pptx', 'html'],
   pptxgenjs: ['pdf', 'pptx'],
@@ -116,6 +137,10 @@ const MARP = ['npx', '--yes', '@marp-team/marp-cli@latest'];
  * Each step is { cmd, args, label, optional? }; `optional` steps are skipped
  * with a warning when the binary is missing.
  */
+export function isExternalEngine(engine) {
+  return EXTERNAL_ENGINES.includes(engine);
+}
+
 export function planExport({ cwd, deckId, engine, formats, outDir }) {
   assertEngine(engine);
   const out = (ext) => path.join(outDir, `${deckId}.${ext}`);
@@ -138,9 +163,14 @@ export function planExport({ cwd, deckId, engine, formats, outDir }) {
         args: [...prefix, source, '--allow-local-files', '-o', out(format)],
       });
     }
-  } else if (engine === 'pptxgenjs') {
+  } else if (SCRIPT_ENGINES.includes(engine)) {
+    const script = pptxgenjsScript(cwd, deckId);
+    // claude-pptx and codex-slides decks may be edited from a template instead
+    // of a build script; then the .pptx is already in --out-dir and only the
+    // PDF conversion runs.
+    const hasScript = engine === 'pptxgenjs' || existsSync(script);
     // build.mjs reads DECK_OUT_DIR so --out-dir reaches the script.
-    steps.push({
+    if (hasScript) steps.push({
       label: 'pptxgenjs build (writes the .pptx)',
       cmd: process.execPath,
       args: [pptxgenjsScript(cwd, deckId)],
@@ -258,7 +288,7 @@ export function resolveRequest(engine, format) {
   if (format !== 'auto') return { formats: resolveFormats(engine, format), optional: [] };
   return {
     formats: resolveFormats(engine, 'pdf,pptx'),
-    optional: engine === 'pptxgenjs' ? ['pdf'] : [],
+    optional: OPTIONAL_PDF.includes(engine) ? ['pdf'] : [],
   };
 }
 

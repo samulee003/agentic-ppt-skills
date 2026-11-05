@@ -46,7 +46,9 @@
 
 - Presenting deck / reading deck / both:
 - Formats: (`.pptx`, `.pdf`, `.html`)
-- Must the `.pptx` be natively editable in PowerPoint? (yes → prefer `pptxgenjs` or `genoffice`)
+- Must the `.pptx` be natively editable in PowerPoint? (yes → `claude-pptx`, `codex-slides`, `pptxgenjs`, or `genoffice`)
+- Where will the team edit it? (PowerPoint, Google Slides → `google-slides`, another tool such as ChatGPT/Gamma/Canva → `handoff`)
+- Live file link (Google Slides or external tool), if any:
 - Speaker notes language:
 - Engine preference, if any: (recorded with `status.mjs set-engine` at the prototype gate)
 
