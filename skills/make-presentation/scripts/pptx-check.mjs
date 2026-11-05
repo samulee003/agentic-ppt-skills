@@ -149,6 +149,61 @@ export function countPdfPages(buffer) {
   return pages > 0 ? pages : null;
 }
 
+const EMU_PER_PT = 12700;
+const CJK_CHAR = /[぀-ヿ㐀-鿿豈-﫿가-힯＀-￯]/;
+
+/**
+ * Estimates whether a text box's text needs more height than the box has.
+ * The estimate uses average glyph widths (Latin ≈ 0.55 em, bold ≈ 0.6 em,
+ * CJK ≈ 1 em) and 1.2 line height, so it reports "may overflow" warnings,
+ * never errors. Boxes set to shrink text on overflow are reported too,
+ * because shrinking can push text under the type floor.
+ */
+export function estimateOverflow(shapeXml) {
+  const off = shapeXml.match(/<a:xfrm\b[^>]*>[\s\S]*?<a:ext\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
+  if (!off) return null;
+  const body = shapeXml.match(/<a:bodyPr\b([^>]*)\/?>/)?.[1] ?? '';
+  if (/<a:normAutofit\b/.test(shapeXml)) return { autofit: true };
+  if (/<a:spAutoFit\b/.test(shapeXml)) return null; // box grows with its text
+  const inset = (name, fallback) => Number(body.match(new RegExp(`\\b${name}="(\\d+)"`))?.[1] ?? fallback);
+  const widthPt = (Number(off[1]) - inset('lIns', 91440) - inset('rIns', 91440)) / EMU_PER_PT;
+  const heightPt = (Number(off[2]) - inset('tIns', 45720) - inset('bIns', 45720)) / EMU_PER_PT;
+  if (widthPt <= 0 || heightPt <= 0) return null;
+
+  let needed = 0;
+  let sample = '';
+  for (const para of shapeXml.matchAll(/<a:p>([\s\S]*?)<\/a:p>|<a:p\b[^>]*>([\s\S]*?)<\/a:p>/g)) {
+    const inner = para[1] ?? para[2] ?? '';
+    const runs = [...inner.matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)].map((run) => {
+      const size = Number(run[1].match(/\bsz="(\d+)"/)?.[1] ?? 1800) / 100;
+      const bold = /<a:rPr\b[^>]*\bb="1"/.test(run[1]);
+      const value = decodeXml(run[1].match(/<a:t>([^<]*)<\/a:t>/)?.[1] ?? '');
+      return { size, bold, value };
+    });
+    const textValue = runs.map((run) => run.value).join('');
+    if (!textValue.trim()) continue;
+    if (!sample) sample = textValue.trim().slice(0, 40);
+    const size = Math.max(...runs.map((run) => run.size));
+    const width = runs.reduce(
+      (sum, run) =>
+        sum +
+        [...run.value].reduce(
+          (w, ch) => w + run.size * (CJK_CHAR.test(ch) ? 1 : run.bold ? 0.6 : 0.55),
+          0,
+        ),
+      0,
+    );
+    const bullet = /<a:buChar\b|<a:buAutoNum\b/.test(inner) ? size * 1.5 : 0;
+    const lines = Math.max(1, Math.ceil(width / Math.max(1, widthPt - bullet)));
+    const spacing = Number(inner.match(/<a:spcAft>\s*<a:spcPts val="(\d+)"/)?.[1] ?? 0) / 100;
+    needed += lines * size * 1.2 + spacing;
+  }
+  if (!sample) return null;
+  return needed > heightPt * 1.15 + 2
+    ? { sample, neededIn: needed / 72, haveIn: heightPt / 72 }
+    : null;
+}
+
 export function inspectPptx(buffer, options = {}) {
   const requireNotes = options.requireNotes ?? true;
   const zip = readZip(buffer);
@@ -232,6 +287,16 @@ export function inspectPptx(buffer, options = {}) {
       }
     }
     if (missingAlt > 0) warnings.push(`Slide ${number}: ${missingAlt} picture(s) without alt text`);
+    for (const shape of contentXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)) {
+      const overflow = estimateOverflow(shape[0]);
+      if (!overflow) continue;
+      slide.overflow = (slide.overflow ?? 0) + 1;
+      warnings.push(
+        overflow.autofit
+          ? `Slide ${number}: a text box shrinks text to fit; check it stays above the type floor, or split the slide`
+          : `Slide ${number}: "${overflow.sample}" may overflow its box (needs ~${overflow.neededIn.toFixed(2)} in, has ${overflow.haveIn.toFixed(2)} in)`,
+      );
+    }
     if (words.latin > DENSITY_WORDS || words.cjk > DENSITY_CJK) {
       warnings.push(
         `Slide ${number}: dense text (${words.latin} words, ${words.cjk} CJK characters); split the slide or move detail to notes`,

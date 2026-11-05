@@ -187,3 +187,23 @@ test('PDF page count prefers the page tree over stray page objects', () => {
   assert.equal(countPdfPages(pdf), 2);
   assert.equal(countPdfPages(Buffer.from('<< /Count 3 /Kids [] /Type /Pages >>')), 3);
 });
+
+test('text that needs more height than its box is reported as a possible overflow', () => {
+  const box = (cy, words) =>
+    `<p:sld ${NS}><p:cSld><p:spTree><p:sp><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="4572000" cy="${cy}"/></a:xfrm></p:spPr><p:txBody><a:bodyPr lIns="0" rIns="0" tIns="0" bIns="0"/><a:p><a:r><a:rPr lang="en-US" sz="4000" b="1"/><a:t>${words}</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`;
+  const long = 'Agentic coding is a loop, not a single answer';
+  const tight = inspectPptx(deck([{ xml: box(914400, long), notes: 'n' }])); // 1 in tall, 5 in wide
+  assert.ok(tight.warnings.some((w) => /may overflow its box/.test(w)), tight.warnings.join('; '));
+  const roomy = inspectPptx(deck([{ xml: box(2743200, long), notes: 'n' }])); // 3 in tall
+  assert.ok(!roomy.warnings.some((w) => /overflow/.test(w)), roomy.warnings.join('; '));
+});
+
+test('the showcase and pptxgenjs example decks have no overflow or density warnings', async () => {
+  for (const engine of ['claude-pptx', 'pptxgenjs']) {
+    const report = inspectPptx(await readFile(example(engine, 'pptx')), {
+      pdf: await readFile(example(engine, 'pdf')),
+    });
+    assert.deepEqual(report.errors, [], engine);
+    assert.deepEqual(report.warnings, [], `${engine}: ${report.warnings.join('; ')}`);
+  }
+});

@@ -4,6 +4,7 @@
 
 - Profile: `default`
 - Deck type: `technical` (short explainer)
+- Theme: `editorial-minimal`
 
 ## Audience
 
