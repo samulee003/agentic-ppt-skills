@@ -207,3 +207,12 @@ test('the showcase and pptxgenjs example decks have no overflow or density warni
     assert.deepEqual(report.warnings, [], `${engine}: ${report.warnings.join('; ')}`);
   }
 });
+
+test('only shrink-to-fit that was actually applied is reported', () => {
+  const shape = (autofit) =>
+    `<p:sld ${NS}><p:cSld><p:spTree><p:sp><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="4572000" cy="2743200"/></a:xfrm></p:spPr><p:txBody><a:bodyPr>${autofit}</a:bodyPr><a:p><a:r><a:rPr lang="en-US" sz="2400"/><a:t>Short line</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`;
+  const applied = inspectPptx(deck([{ xml: shape('<a:normAutofit fontScale="62500"/>'), notes: 'n' }]));
+  assert.ok(applied.warnings.some((w) => /shrunk to 62\.5%/.test(w)), applied.warnings.join('; '));
+  const setting = inspectPptx(deck([{ xml: shape('<a:normAutofit/>'), notes: 'n' }]));
+  assert.deepEqual(setting.warnings, []);
+});

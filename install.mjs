@@ -42,7 +42,7 @@ export function install({ target, runtime, force }, log = (line) => process.stdo
 
   if (existsSync(orchestrator(root)) && readFileSync(orchestrator(root), 'utf8') !== source && !force) {
     throw new Error(
-      `${orchestrator(root)} already exists with different content. Re-run with --force to overwrite it.`,
+      `${orchestrator(root)} differs from this version (local edits or an older install). Re-run with --force to replace the installed skills and adapters.`,
     );
   }
   if (existsSync(orchestrator(other)) && readFileSync(orchestrator(other), 'utf8') !== source) {

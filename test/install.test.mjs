@@ -50,7 +50,7 @@ test('refuses to overwrite a different orchestrator without --force', async () =
     await mkdir(skill, { recursive: true });
     await writeFile(path.join(skill, 'SKILL.md'), 'local edits');
     await assert.rejects(execFileAsync(process.execPath, [installer, dir]), (err) => {
-      assert.match(err.stderr, /already exists with different content/);
+      assert.match(err.stderr, /differs from this version/);
       return true;
     });
     await execFileAsync(process.execPath, [installer, dir, '--force']);

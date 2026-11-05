@@ -163,7 +163,11 @@ export function estimateOverflow(shapeXml) {
   const off = shapeXml.match(/<a:xfrm\b[^>]*>[\s\S]*?<a:ext\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
   if (!off) return null;
   const body = shapeXml.match(/<a:bodyPr\b([^>]*)\/?>/)?.[1] ?? '';
-  if (/<a:normAutofit\b/.test(shapeXml)) return { autofit: true };
+  // Shrink-on-overflow that PowerPoint actually applied carries a fontScale
+  // below 100%; the bare setting alone is common and harmless.
+  const scale = shapeXml.match(/<a:normAutofit\b[^>]*\bfontScale="(\d+)"/);
+  if (scale && Number(scale[1]) < 100000) return { autofit: true, scale: Number(scale[1]) / 1000 };
+  if (/<a:normAutofit\b/.test(shapeXml)) return null;
   if (/<a:spAutoFit\b/.test(shapeXml)) return null; // box grows with its text
   const inset = (name, fallback) => Number(body.match(new RegExp(`\\b${name}="(\\d+)"`))?.[1] ?? fallback);
   const widthPt = (Number(off[1]) - inset('lIns', 91440) - inset('rIns', 91440)) / EMU_PER_PT;
@@ -293,7 +297,7 @@ export function inspectPptx(buffer, options = {}) {
       slide.overflow = (slide.overflow ?? 0) + 1;
       warnings.push(
         overflow.autofit
-          ? `Slide ${number}: a text box shrinks text to fit; check it stays above the type floor, or split the slide`
+          ? `Slide ${number}: a text box is shrunk to ${overflow.scale}% to fit; check it stays above the type floor, or split the slide`
           : `Slide ${number}: "${overflow.sample}" may overflow its box (needs ~${overflow.neededIn.toFixed(2)} in, has ${overflow.haveIn.toFixed(2)} in)`,
       );
     }
