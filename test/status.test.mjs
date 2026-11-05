@@ -31,12 +31,16 @@ async function runStatusWithArtifacts(root, ...args) {
   return runStatus(root, ...args);
 }
 
+// The work root is the deck's own folder, named after the deck id.
 async function withWorkspace(callback) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'agentic-ppt-status-'));
+  const base = await mkdtemp(path.join(os.tmpdir(), 'agentic-ppt-status-'));
+  const root = path.join(base, 'demo-deck');
+  const { mkdir } = await import('node:fs/promises');
+  await mkdir(root);
   try {
     await callback(root);
   } finally {
-    await rm(root, { recursive: true, force: true });
+    await rm(base, { recursive: true, force: true });
   }
 }
 
@@ -249,5 +253,14 @@ test('passing a gate requires its artifacts to exist', async () => {
     await writeFile(path.join(root, 'SOURCE-INVENTORY.md'), '# SOURCE-INVENTORY');
     await runStatus(root, 'result', 'source-intake', 'passed', 'Done', '--artifact', 'SOURCE-INVENTORY.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'product-grill');
+  });
+});
+
+test('init refuses a work root that is not the deck folder', async () => {
+  await withWorkspace(async (root) => {
+    await assert.rejects(runStatus(path.dirname(root), 'init', 'demo-deck', './notes'), (err) => {
+      assert.match(err.stderr, /work root should be the deck's own folder, presentation-work\/demo-deck/);
+      return true;
+    });
   });
 });

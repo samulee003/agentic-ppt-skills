@@ -37,6 +37,7 @@
 ## Constraints
 
 - Time (talk length, Q&A length):
+- Slide time (only when the session has long stretches without slides, such as demos or exercises):
 - Venue and screen (room size, projector or screen share, aspect ratio):
 - Language on screen / language spoken:
 - Tone:

@@ -78,3 +78,17 @@ test('reinstall removes files a newer version dropped but keeps unrelated skills
     assert.ok(existsSync(mine), 'unrelated skill kept');
   });
 });
+
+test('--to installs into any runtime folder; ~ expands; --runtime=workbuddy targets ~/.workbuddy', async () => {
+  const { installRoot, expandHome } = await import('../install.mjs');
+  const os = await import('node:os');
+  assert.equal(installRoot({ target: '/p', runtime: 'workbuddy', to: null }), path.join(os.homedir(), '.workbuddy'));
+  assert.equal(installRoot({ target: '/p', runtime: 'agents', to: '/x/y' }), '/x/y');
+  assert.equal(expandHome('~/abc'), path.join(os.homedir(), 'abc'));
+  await withTarget(async (dir) => {
+    const to = path.join(dir, 'runtime-home');
+    await execFileAsync(process.execPath, [installer, `--to=${to}`]);
+    assert.ok(existsSync(path.join(to, 'skills/make-presentation/SKILL.md')));
+    assert.ok(existsSync(path.join(to, 'adapters/workbuddy-pptx/engine.json')));
+  });
+});

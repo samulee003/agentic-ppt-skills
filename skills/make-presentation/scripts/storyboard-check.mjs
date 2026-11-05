@@ -61,10 +61,20 @@ export function parseMinutes(value) {
   return null;
 }
 
+/** The value after a brief line's label, accepting ":" or the full-width "：". */
+export function afterLabel(line) {
+  const at = line.search(/[:：]/);
+  return at < 0 ? '' : line.slice(at + 1);
+}
+
 export function briefMinutes(brief) {
-  const line = brief.split(/\r?\n/).find((l) => /^\s*-\s*Time\b/i.test(l));
+  const lines = brief.split(/\r?\n/);
+  // A session with long stretches off the slides states its slide time separately.
+  const line =
+    lines.find((l) => /^\s*-\s*(?:Slide time|投影片時間|幻灯片时间)/i.test(l) && /\d/.test(afterLabel(l))) ??
+    lines.find((l) => /^\s*-\s*(?:Time\b|時間|时间)/i.test(l));
   if (!line) return null;
-  const value = line.slice(line.indexOf(':') + 1);
+  const value = afterLabel(line);
   const MINUTES = String.raw`(?:minutes?|mins?|m\b|分鐘|分钟|分)`;
   const hours = value.match(
     new RegExp(String.raw`(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h\b|小時|小时)\s*(?:(\d+(?:\.\d+)?)\s*${MINUTES})?`, 'i'),

@@ -2,10 +2,11 @@
 // Every engine is driven by its own CLI, matching adapters/<engine>/qa.md.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const ENGINES = [
+const BUILT_IN = [
   'open-slide',
   'genoffice',
   'marp',
@@ -24,7 +25,48 @@ const EXTERNAL_ENGINES = ['google-slides', 'handoff'];
 // Engines that cannot always produce a PDF themselves.
 const OPTIONAL_PDF = ['pptxgenjs', 'claude-pptx', 'codex-slides', 'handoff'];
 
+/**
+ * Engines added without touching this file: any adapters/<name>/engine.json
+ * next to the installed skills, e.g.
+ *   { "kind": "external", "formats": ["pdf", "pptx"], "optionalPdf": true }
+ * "external": the engine's own tool exports into --out-dir (like handoff);
+ * "script": rebuilt with node slides/<deck-id>/build.mjs (like pptxgenjs).
+ * Reinstalling the skills does not touch adapters you added yourself.
+ */
+export function adaptersDir() {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  return process.env.PPT_ADAPTERS_DIR ?? path.resolve(here, '..', '..', '..', 'adapters');
+}
+
+export function customEngines(dir = adaptersDir()) {
+  if (!existsSync(dir)) return {};
+  const found = {};
+  for (const name of readdirSync(dir)) {
+    const file = path.join(dir, name, 'engine.json');
+    if (BUILT_IN.includes(name) || !existsSync(file)) continue;
+    try {
+      const spec = JSON.parse(readFileSync(file, 'utf8'));
+      found[name] = {
+        kind: spec.kind === 'script' ? 'script' : 'external',
+        formats: Array.isArray(spec.formats) && spec.formats.length ? spec.formats : ['pdf', 'pptx'],
+        optionalPdf: spec.optionalPdf !== false,
+      };
+    } catch (error) {
+      throw new Error(`${file} is not valid JSON: ${error.message}`);
+    }
+  }
+  return found;
+}
+
+const CUSTOM = customEngines();
+export const ENGINES = [...BUILT_IN, ...Object.keys(CUSTOM)];
+for (const [name, spec] of Object.entries(CUSTOM)) {
+  (spec.kind === 'script' ? SCRIPT_ENGINES : EXTERNAL_ENGINES).push(name);
+  if (spec.optionalPdf) OPTIONAL_PDF.push(name);
+}
+
 const ENGINE_FORMATS = {
+  ...Object.fromEntries(Object.entries(CUSTOM).map(([name, spec]) => [name, spec.formats])),
   'claude-pptx': ['pdf', 'pptx'],
   'codex-slides': ['pdf', 'pptx'],
   'google-slides': ['pdf', 'pptx'],

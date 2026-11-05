@@ -1,0 +1,5 @@
+{
+  "kind": "external",
+  "formats": ["pdf", "pptx"],
+  "optionalPdf": true
+}

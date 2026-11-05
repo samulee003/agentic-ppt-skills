@@ -8,7 +8,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { column, parseTables } from './storyboard-check.mjs';
+import { afterLabel, column, parseTables } from './storyboard-check.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,7 +17,7 @@ function field(markdown, label) {
     .split(/\r?\n/)
     .find((l) => new RegExp(String.raw`^\s*-\s*${label}\b`, 'i').test(l));
   if (!line) return '';
-  return line.slice(line.indexOf(':') + 1).trim();
+  return afterLabel(line).trim();
 }
 
 

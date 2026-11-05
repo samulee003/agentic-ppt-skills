@@ -25,7 +25,10 @@ export const FLOOR_TOLERANCE = 0.0005;
 export const DENSITY_WORDS = 70;
 // Text a builder leaves behind when content is still missing.
 export const PLACEHOLDER = /\b(?:TODO|TBD|TBC|FIXME|lorem ipsum|placeholder)\b|\bX{3,}\b|待補|待定|佔位|占位|\[(?:insert|add|logo|image)[^\]]*\]/i;
-export const DENSITY_CJK = 120;
+export const DENSITY_CJK = 160;
+// Per text box: one card's worth of copy.
+export const BOX_WORDS = 45;
+export const BOX_CJK = 70;
 
 export function readZip(buffer) {
   let eocd = -1;
@@ -79,7 +82,7 @@ function decodeXml(text) {
 }
 
 function texts(xml) {
-  return [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => decodeXml(match[1]));
+  return [...xml.matchAll(/<a:t(?:\s[^>]*)?>([^<]*)<\/a:t>/g)].map((match) => decodeXml(match[1]));
 }
 
 function relsFor(zip, part) {
@@ -161,7 +164,35 @@ const CJK_CHAR = /[぀-ヿ㐀-鿿豈-﫿가-힯＀-￯]/;
  * never errors. Boxes set to shrink text on overflow are reported too,
  * because shrinking can push text under the type floor.
  */
-export function estimateOverflow(shapeXml) {
+/** Approximate advance width of one character, in ems. */
+export function charWidth(ch, bold = false) {
+  let em;
+  if (CJK_CHAR.test(ch) || /[\u3000-\u303f\uff01-\uff5e]/.test(ch)) em = 1; // CJK and full-width punctuation
+  else if (ch === ' ') em = 0.28;
+  else if (ch === '·' || ch === '•') em = 0.5; // CJK fonts draw the middle dot wide
+  else if (/[.,:;'"|!/()\[\]-]/.test(ch)) em = 0.3;
+  else if (/[0-9]/.test(ch)) em = 0.56;
+  else if (/[A-Z]/.test(ch)) em = 0.66;
+  else em = 0.52;
+  return bold ? em * 1.05 : em;
+}
+
+/** A shape's box in EMU, from its <a:xfrm>. */
+export function shapeRect(shapeXml) {
+  const off = shapeXml.match(/<a:xfrm\b[^>]*>\s*<a:off\b[^>]*\bx="(-?\d+)"[^>]*\by="(-?\d+)"[^>]*\/>\s*<a:ext\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
+  return off ? { x: +off[1], y: +off[2], w: +off[3], h: +off[4] } : null;
+}
+
+/** True when the shape draws a fill or an outline (not just text). */
+export function hasVisibleBox(shapeXml) {
+  const spPr = shapeXml.match(/<p:spPr\b[\s\S]*?<\/p:spPr>/)?.[0] ?? '';
+  const withoutLine = spPr.replace(/<a:ln\b[\s\S]*?<\/a:ln>/g, '');
+  const filled = /<a:solidFill>|<a:gradFill>|<a:blipFill>/.test(withoutLine);
+  const outlined = /<a:ln\b/.test(spPr) && !/<a:ln\b[^>]*>\s*<a:noFill\s*\/>/.test(spPr);
+  return filled || outlined;
+}
+
+export function estimateOverflow(shapeXml, containers = []) {
   const off = shapeXml.match(/<a:xfrm\b[^>]*>[\s\S]*?<a:ext\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
   if (!off) return null;
   const body = shapeXml.match(/<a:bodyPr\b([^>]*)\/?>/)?.[1] ?? '';
@@ -175,7 +206,25 @@ export function estimateOverflow(shapeXml) {
   const widthPt = (Number(off[1]) - inset('lIns', 91440) - inset('rIns', 91440)) / EMU_PER_PT;
   const heightPt = (Number(off[2]) - inset('tIns', 45720) - inset('bIns', 45720)) / EMU_PER_PT;
   if (widthPt <= 0 || heightPt <= 0) return null;
-
+  const noWrap = /\bwrap="none"/.test(body);
+  // Sideways overflow only shows against a visible box: the shape's own fill or
+  // outline, or the smallest filled shape it sits on (a label over a pill).
+  // Slide-sized backgrounds are excluded by the caller.
+  const rect = shapeRect(shapeXml);
+  const EMU_SLACK = 91440; // 0.1 in
+  const own = hasVisibleBox(shapeXml) ? rect : null;
+  const holder =
+    own ??
+    (rect &&
+      containers
+        .filter(
+          (c) =>
+            c.x <= rect.x + EMU_SLACK &&
+            c.y <= rect.y + EMU_SLACK &&
+            c.x + c.w >= rect.x + rect.w - EMU_SLACK &&
+            c.y + c.h >= rect.y + rect.h - EMU_SLACK,
+        )
+        .sort((a, b) => a.w * a.h - b.w * b.h)[0]);
   let needed = 0;
   let sample = '';
   for (const para of shapeXml.matchAll(/<a:p>([\s\S]*?)<\/a:p>|<a:p\b[^>]*>([\s\S]*?)<\/a:p>/g)) {
@@ -183,7 +232,7 @@ export function estimateOverflow(shapeXml) {
     const runs = [...inner.matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)].map((run) => {
       const size = Number(run[1].match(/\bsz="(\d+)"/)?.[1] ?? 1800) / 100;
       const bold = /<a:rPr\b[^>]*\bb="1"/.test(run[1]);
-      const value = decodeXml(run[1].match(/<a:t>([^<]*)<\/a:t>/)?.[1] ?? '');
+      const value = decodeXml(run[1].match(/<a:t(?:\s[^>]*)?>([^<]*)<\/a:t>/)?.[1] ?? '');
       return { size, bold, value };
     });
     const textValue = runs.map((run) => run.value).join('');
@@ -193,14 +242,25 @@ export function estimateOverflow(shapeXml) {
     const width = runs.reduce(
       (sum, run) =>
         sum +
-        [...run.value].reduce(
-          (w, ch) => w + run.size * (CJK_CHAR.test(ch) ? 1 : run.bold ? 0.6 : 0.55),
-          0,
-        ),
+        [...run.value].reduce((w, ch) => w + run.size * charWidth(ch, run.bold), 0),
       0,
     );
     const bullet = /<a:buChar\b|<a:buAutoNum\b/.test(inner) ? size * 1.5 : 0;
-    const lines = Math.max(1, Math.ceil(width / Math.max(1, widthPt - bullet)));
+    // wrap="none": the line does not wrap, so it overflows sideways and is clipped.
+    if (noWrap && holder && rect) {
+      // Where the line actually lands, from the paragraph alignment.
+      const align = inner.match(/<a:pPr\b[^>]*\balgn="(\w+)"/)?.[1] ?? 'l';
+      const left = (rect.x + inset('lIns', 91440)) / EMU_PER_PT;
+      const start = align === 'ctr' ? left + (widthPt - width) / 2 : align === 'r' ? left + widthPt - width : left;
+      const minX = holder.x / EMU_PER_PT;
+      const maxX = (holder.x + holder.w) / EMU_PER_PT;
+      const over = Math.max(0, minX - start) + Math.max(0, start + width - maxX);
+      // 3% of the line is within the font-width estimate's error.
+      if (over > width * 0.03 + 2) {
+        return { sample: textValue.trim().slice(0, 40), sideways: true, neededIn: width / 72, overIn: over / 72 };
+      }
+    }
+    const lines = noWrap ? 1 : Math.max(1, Math.ceil(width / Math.max(1, widthPt - bullet)));
     const spacing = Number(inner.match(/<a:spcAft>\s*<a:spcPts val="(\d+)"/)?.[1] ?? 0) / 100;
     needed += lines * size * 1.2 + spacing;
   }
@@ -264,10 +324,23 @@ export function inspectPptx(buffer, options = {}) {
     const contentXml = xml
       .replace(/<a:fld\b[\s\S]*?<\/a:fld>/g, '')
       .replace(/<p:sp\b(?:(?!<\/p:sp>)[\s\S])*?<p:ph\b[^>]*type="(?:sldNum|dt|ftr|hdr)"[\s\S]*?<\/p:sp>/g, '');
-    const sizes = [...contentXml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t>([^<]*)<\/a:t>/g)]
+    const sizes = [...contentXml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t(?:\s[^>]*)?>([^<]*)<\/a:t>/g)]
       .filter((match) => match[2].trim() !== '')
       .map((match) => Number(match[1]) / 100);
     const minPt = sizes.length ? Math.min(...sizes) : null;
+    // Short lines in the header or footer band (section labels, page numbers,
+    // source lines) are captions: they answer to the hard floor only.
+    const bodySizes = [];
+    for (const shapeXml of contentXml.match(/<p:sp\b[\s\S]*?<\/p:sp>/g) ?? []) {
+      const r = shapeRect(shapeXml);
+      const shapeText = texts(shapeXml).join('').trim();
+      const band = r && cy && (r.y >= cy * 0.78 || r.y + r.h <= cy * 0.14);
+      if (band && shapeText.length <= 80) continue;
+      for (const m of shapeXml.matchAll(/<a:rPr\b[^>]*\bsz="(\d+)"[^>]*\/?>(?:(?!<\/a:r>)[\s\S])*?<a:t(?:\s[^>]*)?>([^<]*)<\/a:t>/g)) {
+        if (m[2].trim()) bodySizes.push(Number(m[1]) / 100);
+      }
+    }
+    const minBodyPt = bodySizes.length ? Math.min(...bodySizes) : null;
     const pictures = [...xml.matchAll(/<p:pic\b[\s\S]*?<\/p:pic>/g)];
     const missingAlt = pictures.filter((pic) => {
       const descr = pic[0].match(/<p:cNvPr\b[^>]*\bdescr="([^"]*)"/)?.[1];
@@ -304,28 +377,45 @@ export function inspectPptx(buffer, options = {}) {
         errors.push(
           `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height (hard floor ${HARD_FLOOR * 100}%)`,
         );
-      } else if (ratio < BODY_FLOOR - FLOOR_TOLERANCE) {
+      } else if (minBodyPt !== null && minBodyPt / heightPt < BODY_FLOOR - FLOOR_TOLERANCE) {
+        const bodyRatio = minBodyPt / heightPt;
         warnings.push(
-          `Slide ${number}: ${minPt}pt text is ${(ratio * 100).toFixed(1)}% of slide height; keep it to captions or labels (body floor ${BODY_FLOOR * 100}%)`,
+          `Slide ${number}: ${minBodyPt}pt text is ${(bodyRatio * 100).toFixed(1)}% of slide height; keep it to captions or labels (body floor ${BODY_FLOOR * 100}%)`,
         );
       }
     }
     if (missingAlt > 0) warnings.push(`Slide ${number}: ${missingAlt} picture(s) without alt text`);
     const placeholder = allText.match(PLACEHOLDER);
     if (placeholder) errors.push(`Slide ${number}: placeholder text "${placeholder[0]}" is still on the slide`);
-    for (const shape of contentXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)) {
-      const overflow = estimateOverflow(shape[0]);
+    const shapes = [...contentXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)].map((m) => m[0]);
+    const containers = shapes
+      .filter(hasVisibleBox)
+      .map(shapeRect)
+      .filter((c) => c && cx && cy && !(c.w >= cx * 0.9 && c.h >= cy * 0.9)); // not the slide background
+    for (const shapeXml of shapes) {
+      const overflow = estimateOverflow(shapeXml, containers);
       if (!overflow) continue;
       slide.overflow = (slide.overflow ?? 0) + 1;
       warnings.push(
         overflow.autofit
           ? `Slide ${number}: a text box is shrunk to ${overflow.scale}% to fit; check it stays above the type floor, or split the slide`
-          : `Slide ${number}: "${overflow.sample}" may overflow its box (needs ~${overflow.neededIn.toFixed(2)} in, has ${overflow.haveIn.toFixed(2)} in)`,
+          : overflow.sideways
+            ? `Slide ${number}: "${overflow.sample}" runs ${overflow.overIn.toFixed(2)} in past the edge of the shape behind it and will look cut off`
+            : `Slide ${number}: "${overflow.sample}" may overflow its box (needs ~${overflow.neededIn.toFixed(2)} in, has ${overflow.haveIn.toFixed(2)} in)`,
       );
     }
+    // A text wall is one box carrying a paragraph, or a slide carrying far too much.
+    const densestBox = shapes
+      .map((shapeXml) => ({ text: texts(shapeXml).join(' ').trim() }))
+      .map((box) => ({ ...box, count: countWords(box.text) }))
+      .sort((a, b) => b.count.latin + b.count.cjk / 1.6 - (a.count.latin + a.count.cjk / 1.6))[0];
     if (words.latin > DENSITY_WORDS || words.cjk > DENSITY_CJK) {
       warnings.push(
         `Slide ${number}: dense text (${words.latin} words, ${words.cjk} CJK characters); split the slide or move detail to notes`,
+      );
+    } else if (densestBox && (densestBox.count.latin > BOX_WORDS || densestBox.count.cjk > BOX_CJK)) {
+      warnings.push(
+        `Slide ${number}: one text box carries a paragraph ("${densestBox.text.slice(0, 30)}…"); keep one idea per box or move detail to notes`,
       );
     }
   });

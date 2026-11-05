@@ -12,7 +12,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { briefMinutes, column, parseTables } from './storyboard-check.mjs';
+import { afterLabel, briefMinutes, column, parseTables } from './storyboard-check.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const PHASES = ['product-grill', 'story-grill', 'deck-prototype', 'stage-grill'];
@@ -26,8 +26,8 @@ export function loadTree(markdown = readFileSync(path.join(here, '..', 'referenc
 
 
 export function profileId(brief) {
-  const line = (brief ?? '').split(/\r?\n/).find((l) => /^\s*-\s*Profile\b/i.test(l));
-  return line?.slice(line.indexOf(':') + 1).match(/^\s*`?([a-z0-9]+(?:-[a-z0-9]+)*)`?(?=$|[\s,;(])/)?.[1] ?? null;
+  const line = (brief ?? '').split(/\r?\n/).find((l) => /^\s*-\s*(?:Profile\b|設定檔|配置档)/i.test(l));
+  return afterLabel(line ?? '').match(/^\s*`?([a-z0-9]+(?:-[a-z0-9]+)*)`?(?=$|[\s,;(])/)?.[1] ?? null;
 }
 
 /** Adds the nodes a profile declares in its ```json grill-nodes block. */

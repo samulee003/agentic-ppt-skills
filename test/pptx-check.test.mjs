@@ -216,3 +216,42 @@ test('only shrink-to-fit that was actually applied is reported', () => {
   const setting = inspectPptx(deck([{ xml: shape('<a:normAutofit/>'), notes: 'n' }]));
   assert.deepEqual(setting.warnings, []);
 });
+
+test('text runs with attributes (xml:space="preserve") are read', () => {
+  const xml = `<p:sld ${NS}><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:rPr lang="en-US" sz="3200"/><a:t>Churn</a:t></a:r><a:r><a:rPr lang="en-US" sz="3200"/><a:t xml:space="preserve"> rose after the change TODO</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`;
+  const report = inspectPptx(deck([{ xml, notes: 'n' }]));
+  assert.ok(report.errors.some((e) => /placeholder text "TODO"/.test(e)), report.errors.join('; '));
+  assert.equal(report.slides[0].words, 6);
+});
+
+const shapeXml = ({ x, y, w, h, fill = false, text = '', sz = 1800, wrap = '', algn = '' }) =>
+  `<p:sp><p:spPr><a:xfrm><a:off x="${Math.round(x)}" y="${Math.round(y)}"/><a:ext cx="${Math.round(w)}" cy="${Math.round(h)}"/></a:xfrm>${fill ? '<a:solidFill><a:srgbClr val="FFCF33"/></a:solidFill>' : '<a:noFill/>'}</p:spPr>${
+    text ? `<p:txBody><a:bodyPr ${wrap} lIns="0" rIns="0" tIns="0" bIns="0"/><a:p>${algn ? `<a:pPr algn="${algn}"/>` : ''}<a:r><a:rPr lang="zh-TW" sz="${sz}" b="1"/><a:t>${text}</a:t></a:r></a:p></p:txBody>` : ''
+  }</p:sp>`;
+const slideOf = (...shapes) => `<p:sld ${NS}><p:cSld><p:spTree>${shapes.join('')}</p:spTree></p:cSld></p:sld>`;
+const IN = 914400;
+
+test('a no-wrap label wider than the pill behind it is reported; one that fits is not', () => {
+  const pill = shapeXml({ x: IN, y: 4 * IN, w: 2.6 * IN, h: 0.6 * IN, fill: true });
+  const label = (text) => shapeXml({ x: 1.15 * IN, y: 4.15 * IN, w: 2.3 * IN, h: 0.3 * IN, text, wrap: 'wrap="none"' });
+  const cut = inspectPptx(deck([{ xml: slideOf(pill, label('吩咐 · 驗貨 · 派活 · 算賬')), notes: 'n' }]));
+  assert.ok(cut.warnings.some((w) => /runs [\d.]+ in past the edge of the shape behind it/.test(w)), cut.warnings.join('; '));
+  const fits = inspectPptx(deck([{ xml: slideOf(pill, label('吩咐 · 驗貨')), notes: 'n' }]));
+  assert.deepEqual(fits.warnings, []);
+  // The slide background is not a "shape behind it".
+  const bg = shapeXml({ x: 0, y: 0, w: 12192000, h: 6858000, fill: true });
+  const header = shapeXml({ x: IN, y: 0.3 * IN, w: 0.5 * IN, h: 0.3 * IN, text: 'Block 1 · 怎麼吩咐', sz: 1500, wrap: 'wrap="none"' });
+  assert.deepEqual(inspectPptx(deck([{ xml: slideOf(bg, header), notes: 'n' }])).warnings, []);
+});
+
+test('short footer lines are captions; body text and per-box paragraphs are still checked', () => {
+  const footer = shapeXml({ x: IN, y: 6.2 * IN, w: 9 * IN, h: 0.3 * IN, text: '資料：中心 2025 年個案檢討', sz: 1350 });
+  const bodySmall = shapeXml({ x: IN, y: 2 * IN, w: 9 * IN, h: 1 * IN, text: '這是內文但字太小了一點點', sz: 1350 });
+  assert.deepEqual(inspectPptx(deck([{ xml: slideOf(footer), notes: 'n' }])).warnings, []);
+  assert.ok(inspectPptx(deck([{ xml: slideOf(bodySmall), notes: 'n' }])).warnings.some((w) => /13.5pt text .*body floor/.test(w)));
+  const para = '長'.repeat(80);
+  const box = shapeXml({ x: IN, y: 2 * IN, w: 9 * IN, h: 4 * IN, text: para, sz: 2000 });
+  assert.ok(inspectPptx(deck([{ xml: slideOf(box), notes: 'n' }])).warnings.some((w) => /one text box carries a paragraph/.test(w)));
+  const cards = [0, 1, 2, 3].map((i) => shapeXml({ x: (0.5 + i * 3) * IN, y: 2 * IN, w: 2.8 * IN, h: 3 * IN, text: '卡'.repeat(35), sz: 1650 }));
+  assert.ok(!inspectPptx(deck([{ xml: slideOf(...cards), notes: 'n' }])).warnings.some((w) => /dense|paragraph/.test(w)), '140 CJK across four cards is not a wall');
+});

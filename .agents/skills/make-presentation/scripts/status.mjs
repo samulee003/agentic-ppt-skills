@@ -240,6 +240,13 @@ function validateState(state) {
 }
 
 async function init(root, deckId, sourceRoot, mode, modeReason, force) {
+  // STATUS.md belongs in the deck's own folder (presentation-work/<deck-id>/),
+  // where every check and export-deck.mjs look for it.
+  if (path.basename(path.resolve(root)) !== deckId) {
+    throw new Error(
+      `The work root should be the deck's own folder, presentation-work/${deckId}, not ${root}`,
+    );
+  }
   const state = createState(deckId, sourceRoot, mode, modeReason, root);
   try {
     await save(root, state, { exclusive: !force });

@@ -9,6 +9,7 @@
 // Usage: source-check.mjs <work-root> [--final] [--json]
 
 import { existsSync, readFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { column, parseTables } from './storyboard-check.mjs';
@@ -60,7 +61,9 @@ export function checkSources({ inventory, bases, final = false }) {
         if (!looksLikePath(row[pathCol])) continue;
         checked += 1;
         const value = clean(row[pathCol]);
-        if (!bases.some((base) => existsSync(path.resolve(base, value)))) {
+        // "~/…" means the home folder (skills and profiles often live there).
+        const home = value.replace(/^~(?=[\\/])/, os.homedir());
+        if (!bases.some((base) => existsSync(path.resolve(base, home)))) {
           errors.push(`SOURCE-INVENTORY.md lists "${value}", which is not under ${bases.join(' or ')}`);
         }
       }
