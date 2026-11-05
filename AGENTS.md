@@ -16,7 +16,18 @@ repository. The root [`README.md`](./README.md) is the human-oriented guide.
 
 ## 2. Install and verify
 
-Set `SRC` to the actual path of this repository; do not assume its folder name.
+Preferred: run the installer from the target folder (it copies, then verifies):
+
+```bash
+npx github:samulee003/agentic-ppt-skills            # → .agents/
+npx github:samulee003/agentic-ppt-skills --runtime=claude   # → .claude/
+```
+
+Claude Code can also install the plugin:
+`/plugin marketplace add samulee003/agentic-ppt-skills`, then
+`/plugin install agentic-ppt-skills@agentic-ppt-skills`.
+
+Manual install: set `SRC` to the actual path of this repository; do not assume its folder name.
 
 ```bash
 SRC=/absolute/path/to/agentic-ppt-skills

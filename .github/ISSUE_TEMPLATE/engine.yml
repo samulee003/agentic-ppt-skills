@@ -1,0 +1,18 @@
+name: New engine or tool
+description: Ask for an adapter for another slide tool
+labels: [adapter]
+body:
+  - type: input
+    id: tool
+    attributes:
+      label: Tool
+      placeholder: e.g. Keynote, Pitch, Beautiful.ai
+    validations:
+      required: true
+  - type: textarea
+    id: export
+    attributes:
+      label: How it builds and exports
+      description: Can an agent drive it (CLI, API, MCP)? Can it export .pptx with speaker notes? PDF?
+    validations:
+      required: true

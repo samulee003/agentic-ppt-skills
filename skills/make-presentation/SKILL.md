@@ -1,11 +1,19 @@
 ---
 name: make-presentation
-description: Turns a source folder, existing deck, or presentation idea into a complete presentation product by routing through source intake, product grilling, evidence, story, prototype, stage review, and final delivery. Use when starting a presentation from materials, rebuilding a deck, resuming a partial presentation project, or asking for an end-to-end PPT/PDF workflow.
+description: Turns notes, a source folder, an existing deck, or an idea into a stage-ready presentation through eight gates (source intake, brief, evidence, story, story review, prototype, stage review, QA) with machine checks on the exported file. Works with any slide tool (Claude pptx, Codex slides, PptxGenJS, Google Slides, GenOffice, open-slide, Marp, or a handoff to ChatGPT/Gamma/Canva). Use whenever the user asks for slides, a deck, a PowerPoint/PPTX, a pitch deck, a talk, a training deck, a keynote, or 簡報/投影片/演示文稿, wants an existing deck improved, translated, or rebranded, or wants to resume a presentation project.
 ---
 
 # Make a presentation product
 
 Read repo instructions first. Route the project from the earliest unresolved gate instead of recreating work.
+
+## Paths
+
+Every command in these skills is written for skills installed at `.agents/skills/` with adapters at `.agents/adapters/`. When they live elsewhere, substitute the real folder in every command and path, in every skill:
+
+- Claude Code project install: `.claude/skills/` and `.claude/adapters/`.
+- Claude Code plugin: `${CLAUDE_PLUGIN_ROOT}/skills/` and `${CLAUDE_PLUGIN_ROOT}/adapters/` (if this line still shows the literal `${CLAUDE_PLUGIN_ROOT}`, you are not running as a plugin).
+- Find the real folder by locating this `SKILL.md`: the skills folder is its parent's parent, and `adapters/` sits next to it.
 
 ## Workspace
 
