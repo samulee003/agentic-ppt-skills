@@ -408,6 +408,93 @@ async function summary(root) {
   process.stdout.write('=====================================\n\n');
 }
 
+async function readOptional(file) {
+  try {
+    return await readFile(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A resume capsule (adapted from pstack's recall): where the deck stands, the
+ * decisions still open, and the single next move.
+ */
+export async function brief(root) {
+  const state = validateState(await load(root));
+  const dir = path.resolve(root);
+  const [briefMd, grillMd, interrogationMd] = await Promise.all(
+    ['PRESENTATION-BRIEF.md', 'GRILL-LOG.md', 'INTERROGATION.md'].map((name) =>
+      readOptional(path.join(dir, name)),
+    ),
+  );
+  const passed = GATES.filter((gate) => state.gates[gate].status === 'passed').length;
+  const next = GATES.find((gate) => state.gates[gate].status !== 'passed') ?? 'complete';
+  const playback = briefMd?.match(/##\s+Playback\s*\n+([\s\S]*?)(?=\n##|$)/)?.[1]
+    ?.replace(/^-\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const lines = ['## Capsule', ''];
+  lines.push(`- ${state.deckId}: ${passed}/${GATES.length} gates passed, mode \`${state.mode}\`, engine \`${state.engine ?? 'not chosen'}\`.`);
+  if (playback) lines.push(`- Playback: ${playback.length > 220 ? `${playback.slice(0, 217)}...` : playback}`);
+  const blocked = GATES.filter((gate) => ['blocked', 'needs_revision'].includes(state.gates[gate].status));
+  if (blocked.length) lines.push(`- Needs attention: ${blocked.map((g) => `${g} (${state.gates[g].status})`).join(', ')}.`);
+
+  lines.push('', '## Gates', '');
+  for (const gate of GATES) {
+    const item = state.gates[gate];
+    const why = item.status === 'passed' ? item.reason : item.invalidationReason || item.reason;
+    lines.push(`- [${item.status}] ${gate}${why ? `: ${why}` : ''}`);
+  }
+
+  const open = [];
+  if (grillMd) {
+    const { parseLog, loadTree } = await import('./grill-check.mjs');
+    const tree = loadTree();
+    const loadBearing = new Set(
+      Object.entries(tree).flatMap(([phase, nodes]) => nodes.filter((n) => n.loadBearing).map((n) => `${phase}/${n.id}`)),
+    );
+    const latest = new Map();
+    for (const row of parseLog(grillMd).rows) latest.set(`${row.phase}/${row.node}`, row);
+    for (const [key, row] of latest) {
+      if (row.status === 'Deferred') open.push(`${key}: Deferred (${row.reason || 'waiting on someone'})`);
+      else if (row.status === 'Assumed' && loadBearing.has(key)) open.push(`${key}: Assumed, load-bearing (${row.reason}); confirm with the user`);
+    }
+  }
+  if (interrogationMd) {
+    const { parseRounds } = await import('./interrogation-check.mjs');
+    for (const round of parseRounds(interrogationMd)) {
+      for (const f of round.findings) {
+        if (f.verdict === 'kept' && f.bucket === 'Act on' && !f.resolution.replace(/[-—\s]/g, '')) {
+          open.push(`${round.name} ${f.id}: Act on finding without a resolution (slide ${f.slide})`);
+        }
+      }
+    }
+  }
+  lines.push('', '## Open decisions', '');
+  lines.push(...(open.length ? open.map((item) => `- ${item}`) : ['- none']));
+
+  const skill = {
+    'source-intake': 'presentation-source-intake',
+    'product-grill': 'presentation-product-grill',
+    evidence: 'presentation-evidence',
+    'story-architecture': 'presentation-story-architecture',
+    'story-grill': 'presentation-story-grill',
+    'deck-prototype': 'presentation-prototype',
+    'stage-grill': 'presentation-stage-grill',
+    'production-qa': 'presentation-deck-qa',
+  }[next];
+  lines.push('', '## Next move', '');
+  lines.push(
+    next === 'complete'
+      ? open.length
+        ? '- Confirm the open decisions above with the user; then the deck is ready. After the talk, run the retro (`references/retro.md`).'
+        : '- The deck is complete. After the talk, run the retro (`references/retro.md`).'
+      : `- Run \`${skill}\` for the \`${next}\` gate${open.length ? ', asking the open decisions above in its first round' : ''}.`,
+  );
+  return `${lines.join('\n')}\n`;
+}
+
 async function main(argv) {
   const [command, root, ...args] = argv;
   if (command === 'init') {
@@ -461,13 +548,17 @@ async function main(argv) {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs next <root>');
     process.stdout.write(`${await nextGate(root)}\n`);
     return;
+  } else if (command === 'brief') {
+    if (!root || args.length !== 0) throw new Error('Usage: status.mjs brief <root>');
+    process.stdout.write(await brief(root));
+    return;
   } else if (command === 'summary') {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs summary <root>');
     await summary(root);
     return;
   } else {
     throw new Error(
-      'Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, or summary',
+      'Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, summary, or brief',
     );
   }
   process.stdout.write(`${command} ok\n`);

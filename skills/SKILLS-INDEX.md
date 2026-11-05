@@ -49,7 +49,10 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 
 | Reference | Use it when you need to… |
 | --- | --- |
+| [grill-tree.md](./make-presentation/references/grill-tree.md) | the presentation decision tree the grill gates work through, with load-bearing nodes |
 | [grilling-rounds.md](./make-presentation/references/grilling-rounds.md) | grill the user in frontier rounds instead of one question per turn (from [`mattpocock/skills`](https://github.com/mattpocock/skills)) |
+| [interrogate.md](./make-presentation/references/interrogate.md) | attack the deck with adversarial audience members; only proven findings survive (from pstack `interrogate`) |
+| [retro.md](./make-presentation/references/retro.md) | after the talk, grill the user about what happened and route learnings into checks, the tree, profiles, or themes (from pstack `reflect`) |
 | [sharpen-playback.md](./make-presentation/references/sharpen-playback.md) | avoid interrogation fatigue at `product-grill` |
 | [unslop-copy.md](./make-presentation/references/unslop-copy.md) + [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | remove AI tells from slide copy and notes |
 | [review-buckets.md](./make-presentation/references/review-buckets.md) | turn review findings into Act on / Consider / Noted / Dismissed |
@@ -60,7 +63,9 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 
 | Script | Gate | What it checks or does |
 | --- | --- | --- |
-| [`status.mjs`](./make-presentation/scripts/status.mjs) | all | pipeline state, gate order, invalidation |
+| [`status.mjs`](./make-presentation/scripts/status.mjs) | all | pipeline state, gate order, invalidation; `brief` prints a resume capsule (from pstack `recall`) |
+| [`grill-check.mjs`](./make-presentation/scripts/grill-check.mjs) | every grill gate, production-qa | every tree node settled; no reasonless, Deferred, or unconfirmed load-bearing decision |
+| [`interrogation-check.mjs`](./make-presentation/scripts/interrogation-check.mjs) | story-grill, stage-grill | adversary cast, verbatim quotes, claim IDs, buckets, Act-on resolutions |
 | [`storyboard-check.mjs`](./make-presentation/scripts/storyboard-check.mjs) | story-architecture, story-grill | action titles, archetypes, archetype runs, evidence IDs, timing vs brief |
 | [`unslop-check.mjs`](./make-presentation/scripts/unslop-check.mjs) | story through QA | AI-tell phrasing in slide copy and notes |
 | [`theme-check.mjs`](./make-presentation/scripts/theme-check.mjs) | when a theme changes | theme fields and WCAG contrast |

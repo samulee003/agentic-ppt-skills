@@ -26,7 +26,7 @@ Every command in these skills is written for skills installed at `.agents/skills
 ## Status
 
 - Use the shipped helper at `.agents/skills/make-presentation/scripts/status.mjs`.
-- If `presentation-work/<deck-id>/STATUS.md` exists, run `node .agents/skills/make-presentation/scripts/status.mjs validate presentation-work/<deck-id>`.
+- If `presentation-work/<deck-id>/STATUS.md` exists, run `node .agents/skills/make-presentation/scripts/status.mjs validate presentation-work/<deck-id>`, then `status.mjs brief presentation-work/<deck-id>` and show the user the capsule: where the deck stands, the open decisions, and the next move.
 - Otherwise initialize it with `node .agents/skills/make-presentation/scripts/status.mjs init <work-root> <deck-id> <source-root> <mode> <mode-reason>`.
 - Never reset an existing status file unless the user explicitly requests a reset; only then append `--force`.
 - Treat artifact existence as a clue, not proof that a gate passed.
@@ -84,6 +84,10 @@ Read the named reference only when its trigger applies.
 - **Data slides** (`references/data-slides.md`): at `evidence`, `story-architecture`, `deck-prototype`, and `production-qa` whenever a slide shows numbers.
 - **Revising an existing deck** (`references/revise-existing.md`): when the source is a finished deck and the user wants it improved rather than rebuilt.
 - **Encode lessons** (`references/encode-lessons.md`): when the user corrects the same mistake twice, fix it in the template or a check first, a test next, and a doc last. Keep the rule table current.
+
+## After delivery
+
+When the user says the talk is done, or asks for a retro, follow `references/retro.md`: grill the user about what happened, turn the answers into routed learnings, and apply them only after approval.
 
 ## Handoff
 

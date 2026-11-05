@@ -1,5 +1,9 @@
 # PRESENTATION-BRIEF
 
+## Playback
+
+- A five-minute technical explainer for developers and tech leads: show that agentic coding is a read-plan-write-verify loop driven by tool feedback, use one sourced 2023 benchmark as a historical baseline rather than a promise, and leave the audience matching human review to the risk of each action.
+
 ## Profile and deck type
 
 - Profile: `default`

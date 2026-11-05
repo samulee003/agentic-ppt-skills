@@ -83,8 +83,8 @@ Create each named artifact yourself from its template. Never skip a gate
 because an output already exists.
 
 Never hand-edit `STATUS.md`. Use only `init`, `validate`, `next`, `set`,
-`result`, `invalidate`, `set-mode`, `set-engine`, and `summary` from the status
-helper. Mark a gate passed only with real `--artifact` paths.
+`result`, `invalidate`, `set-mode`, `set-engine`, `summary`, and `brief` from the
+status helper. When resuming a deck, show the user `status.mjs brief` first. Mark a gate passed only with real `--artifact` paths.
 
 The deterministic checks in `make-presentation/scripts/` (`grill-check.mjs`,
 `interrogation-check.mjs`, `storyboard-check.mjs`, `pptx-check.mjs`,

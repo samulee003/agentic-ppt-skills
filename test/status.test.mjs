@@ -142,3 +142,36 @@ test('fast-track consolidates paired gates; general mode does not', async () => 
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'product-grill');
   });
 });
+
+test('brief reports progress, open load-bearing assumptions, unresolved findings, and the next move', async () => {
+  const { writeFile } = await import('node:fs/promises');
+  await withWorkspace(async (root) => {
+    await runStatus(root, 'init', 'demo-deck', './notes');
+    await runStatus(root, 'result', 'source-intake', 'passed', 'Inventory done', '--artifact', 'SOURCE-INVENTORY.md');
+    await writeFile(path.join(root, 'PRESENTATION-BRIEF.md'), '## Playback\n\n- A decision deck for the board.\n');
+    await writeFile(
+      path.join(root, 'GRILL-LOG.md'),
+      `| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| product-grill | audience | q | r | d | Assumed | Headless run | — |
+| product-grill | visual | q | r | d | Assumed | Reversible | — |
+| product-grill | outcome | q | r | d | Deferred | Waiting on the sponsor | — |`,
+    );
+    await writeFile(
+      path.join(root, 'INTERROGATION.md'),
+      `## Round: story-grill
+
+| ID | Adversary | Slide | Quote | Proof type | Proof | Verdict | Bucket | Resolution |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S1 | the CFO | 3 | x | ledger | no row | kept | Act on | |`,
+    );
+    const { stdout } = await runStatus(root, 'brief');
+    assert.match(stdout, /demo-deck: 1\/8 gates passed/);
+    assert.match(stdout, /Playback: A decision deck for the board\./);
+    assert.match(stdout, /product-grill\/audience: Assumed, load-bearing \(Headless run\)/);
+    assert.doesNotMatch(stdout, /product-grill\/visual/);
+    assert.match(stdout, /product-grill\/outcome: Deferred \(Waiting on the sponsor\)/);
+    assert.match(stdout, /story-grill S1: Act on finding without a resolution/);
+    assert.match(stdout, /Run `presentation-product-grill` for the `product-grill` gate, asking the open decisions/);
+  });
+});

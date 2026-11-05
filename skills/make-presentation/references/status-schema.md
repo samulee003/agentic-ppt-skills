@@ -45,6 +45,7 @@ node .agents/skills/make-presentation/scripts/status.mjs init ./work/demo demo-d
 node .agents/skills/make-presentation/scripts/status.mjs validate ./work/demo
 node .agents/skills/make-presentation/scripts/status.mjs next ./work/demo
 node .agents/skills/make-presentation/scripts/status.mjs summary ./work/demo
+node .agents/skills/make-presentation/scripts/status.mjs brief ./work/demo
 node .agents/skills/make-presentation/scripts/status.mjs set ./work/demo evidence in_progress "Reviewing claims" --input SOURCE-INVENTORY.md
 node .agents/skills/make-presentation/scripts/status.mjs invalidate ./work/demo evidence "A source changed"
 node .agents/skills/make-presentation/scripts/status.mjs invalidate ./work/demo evidence "Refresh single gate" --selective
@@ -54,4 +55,4 @@ node .agents/skills/make-presentation/scripts/status.mjs result ./work/demo prod
 node .agents/skills/make-presentation/scripts/status.mjs result ./work/demo story-grill "needs_revision: evidence" "Counter-evidence is missing"
 ```
 
-`init` refuses to overwrite an existing `STATUS.md`; `--force` is an explicit reset. Deck ids must be safe kebab-case. A passed `result` requires at least one `--artifact`; repeat it for multiple outputs. Repeat `--input` and `--decision` to replace those arrays with the values supplied in that command. `next` prints the earliest gate whose status is not `passed`, or `complete`.
+`init` refuses to overwrite an existing `STATUS.md`; `--force` is an explicit reset. Deck ids must be safe kebab-case. A passed `result` requires at least one `--artifact`; repeat it for multiple outputs. Repeat `--input` and `--decision` to replace those arrays with the values supplied in that command. `next` prints the earliest gate whose status is not `passed`, or `complete`. `brief` prints a resume capsule: progress, the playback, every gate, open decisions (load-bearing `Assumed` and `Deferred` rows in `GRILL-LOG.md`, unresolved Act-on findings in `INTERROGATION.md`), and the next move.
