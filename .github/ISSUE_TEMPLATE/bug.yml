@@ -1,0 +1,28 @@
+name: Bug report
+description: A script, check, or skill instruction does the wrong thing
+labels: [bug]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Script or skill
+      placeholder: e.g. pptx-check.mjs, presentation-story-grill
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      options: [open-slide, genoffice, marp, pptxgenjs, claude-pptx, codex-slides, google-slides, handoff, not engine-specific]
+  - type: input
+    id: runtime
+    attributes:
+      label: Agent runtime
+      placeholder: e.g. Claude Code 2.x, Codex, Cursor
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Include the exact command and its output. Attach the .pptx or STORYBOARD.md if you can share it.
+    validations:
+      required: true

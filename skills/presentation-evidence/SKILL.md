@@ -19,8 +19,10 @@ Use when `evidence` is the current gate.
 
 ## Authority & scientific fidelity rules
 
-- **Primary & Official Authority Preference**: For demographic, economic, suicide/mortality, birth rate, or public health claims, mandate primary/official sources (e.g. official statistical bureaus like DSEC, WHO, World Bank, peer-reviewed journals) rather than secondary news reports or casual commentary.
-- **Explicit Baselines & Denominators**: Always capture the exact reference year, definition, denominator, and global baseline comparisons (e.g. regional suicide rate vs WHO global average).
+- **Primary & Official Authority Preference**: For demographic, economic, health, mortality, or other official-statistics claims, require primary or official sources (national statistics offices, WHO, World Bank, regulators, peer-reviewed journals) rather than news reports or commentary. Apply the profile's *Evidence* section if it names local sources.
+- **Explicit Baselines & Denominators**: Always capture the exact reference year, definition, denominator, and the comparison that gives the number meaning (prior period, target, regional or global baseline).
+- **Charts**: every number that will become a chart gets its own row, with the comparison it needs; follow `../make-presentation/references/data-slides.md`.
+- **Assets**: record each photo, illustration, icon set, or font that is not original work in an *Assets* table (source, licence, attribution text). Unlicensed assets are rejected like unsupported claims.
 - **Nuanced Literature Fidelity**: Guard against oversimplified pop-clichés (e.g. do not reduce complex findings like the Killingsworth/Kahneman income-wellbeing association to "money can't buy happiness").
 
 Research-enhanced mode alone adds A/B/C/D claim safety.
@@ -37,4 +39,5 @@ Research-enhanced mode alone adds A/B/C/D claim safety.
 
 - Move unsupported but useful material to notes or backup only when the wording stays honest.
 - Reject claims that cannot be supported proportionately for the presentation’s mode.
-- Stop once every material claim is supported, carefully qualified, moved to notes or backup, or rejected.
+- Run `node .agents/skills/make-presentation/scripts/ledger-check.mjs <work-root>`: every row needs an ID, the claim, and a source (plus a date and an A/B/C/D level in research-enhanced mode), and every asset needs a licence.
+- Stop once every material claim is supported, carefully qualified, moved to notes or backup, or rejected, and `ledger-check.mjs` reports no errors.

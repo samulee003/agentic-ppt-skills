@@ -1,133 +1,90 @@
 #!/usr/bin/env node
+// Headless export for every supported engine. Each engine runs its own CLI:
+//   open-slide → open-slide export      marp      → @marp-team/marp-cli
+//   pptxgenjs  → node build.mjs (+ soffice for PDF)   genoffice → genoffice create/convert
+// Pass --dry-run to print the commands without running them.
 
-import { execFile } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { promisify } from 'node:util';
+import {
+  checkExports,
+  detectEngine,
+  expectedExports,
+  formatStep,
+  hasBinary,
+  isExternalEngine,
+  parseFlags,
+  planExport,
+  printExportResults,
+  resolveRequest,
+  runStep,
+} from './deck-engines.mjs';
 
-const execFileAsync = promisify(execFile);
-
-function usage() {
-  process.stderr.write(
-    `Usage: export-deck.mjs <deck-id> [--engine=<engine>] [--format=<pdf,pptx,html,all>] [--out-dir=<dir>]\n`,
-  );
-  process.exit(1);
-}
-
-function parseArgs(args) {
-  let deckId = null;
-  const flags = {
-    engine: 'auto',
-    format: 'pdf,pptx',
-    outDir: 'exports',
-  };
-
-  for (const arg of args) {
-    if (arg.startsWith('--engine=')) {
-      flags.engine = arg.slice('--engine='.length).trim();
-    } else if (arg.startsWith('--format=')) {
-      flags.format = arg.slice('--format='.length).trim();
-    } else if (arg.startsWith('--out-dir=')) {
-      flags.outDir = arg.slice('--out-dir='.length).trim();
-    } else if (!arg.startsWith('-') && !deckId) {
-      deckId = arg.trim();
-    }
-  }
-
-  if (!deckId) usage();
-  return { deckId, flags };
-}
-
-function detectEngine(userCwd, deckId, explicit) {
-  if (explicit && explicit !== 'auto') return explicit;
-
-  const statusCandidates = [
-    path.join(userCwd, 'presentation-work', deckId, 'STATUS.md'),
-    path.join(userCwd, 'slides', deckId, 'STATUS.md'),
-    path.join(userCwd, deckId, 'STATUS.md'),
-    path.join(userCwd, 'STATUS.md'),
-  ];
-  for (const p of statusCandidates) {
-    if (existsSync(p)) {
-      try {
-        const raw = readFileSync(p, 'utf8');
-        const match = raw.match(/<!-- presentation-status:start -->[\s\S]*?```json([\s\S]*?)```/);
-        if (match?.[1]) {
-          const json = JSON.parse(match[1].trim());
-          if (json.engine) return json.engine;
-        }
-      } catch {}
-    }
-  }
-
-  const slidesDir = path.join(userCwd, 'slides');
-  const deckDir = path.join(slidesDir, deckId);
-
-  if (existsSync(path.join(deckDir, 'outline.json')) || existsSync(path.join(deckDir, 'pages'))) {
-    return 'genoffice';
-  }
-  if (
-    existsSync(path.join(slidesDir, `${deckId}.md`)) ||
-    existsSync(path.join(deckDir, 'index.md'))
-  ) {
-    return 'marp';
-  }
-  if (existsSync(path.join(deckDir, 'build.mjs')) || existsSync(path.join(deckDir, 'build.js'))) {
-    return 'pptxgenjs';
-  }
-  return 'open-slide';
-}
+const USAGE =
+  'Usage: export-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<auto|pdf,pptx,html|all>] [--out-dir=<dir>] [--dry-run]\n';
 
 async function main() {
-  const { deckId, flags } = parseArgs(process.argv.slice(2));
-  const userCwd = process.cwd();
-  const engine = detectEngine(userCwd, deckId, flags.engine);
-
-  process.stdout.write(`Exporting presentation "${deckId}" using engine [${engine}]...\n`);
-
-  // First try delegating to local open-slide CLI export
-  const coreBinCandidates = [
-    path.join(userCwd, 'packages', 'core', 'bin.js'),
-    path.join(userCwd, 'node_modules', '@open-slide', 'core', 'bin.js'),
-  ];
-  let localCoreBin = null;
-  for (const c of coreBinCandidates) {
-    if (existsSync(c)) {
-      localCoreBin = c;
-      break;
-    }
+  const { deckId, flags } = parseFlags(process.argv.slice(2), {
+    engine: 'auto',
+    format: 'auto',
+    outDir: 'exports',
+    dryRun: false,
+  });
+  if (!deckId) {
+    process.stderr.write(USAGE);
+    process.exit(1);
   }
 
-  if (localCoreBin) {
-    const cliArgs = [
-      localCoreBin,
-      'export',
-      deckId,
-      `--engine=${engine}`,
-      `--format=${flags.format}`,
-      `--out-dir=${flags.outDir}`,
-    ];
-    await execFileAsync('node', cliArgs, { stdio: 'inherit' });
+  const cwd = process.cwd();
+  const engine = detectEngine(cwd, deckId, flags.engine);
+  const { formats, optional } = resolveRequest(engine, flags.format);
+  const outDir = path.resolve(cwd, flags.outDir);
+  const steps = planExport({ cwd, deckId, engine, formats, outDir });
+
+  process.stdout.write(`Exporting "${deckId}" with engine [${engine}] → ${formats.join(', ')}\n`);
+
+  if (isExternalEngine(engine) || steps.length === 0) {
+    process.stdout.write(
+      `The ${engine} deck is exported by its own tool: save the files in ${outDir} (see adapters/${engine}/qa.md). Checking them now.\n`,
+    );
+  }
+
+  if (flags.dryRun) {
+    for (const step of steps) process.stdout.write(`$ ${formatStep(step)}\n`);
     return;
   }
 
-  // Fallback to npx open-slide
-  try {
-    await execFileAsync('npx', [
-      'open-slide',
-      'export',
-      deckId,
-      `--engine=${engine}`,
-      `--format=${flags.format}`,
-      `--out-dir=${flags.outDir}`,
-    ]);
-  } catch (err) {
-    process.stderr.write(`Failed to export deck: ${String(err)}\n`);
-    process.exit(1);
+  const skipped = [];
+  for (const step of steps) {
+    if (step.requiresBinary && !hasBinary(step.cmd)) {
+      const fallback = step.cmd === 'soffice' && hasBinary('libreoffice') ? 'libreoffice' : null;
+      if (fallback) {
+        step.cmd = fallback;
+      } else if (optional.includes('pdf')) {
+        process.stdout.write(
+          `skip    ${step.label}: "${step.cmd}" is not installed. PptxGenJS writes PPTX only; tell the user the PDF was not produced.\n`,
+        );
+        skipped.push('pdf');
+        continue;
+      } else {
+        throw new Error(
+          `${step.label}: "${step.cmd}" is not installed. PptxGenJS writes PPTX only; install LibreOffice or export with --format=pptx. Do not fabricate a PDF.`,
+        );
+      }
+    }
+    process.stdout.write(`$ ${formatStep(step)}\n`);
+    await runStep(step, cwd);
+  }
+
+  // Every engine must leave its files in --out-dir.
+  const results = checkExports(
+    expectedExports({ deckId, formats, outDir, optional: [...optional, ...skipped] }),
+  );
+  if (!printExportResults(results)) {
+    throw new Error('One or more expected export files are missing or empty');
   }
 }
 
-main().catch((err) => {
-  process.stderr.write(`export-deck error: ${String(err)}\n`);
+main().catch((error) => {
+  process.stderr.write(`export-deck error: ${error instanceof Error ? error.message : error}\n`);
   process.exit(1);
 });

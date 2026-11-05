@@ -8,4 +8,4 @@ The source folder contains a research memo, evidence table, storyline, storyboar
 4. Run Product Grill only for unresolved product choices.
 5. Run Story Grill and Stage Grill before finalization.
 6. When a statistic is corrected, invalidate reviewed evidence-dependent gates while leaving untouched pending work pending.
-7. Regenerate and verify the visual-faithful PPTX and matching PDF.
+7. Regenerate the PPTX and matching PDF with `export-deck.mjs`, then run `qa-deck.mjs` (which runs `pptx-check.mjs`) until it reports no errors.

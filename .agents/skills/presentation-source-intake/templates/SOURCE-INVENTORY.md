@@ -40,10 +40,25 @@ Use `draft`, `revision`, `export`, `derivative`, or `duplicate` for `Lineage cla
 
 ## Missing
 
-| Needed item | Why needed | Likely owner or location | Next step |
-| --- | --- | --- | --- |
+`Status`: `Open` until the item arrives or the user accepts going without it,
+then `Resolved` or `Accepted` with the reason in *Next step*. `production-qa`
+fails while any row is `Open` (`source-check.mjs --final`).
+
+| Needed item | Why needed | Likely owner or location | Next step | Status |
+| --- | --- | --- | --- | --- |
 
 ## Access issue
 
 | Blocked item | Why blocked | Impact | Help needed |
 | --- | --- | --- | --- |
+
+## Existing deck (if the source is a finished deck)
+
+- File and `pptx-check.mjs` summary:
+- Revision scope: (`polish`, `rebrand`, `translate`, `restructure`; see `references/revise-existing.md`)
+- Slides to reuse as-is:
+
+## Hints for the product grill
+
+- Brand template or guide:
+- Profile hints (language, audience, venue, deck type):

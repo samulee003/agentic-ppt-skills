@@ -3,7 +3,7 @@
 <!-- presentation-status:start -->
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "deckId": "agentic-coding-anatomy",
   "mode": "research-enhanced",
   "modeReviewedAt": "2026-06-21T00:40:21.555Z",
@@ -152,10 +152,13 @@
       "reason": "Fresh browser, PPTX, PDF, notes, and PowerPoint checks pass after correcting export-time header/footer wrapping.",
       "invalidationReason": ""
     }
-  }
+  },
+  "engine": "claude-pptx"
 }
 ```
 <!-- presentation-status:end -->
+
+**Deck:** agentic-coding-anatomy · **Mode:** research-enhanced · **Engine:** claude-pptx
 
 | Gate | Status | Artifacts | Inputs | Decisions | Invalidated by | Reviewed | Review reason | Invalidated | Invalidation reason |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

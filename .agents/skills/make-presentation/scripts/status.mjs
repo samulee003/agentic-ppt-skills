@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -18,6 +19,13 @@ export const STATUSES = ['pending', 'in_progress', 'passed', 'needs_revision', '
 const SCHEMA_VERSION = 3;
 const MODES = ['general', 'research-enhanced', 'fast-track'];
 const RESULTS = ['passed', 'blocked', 'needs_revision: product-grill', 'needs_revision: evidence'];
+
+// In fast-track mode one focused pass produces the artifacts for both gates of
+// each pair, so passing the lead gate also passes its partner.
+export const FAST_TRACK_PAIRS = {
+  'source-intake': 'product-grill',
+  'story-architecture': 'story-grill',
+};
 
 function statusPath(root) {
   return path.join(path.resolve(root), 'STATUS.md');
@@ -152,7 +160,7 @@ async function save(root, state, options = {}) {
   await writeFile(statusPath(root), render(state), { flag: options.exclusive ? 'wx' : 'w' });
 }
 
-function createState(deckId, sourceRoot, mode, modeReason) {
+function createState(deckId, sourceRoot, mode, modeReason, root = '.') {
   assertDeckId(deckId);
   assertRequiredString(sourceRoot, 'sourceRoot');
   const resolvedMode = mode?.trim() ? mode : 'general';
@@ -168,7 +176,8 @@ function createState(deckId, sourceRoot, mode, modeReason) {
     modeReviewedAt: new Date().toISOString(),
     modeReason: resolvedReason,
     engine: null,
-    sourceRoot: path.resolve(sourceRoot),
+    // Stored relative to the work root so the project can move between machines.
+    sourceRoot: path.relative(path.resolve(root), path.resolve(sourceRoot)) || '.',
     gates: Object.fromEntries(
       GATES.map((gate) => [
         gate,
@@ -231,7 +240,14 @@ function validateState(state) {
 }
 
 async function init(root, deckId, sourceRoot, mode, modeReason, force) {
-  const state = createState(deckId, sourceRoot, mode, modeReason);
+  // STATUS.md belongs in the deck's own folder (presentation-work/<deck-id>/),
+  // where every check and export-deck.mjs look for it.
+  if (path.basename(path.resolve(root)) !== deckId) {
+    throw new Error(
+      `The work root should be the deck's own folder, presentation-work/${deckId}, not ${root}`,
+    );
+  }
+  const state = createState(deckId, sourceRoot, mode, modeReason, root);
   try {
     await save(root, state, { exclusive: !force });
   } catch (error) {
@@ -265,7 +281,17 @@ function parseMetadataOptions(args) {
   return metadata;
 }
 
-function applyGateState(state, gate, status, reason, metadata = {}) {
+/** A passed gate's artifacts must exist: relative to the work root, the current folder, or absolute. */
+export function missingArtifacts(root, artifacts) {
+  return artifacts.filter((artifact) => {
+    const candidates = path.isAbsolute(artifact)
+      ? [artifact]
+      : [path.resolve(root, artifact), path.resolve(process.cwd(), artifact)];
+    return !candidates.some((file) => existsSync(file));
+  });
+}
+
+function applyGateState(state, gate, status, reason, metadata = {}, root = null) {
   assertOneOf(gate, GATES, 'gate');
   assertOneOf(status, STATUSES, 'status');
   assertRequiredString(reason, 'reason');
@@ -273,6 +299,14 @@ function applyGateState(state, gate, status, reason, metadata = {}) {
   const artifacts = metadata.artifacts ?? item.artifacts;
   if (status === 'passed' && artifacts.length === 0) {
     throw new Error('Passed result requires at least one --artifact <path>');
+  }
+  if (status === 'passed' && root !== null) {
+    const missing = missingArtifacts(root, artifacts);
+    if (missing.length) {
+      throw new Error(
+        `Cannot pass ${gate}: artifact(s) not found: ${missing.join(', ')} (paths are relative to the work root or the current folder)`,
+      );
+    }
   }
   state.gates[gate] = {
     ...item,
@@ -291,7 +325,7 @@ function applyGateState(state, gate, status, reason, metadata = {}) {
 
 async function setGate(root, gate, status, reason, metadata) {
   const state = validateState(await load(root));
-  applyGateState(state, gate, status, reason, metadata);
+  applyGateState(state, gate, status, reason, metadata, root);
   await save(root, state);
   return state;
 }
@@ -357,6 +391,16 @@ async function setEngine(root, engine) {
   return state;
 }
 
+async function fastTrackChecks(root, partner) {
+  const { checkGrillAt } = await import('./grill-check.mjs');
+  const problems = checkGrillAt(root, partner).errors;
+  if (partner === 'story-grill') {
+    const { checkInterrogationAt } = await import('./interrogation-check.mjs');
+    problems.push(...checkInterrogationAt(root, 'story-grill').errors);
+  }
+  return problems;
+}
+
 async function applyResult(root, gate, result, reason, metadata) {
   assertOneOf(gate, GATES, 'gate');
   assertOneOf(result, RESULTS, 'result');
@@ -365,7 +409,19 @@ async function applyResult(root, gate, result, reason, metadata) {
   }
   const state = validateState(await load(root));
   if (result === 'passed' || result === 'blocked') {
-    applyGateState(state, gate, result, reason, metadata);
+    applyGateState(state, gate, result, reason, metadata, root);
+    const partner = FAST_TRACK_PAIRS[gate];
+    if (result === 'passed' && state.mode === 'fast-track' && partner) {
+      // The partner is a grill gate; passing it here must not skip its checks.
+      const problems = await fastTrackChecks(root, partner);
+      if (problems.length) {
+        throw new Error(
+          `fast-track: ${gate} also passes ${partner}, but ${partner}'s checks fail:\n  ${problems.join('\n  ')}`,
+        );
+      }
+      const partnerReason = `fast-track: consolidated with ${gate}. ${reason}`;
+      applyGateState(state, partner, 'passed', partnerReason, metadata, root);
+    }
   } else if (result === 'needs_revision: product-grill') {
     invalidateFrom(state, 'product-grill', reason, gate);
   } else if (result === 'needs_revision: evidence') {
@@ -394,6 +450,95 @@ async function summary(root) {
     process.stdout.write(`- [${status}] ${gate.padEnd(20)} (Reviewed: ${date})\n`);
   }
   process.stdout.write('=====================================\n\n');
+}
+
+async function readOptional(file) {
+  try {
+    return await readFile(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A resume capsule (adapted from pstack's recall): where the deck stands, the
+ * decisions still open, and the single next move.
+ */
+export async function brief(root) {
+  const state = validateState(await load(root));
+  const dir = path.resolve(root);
+  const [briefMd, grillMd, interrogationMd] = await Promise.all(
+    ['PRESENTATION-BRIEF.md', 'GRILL-LOG.md', 'INTERROGATION.md'].map((name) =>
+      readOptional(path.join(dir, name)),
+    ),
+  );
+  const passed = GATES.filter((gate) => state.gates[gate].status === 'passed').length;
+  const next = GATES.find((gate) => state.gates[gate].status !== 'passed') ?? 'complete';
+  const playback = briefMd?.match(/##\s+Playback\s*\n+([\s\S]*?)(?=\n##|$)/)?.[1]
+    ?.replace(/^-\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const lines = ['## Capsule', ''];
+  lines.push(`- ${state.deckId}: ${passed}/${GATES.length} gates passed, mode \`${state.mode}\`, engine \`${state.engine ?? 'not chosen'}\`.`);
+  if (playback) lines.push(`- Playback: ${playback.length > 220 ? `${playback.slice(0, 217)}...` : playback}`);
+  const blocked = GATES.filter((gate) => ['blocked', 'needs_revision'].includes(state.gates[gate].status));
+  if (blocked.length) lines.push(`- Needs attention: ${blocked.map((g) => `${g} (${state.gates[g].status})`).join(', ')}.`);
+
+  lines.push('', '## Gates', '');
+  for (const gate of GATES) {
+    const item = state.gates[gate];
+    const why = item.status === 'passed' ? item.reason : item.invalidationReason || item.reason;
+    lines.push(`- [${item.status}] ${gate}${why ? `: ${why}` : ''}`);
+  }
+
+  const open = [];
+  if (grillMd) {
+    const { parseLog, treeFor } = await import('./grill-check.mjs');
+    const tree = treeFor(briefMd);
+    const loadBearing = new Set(
+      Object.entries(tree).flatMap(([phase, nodes]) => nodes.filter((n) => n.loadBearing).map((n) => `${phase}/${n.id}`)),
+    );
+    const latest = new Map();
+    const { rows, schemaError } = parseLog(grillMd);
+    if (schemaError) open.push(`GRILL-LOG.md: ${schemaError}`);
+    for (const row of rows) latest.set(`${row.phase}/${row.node}`, row);
+    for (const [key, row] of latest) {
+      if (row.status === 'Deferred') open.push(`${key}: Deferred (${row.reason || 'waiting on someone'})`);
+      else if (row.status === 'Assumed' && loadBearing.has(key)) open.push(`${key}: Assumed, load-bearing (${row.reason}); confirm with the user`);
+    }
+  }
+  if (interrogationMd) {
+    const { parseRounds } = await import('./interrogation-check.mjs');
+    for (const round of parseRounds(interrogationMd)) {
+      for (const f of round.findings) {
+        if (f.verdict === 'kept' && f.bucket === 'Act on' && !f.resolution.replace(/[-—\s]/g, '')) {
+          open.push(`${round.name} ${f.id}: Act on finding without a resolution (slide ${f.slide})`);
+        }
+      }
+    }
+  }
+  lines.push('', '## Open decisions', '');
+  lines.push(...(open.length ? open.map((item) => `- ${item}`) : ['- none']));
+
+  const skill = {
+    'source-intake': 'presentation-source-intake',
+    'product-grill': 'presentation-product-grill',
+    evidence: 'presentation-evidence',
+    'story-architecture': 'presentation-story-architecture',
+    'story-grill': 'presentation-story-grill',
+    'deck-prototype': 'presentation-prototype',
+    'stage-grill': 'presentation-stage-grill',
+    'production-qa': 'presentation-deck-qa',
+  }[next];
+  lines.push('', '## Next move', '');
+  lines.push(
+    next === 'complete'
+      ? open.length
+        ? '- Confirm the open decisions above with the user; then the deck is ready. After the talk, run the retro (`references/retro.md`).'
+        : '- The deck is complete. After the talk, run the retro (`references/retro.md`).'
+      : `- Run \`${skill}\` for the \`${next}\` gate${open.length ? ', asking the open decisions above in its first round' : ''}.`,
+  );
+  return `${lines.join('\n')}\n`;
 }
 
 async function main(argv) {
@@ -449,13 +594,17 @@ async function main(argv) {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs next <root>');
     process.stdout.write(`${await nextGate(root)}\n`);
     return;
+  } else if (command === 'brief') {
+    if (!root || args.length !== 0) throw new Error('Usage: status.mjs brief <root>');
+    process.stdout.write(await brief(root));
+    return;
   } else if (command === 'summary') {
     if (!root || args.length !== 0) throw new Error('Usage: status.mjs summary <root>');
     await summary(root);
     return;
   } else {
     throw new Error(
-      'Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, or summary',
+      'Expected command: init, validate, set, invalidate, set-mode, set-engine, result, next, summary, or brief',
     );
   }
   process.stdout.write(`${command} ok\n`);

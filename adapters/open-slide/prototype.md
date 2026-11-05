@@ -95,15 +95,15 @@ Never use the generic AI template: `H1 Dark Title` + `H2 Gray Subtitle` + `multi
 - For 4 items: 2×2 grid.
 - For 5 items: **3-top, 2-bottom** (or 2-top, 3-bottom) centered grid. **NEVER** stack 5 narrow vertical stripes across the screen.
 
-### 6. Instructional interaction slide layouts
-Provide dedicated visual layouts for active learning and adult engagement:
+### 6. Interaction layouts (the `interaction` archetype)
+Use these when the storyboard assigns `interaction` (common in `training` decks):
 - **Audience Polling / Temperature Checks**: 2–3 high-contrast cards with large numbers/options for immediate hand-raising.
 - **Buzz-Pair Discussion Banners**: Prominent 30–60s peer discussion prompt containers.
 - **Dialogue Flows & Step-by-Step Rehearsals**: Visual step progressions (01 $\to$ 02 $\to$ 03) with distinct speaker quotes.
 - **Takeaway Scaffolding Cards**: Clean, high-impact checklist/pocket summary cards for post-lecture behavior transfer.
 
 ### 7. Language purity
-- When a presentation is targeted for an international audience (e.g. English summit), enforce **100% target language consistency**. Zero secondary language / Chinese character remnants across slides, cards, badges, and chart labels.
+- One language per surface, in the register the profile sets. No stray untranslated words across slides, cards, badges, and chart labels.
 
 ## Repeated elements — component, not `map`
 
@@ -127,3 +127,9 @@ Before calling the prototype gate passed, review the representative pages in the
 ### Headless review (no browser)
 
 If you are a headless agent, the open-slide canvas is a browser surface, so capture screenshots programmatically: drive the running dev server (`pnpm dev`) with a headless browser (Playwright/Puppeteer), navigate to each slide route, and screenshot at 1920×1080. Open the PNGs with your vision capability and confirm nothing overflows 1080px and type is projector-readable. If you have no headless browser or no image tool, record that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.
+
+## Canonical scale and brand template
+
+- The px table above is the canonical scale (`skills/make-presentation/references/typography.md`) at 1080 px height.
+- Theme contracts (`skills/make-presentation/themes/<id>.md`) map to CSS variables; sizes given as a share of slide height multiply by 1080.
+- open-slide cannot import a `.potx` master. Reproduce the brand palette, fonts, and logo placement as theme tokens. If the brand requires its real PowerPoint master, recommend `pptxgenjs` or `genoffice` at the engine question.

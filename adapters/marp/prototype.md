@@ -69,3 +69,9 @@ pdftoppm -png -r 100 /tmp/preview.pdf /tmp/page
 ```
 
 Open the PNGs with your vision capability and confirm each page is 16:9, text is not clipped, and every `---` produced exactly one page. If you have no image tool, record in the gate result that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.
+
+## Canonical scale and brand template
+
+- Marp pages are 1280×720 CSS px. The canonical scale converts to: body 22–30 px (floor 19 px), captions 14–19 px (floor 14 px), slide titles 32–54 px. Set these in the theme CSS, not per element.
+- Theme contracts (`skills/make-presentation/themes/<id>.md`) become a custom Marp theme CSS registered with `--theme`.
+- Marp cannot import a `.potx` master and its `.pptx` export is image-backed. When the brief needs the brand's real master or an editable `.pptx`, recommend `pptxgenjs` or `genoffice` instead.

@@ -19,24 +19,26 @@ Use when `story-architecture` is the current gate.
 - Separate the main-talk range from backup or Q&A material.
 - Confirm one necessary job and one dominant message per slide.
 - Run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <work-root>/STORYBOARD.md` and fix findings using `../make-presentation/references/unslop-copy.md` before finishing.
-- **Mandatory Page Archetype Assignment**: In `STORYBOARD.md`, assign each slide explicitly to one of the 4 visual archetypes to guarantee visual dynamic rhythm and prevent repetitive box layouts:
-  1. `[大字流]`: Hero thesis, golden rules, safeguard statements (e.g. 100px+ punchline cards).
-  2. `[半圖半文]`: Split editorial grid 1.1:0.9 (visual vignette on one side, structured action steps on the other).
-  3. `[大圖流]`: Full-canvas vector diagram (70%+ canvas occupied by 3px ink stroke SVG system model).
-  4. `[物理卡片流]`: 2~3 multi-card grid with micro-rotations and `<Steps>` progressive reveal.
-- **Language Separation Contract**: Ensure all storyboard on-screen draft copy is standard **Traditional Written Chinese (繁體書面語)**; keep spoken colloquialisms exclusively for spoken transitions and speaker notes.
-- Split the slide rather than shrink text or pack distinct messages onto one page. Remove ornamental, duplicate, or “nice to have” pages.
-- **Meaningful Brevity (Anti-Over-Pruning)**: Text pruning must eliminate fluff and secondary clutter while preserving clear, grammatically sound, and intellectually substantive core takeaways. Do not reduce statements to cryptic 2-word fragments.
+- **Action titles**: write every main-talk slide title in `STORYBOARD.md` as a full-sentence takeaway, not a topic label, and make the titles pass the headline test in `../make-presentation/references/deck-types.md`.
+- **Archetypes**: assign each slide one archetype so layouts vary on purpose and no three consecutive slides share one:
+  1. `hero`: one dominant statement or number, no bullets (thesis, rule, turning point).
+  2. `split`: asymmetric two columns, a visual on one side and the explanation or steps on the other.
+  3. `diagram`: a system model or process filling most of the content area, with labels inside the drawing.
+  4. `cards`: 2–4 parallel items with clear hierarchy.
+  5. `data`: one chart, table, or hero figure that proves the action title (`../make-presentation/references/data-slides.md`).
+  6. `section`: a chapter divider.
+  7. `interaction`: a poll, discussion prompt, exercise, or demo cue.
+- **Slide budget**: fill the *Slide budget* section of `STORY.md`: how many slides, and why (talk length ÷ minutes per slide, slides per chapter, time spent off the slides), and what was cut. `storyboard-check.mjs` fails without it.
+- **Audience-facing copy**: slides carry what the audience should see and keep, in their words. The presenter's reasoning, asides, metaphors explained, and "today I want to…" belong in the speaker notes. `pptx-check.mjs` flags the speaker's voice on a slide, and `plan-check.mjs` flags a slide that repeats its notes.
+- **Language**: on-screen copy uses the written register of the audience's language; spoken phrasing belongs in transitions and speaker notes. Apply the profile's *Language* section when it sets stricter rules.
+- Split the slide rather than shrink text or pack distinct messages onto one page. Remove ornamental, duplicate, or "nice to have" pages.
+- **Meaningful brevity**: cut filler and secondary clutter, but keep each takeaway a clear, complete thought. Do not reduce statements to cryptic two-word fragments.
+- Run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>` and `ledger-check.mjs <work-root>` and fix every error before finishing. `ledger-check` rejects main-talk slides that cite safety C or D claims and warns when a title states a number without evidence. It checks action titles, archetypes, archetype runs, evidence IDs against the ledger, and total main-talk time against the brief.
 
-## Instructional design & 4MAT learning cycle
+## Structure
 
-Incorporate adult learning dynamics (ATD / 4MAT / Kirkpatrick Level 2 & 3 behavior transfer):
-1. **Why (Relevance & Emotional Safety)**: Open with visceral pain points and validation to establish psychological safety before introducing solutions.
-2. **How / Logic (Underlying Cognitive Insight)**: Deconstruct the psychological and systemic mechanisms (e.g. dignity defense, family subsystems) so the audience understands the *why* behind behaviors.
-3. **What (Actionable Tool Chunking)**: Deliver chunked, memorable tools, role definitions, and boundary frameworks with high memory stickiness.
-4. **Action / What If (Behavioral Rehearsal & Transfer)**: Provide concrete dialogue templates, case vignettes, and takeaway scaffolding so learning converts into immediate real-world practice.
-
+- Start from the default structure for the deck type in `../make-presentation/references/deck-types.md`, then apply the profile's *Story architecture* section.
+- For `training`, the 4MAT cycle applies: Why (relevance, acknowledge the learner's situation) → How it works (the mechanism behind the behaviour) → What to do (chunked, memorable tools) → Practice and transfer (rehearsal, templates, take-home scaffolds).
 - Keep chapter order tied to the promised audience outcome, not to the order sources were found.
-- Allow SCQA but never force it.
-- Use another structure when it better fits the product, audience, and evidence.
+- Use another structure when it better fits the product, audience, and evidence, and record why in `STORY.md`.
 - Stop once the thesis, audience journey, chapter roles, transitions, main/backup boundaries, and slide jobs are coherent enough for story grilling or prototyping.

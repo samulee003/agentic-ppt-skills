@@ -20,6 +20,8 @@ npm install pptxgenjs
 - The script imports PptxGenJS, configures the 16:9 layout, adds slides, and writes the file. Nothing else lives in the folder except `package.json` and `node_modules`.
 
 ```javascript
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pptxgen from 'pptxgenjs';
 
 const pres = new pptxgen();
@@ -34,7 +36,11 @@ slide.addText('The Big Idea', {
 });
 slide.addNotes('Speaker notes for this slide.');
 
-await pres.writeFile({ fileName: '../../exports/<deck-id>.pptx' });
+// export-deck.mjs passes --out-dir as DECK_OUT_DIR. The fallback resolves from
+// this file, not the shell's cwd, so a plain `node slides/<deck-id>/build.mjs`
+// writes exports/<deck-id>.pptx at the workspace root.
+const outDir = process.env.DECK_OUT_DIR ?? fileURLToPath(new URL('../../exports/', import.meta.url));
+await pres.writeFile({ fileName: path.join(outDir, '<deck-id>.pptx') });
 ```
 
 - One `addSlide()` call per page, in order.
@@ -85,3 +91,9 @@ pdftoppm -png -r 100 /tmp/<deck-id>.pdf /tmp/page
 ```
 
 Open the PNGs with your vision capability and confirm each page is 16:9 and no text box clips its content. You can also cross-check programmatically: each string passed to `addText`/bullets must fit its `w`/`h` at the given `fontSize` — flag implausibly large content for its bounds. If you have no image tool, record that visual review was not performed and flag it for a human — do not claim the gate passed on an unverified prototype.
+
+## Canonical scale and brand template
+
+- The `WIDE` layout above is 10×5.625 in (405 pt high). The canonical scale converts to: body 12–17 pt (floor 10.5 pt), captions 8–10.5 pt (floor 8 pt), slide titles 18–30 pt, hero 40–73 pt. For a 13.33×7.5 in layout (`LAYOUT_WIDE`), use the 540 pt column of `skills/make-presentation/references/typography.md`.
+- Theme contracts map to `fontFace`, `color`, `fill`, `line`, and `shadow` options; express border and shadow sizes in points from the share of slide height.
+- PptxGenJS cannot open an existing `.potx`. Rebuild the brand master with `pres.defineSlideMaster({ title, background, objects, placeholders })` (logo, footer, title area) and add every slide with `masterName`. The output is native and fully editable.

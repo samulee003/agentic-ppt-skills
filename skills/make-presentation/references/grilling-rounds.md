@@ -1,10 +1,10 @@
 # Grilling in rounds
 
-Adapted from the MIT-licensed [`grilling`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) skill in `mattpocock/skills`. It replaces the older "one question at a time" loop. Standalone use: `grill-me` or `grilling` in `skills/`.
+Adapted from the MIT-licensed [`grilling`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) skill in `mattpocock/skills`. It replaces the older "one question at a time" loop. Standalone use: `grill-me` or `grilling` in `skills/` (installed with the other skills).
 
 ## The model
 
-Map the open decisions as a **design tree**: every decision branches into the decisions that hang off it. Work the tree in **rounds**.
+Map the open decisions as a **design tree**: every decision branches into the decisions that hang off it. Work the tree in **rounds**. For presentations the tree is written down in `grill-tree.md`: its nodes, their prerequisites, and which are load-bearing. Start from it, add any deck-specific decisions as extra rows, and log every node you settle in `GRILL-LOG.md`.
 
 - The **frontier** is every decision whose prerequisites are already settled. These are the questions you can ask now without guessing at answers you have not heard.
 - Ask the **whole frontier in one round**. Never ask a question whose answer depends on another question still open in the same round. Hold it for a later round.
@@ -35,17 +35,19 @@ Find discoverable facts yourself: read the source folder, the slide files, the l
 
 | Gate | Typical shape |
 | --- | --- |
-| `product-grill` | 2 to 3 rounds covering audience, problem, outcome, promise, evidence threshold, constraints, visual direction, success test, out of scope |
-| `story-grill` | 1 round of opposition-driven decisions, after the review buckets are drafted |
-| `deck-prototype` | 1 round on the visual direction and representative scope, ideally answered from the prototype pages |
-| `stage-grill` | 1 round on timing, trims, and audience challenges |
-| `fast-track` mode | 1 round only. Everything else uses recommended defaults marked `Assumed` |
+| `product-grill` | 2 to 3 rounds over the 12 product nodes |
+| `story-grill` | 1 round over the 5 story nodes, after the interrogation (`interrogate.md`) has produced its verified findings |
+| `deck-prototype` | 1 round over the 3 prototype nodes, answered from the prototype pages |
+| `stage-grill` | 1 round over the stage nodes (timing, challenges, opening, language, resets for long talks) |
+| `fast-track` mode | 1 round per grill gate that asks every load-bearing node; reversible nodes carry recommended defaults the user accepts with "yes to all" |
 
-If a round would exceed about 8 questions, keep the ones that change downstream gates and move the rest to `Assumed` defaults.
+If a round would exceed about 8 questions, ask the load-bearing nodes first and carry the rest to the next round.
+
+Before passing a grill gate, run `node .agents/skills/make-presentation/scripts/grill-check.mjs <work-root> <gate>`.
 
 ## Combine with sharpen and playback
 
-Before round 1, follow `references/sharpen-playback.md`: sharpen the task and write the playback paragraph. Reversible and stylistic choices become `Assumed` defaults instead of questions. Rounds are for decisions that would change audience, promise, evidence threshold, or what the deck must not say.
+Before round 1, follow `references/sharpen-playback.md`: sharpen the task and show the playback paragraph with round 1. Load-bearing nodes are always asked; reversible nodes are asked too, with recommended answers, so one "yes to all" settles them.
 
 ## Overrides
 

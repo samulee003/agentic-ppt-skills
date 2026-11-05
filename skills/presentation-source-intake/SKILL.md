@@ -10,6 +10,8 @@ Use when `source-intake` is the current gate.
 - Read repo instructions and nearby handoff docs first.
 - Keep the source folder read-only. Create working notes only in the presentation work area.
 - Read existing deck, source, and work artifacts before creating new ones.
+- When the main source is a finished deck, follow `../make-presentation/references/revise-existing.md`: run `pptx-check.mjs` on it and classify the request as `polish`, `rebrand`, `translate`, or `restructure` in `SOURCE-INVENTORY.md`.
+- Note any brand template, brand guide, or profile hint (language, audience, venue) you find in the sources for the product grill.
 - Inspect file contents with structured tools appropriate to each type: PDF, PPTX, DOCX, spreadsheet, image, script, note, and export.
   - When `genoffice` is available (`genoffice --version` or `/Applications/GenOffice.app/Contents/Resources/cli/genoffice`), use it to read Office and PDF files cleanly without raw `unzip`/`cat`: `genoffice info <file> --json`, `genoffice docs read <file.docx> --full --json` (or `genoffice convert <file.docx> --to md`), `genoffice sheet read <file.xlsx> --stats --json`, `genoffice slides read <file.pptx> --full --json`, and `genoffice pdf read <file.pdf> --range 1-20 --json`.
 - Classify every relevant item by role, recency, and reuse value instead of copying folders into the work area.
@@ -17,11 +19,12 @@ Use when `source-intake` is the current gate.
 - Mark the most authoritative source for each topic, chart, claim set, and visual asset.
 - Record reusable assets that can move forward without rework.
 - Record stale materials that should not drive current decisions.
-- Record conflicts, missing files, and access blockers explicitly.
+- Record conflicts, missing files, and access blockers explicitly. Every *Missing* row starts `Open`; the product grill asks for each one, and delivery waits until each is `Resolved` or `Accepted`.
 
 Write `SOURCE-INVENTORY.md` from `templates/SOURCE-INVENTORY.md`.
 
 - Fill every section with concrete paths, dates when visible, and short evidence notes.
 - Prefer exact filenames over vague summaries.
 - If discoverable answers exist in the files, find them before asking the user.
-- Stop after the inventory is complete enough for product grilling to begin.
+- Run `node .agents/skills/make-presentation/scripts/source-check.mjs <work-root>`: every path the inventory lists must exist. Fix the path or move the item to *Missing*.
+- Stop after the inventory is complete enough for product grilling to begin and `source-check.mjs` reports no errors.

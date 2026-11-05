@@ -1,27 +1,36 @@
 ---
 name: presentation-story-grill
-description: "Pressure-tests an approved story against audience relevance, evidence interpretation, counter-cases, repeated slides, and conclusion quality. Use when the story-grill gate is current for a presentation project or when a router asks for a story opposition pass that may return passed, needs_revision: product-grill, or needs_revision: evidence."
+description: "Interrogates the story with adversarial audience members whose findings must be proven, runs the headline test, then grills the user on what survived. Use when the story-grill gate is current for a presentation project or when a router asks for a story opposition pass that may return passed, needs_revision: product-grill, or needs_revision: evidence."
 ---
 
 # Grill the story
 
-Use when `story-grill` is the current gate.
+Use when `story-grill` is the current gate. The story is interrogated first,
+then the user is grilled on what the interrogation found.
 
-- Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, and cited source files before judging the story.
-- Always explore the files instead of asking the user for discoverable facts.
-- Use an interactive question path when a live consequential decision still needs human judgment.
-- Grill in rounds per `../make-presentation/references/grilling-rounds.md` when consequential story decisions are unresolved: ask the whole frontier in one round.
-- Include a recommended answer with each question, worded so "yes" accepts it.
-- Use `references/opposition-review.md` for the autonomous opposition-review fallback when the user is unavailable or the remaining challenge is clear from the files.
-- State the strongest reasonable case against the story and what the opposition must concede.
-- Pressure-test why the audience should care, whether the thesis answers the right problem, whether the evidence supports the interpretation, what counter-evidence is missing, whether slides repeat or decorate, and whether the conclusion really follows.
-- Sort every finding into Act on, Consider, Noted, or Dismissed using `../make-presentation/references/review-buckets.md`. An unresolved Act on finding blocks `passed`.
+## 1. Interrogate the story
+
+- Read repo instructions, `PRESENTATION-BRIEF.md`, `EVIDENCE-LEDGER.md`, `STORY.md`, `STORYBOARD.md`, and cited source files.
+- Run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>`; its errors are findings with proof type `check`.
+- Run the interrogation in `../make-presentation/references/interrogate.md`: at least three adversaries for the deck type, the newcomer among them; every finding quotes the storyboard or story verbatim and carries a proof; you verify each proof and drop what does not hold.
+- Run the **headline test** (`../make-presentation/references/deck-types.md`): list only the action titles in order. A title that adds nothing is a cut candidate; a gap is a missing slide.
+- Write `INTERROGATION.md` from `templates/INTERROGATION.md` and run `node .agents/skills/make-presentation/scripts/interrogation-check.mjs <work-root> --round=story-grill`.
+
+## 2. Grill the user on the result
+
+- Settle the `story-grill` nodes in `../make-presentation/references/grill-tree.md` (opposition, headline test, counter-evidence, cuts, structure) in one round per `../make-presentation/references/grilling-rounds.md`. Each question cites the finding IDs behind it and carries a recommended answer worded so "yes" accepts it.
+- Facts are yours: fix in place what needs no decision, then ask only what does.
+- Headless, or the user says "stop asking": use `references/opposition-review.md` and log the nodes `Assumed`.
+
+## 3. Decide
+
+- Sort findings with `../make-presentation/references/review-buckets.md`. An unresolved **Act on** finding blocks `passed`.
 - Return `needs_revision: product-grill` when the story exposes the wrong audience, problem, outcome, promise, or success test.
 - Return `needs_revision: evidence` when the story needs unsupported claims, missing counter-evidence, or weaker wording.
-- Return `passed` only when the remaining story is still useful, accurate, and distinctive after the strongest reasonable opposition.
+- Return `passed` only when the story is still useful, accurate, and distinctive after the interrogation, and these all report no errors:
+  - `storyboard-check.mjs <work-root>`
+  - `ledger-check.mjs <work-root>`
+  - `interrogation-check.mjs <work-root> --round=story-grill`
+  - `grill-check.mjs <work-root> story-grill`
 
-Write only consequential decisions to `GRILL-LOG.md` from `../presentation-product-grill/templates/GRILL-LOG.md`.
-
-- Append new decisions without deleting or rewriting entries from other grill phases or earlier runs.
-- Preserve existing product or stage decisions.
-- Log only decisions that materially change the brief, evidence, story order, prototype scope, or stage language.
+Log one `GRILL-LOG.md` row per node (template: `../presentation-product-grill/templates/GRILL-LOG.md`). Append; never delete rows from other phases or earlier runs.

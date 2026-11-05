@@ -1,0 +1,20 @@
+{
+  "name": "agentic-ppt-skills",
+  "description": "grill-me for presentations: Claude grills you before it builds the deck, then checks the result.",
+  "owner": {
+    "name": "samulee003"
+  },
+  "plugins": [
+    {
+      "name": "agentic-ppt-skills",
+      "source": "./",
+      "description": "Grills you in rounds on audience, outcome, and claims; adversarial audiences with proven objections; machine checks on the exported PPTX in any slide tool.",
+      "category": "productivity",
+      "tags": [
+        "presentation",
+        "pptx",
+        "slides"
+      ]
+    }
+  ]
+}

@@ -18,12 +18,12 @@ const fontHeading = 'Arial';
 const fontBody = 'Arial';
 
 function bullet(slide, items, opts = {}) {
-  const { x = 0.8, y = 1.9, w = 8.4, h = 3.0 } = opts;
+  const { x = 0.8, y = 2.7, w = 8.4, h = 2.1 } = opts;
   slide.addText(
     items.map((it, i) => ({
       text: it,
       options: {
-        fontSize: 20,
+        fontSize: 18,
         color: text,
         fontFace: fontBody,
         bullet: { code: '2022', indent: 18 },
@@ -38,14 +38,14 @@ function bullet(slide, items, opts = {}) {
 function heading(slide, title, kicker) {
   if (kicker) {
     slide.addText(kicker, {
-      x: 0.8, y: 0.55, w: 8.4, h: 0.4,
+      x: 0.8, y: 0.45, w: 8.4, h: 0.4,
       fontSize: 14, color: accent, fontFace: fontBody, bold: true,
       charSpacing: 2,
     });
   }
   slide.addText(title, {
-    x: 0.8, y: 0.95, w: 8.4, h: 0.8,
-    fontSize: 32, color: text, fontFace: fontHeading, bold: true,
+    x: 0.8, y: 0.9, w: 8.4, h: 0.75,
+    fontSize: 28, color: text, fontFace: fontHeading, bold: true,
   });
 }
 
@@ -54,11 +54,11 @@ function heading(slide, title, kicker) {
   const s = pres.addSlide();
   s.background = { color: bg };
   s.addText('The Anatomy of Agentic Coding', {
-    x: 0.8, y: 1.9, w: 8.4, h: 1.4,
+    x: 0.8, y: 1.6, w: 8.4, h: 1.6,
     fontSize: 44, color: text, fontFace: fontHeading, bold: true,
   });
   s.addText('How an agent structures its loop — and where the safety boundaries live.', {
-    x: 0.8, y: 3.2, w: 8.4, h: 0.6,
+    x: 0.8, y: 3.35, w: 8.4, h: 0.8,
     fontSize: 20, color: muted, fontFace: fontBody,
   });
   s.addNotes('Welcome. Five slides, five minutes. We will cover the loop, the tools, the one historical benchmark, and how human review matches risk.');
@@ -70,7 +70,7 @@ function heading(slide, title, kicker) {
   s.background = { color: bg };
   heading(s, 'The Prompt Loop', 'THE LOOP');
   s.addText('Read \u2192 Plan \u2192 Write \u2192 Verify \u2014 then repeat using execution feedback.', {
-    x: 0.8, y: 1.8, w: 8.4, h: 0.6,
+    x: 0.8, y: 1.75, w: 8.4, h: 0.85,
     fontSize: 20, color: accent, fontFace: fontBody, bold: true,
   });
   bullet(s, [
@@ -87,9 +87,9 @@ function heading(slide, title, kicker) {
 {
   const s = pres.addSlide();
   s.background = { color: bg };
-  heading(s, 'Tools connect the model to the world', 'THE TOOLS');
+  heading(s, 'Tools connect models to the world', 'THE TOOLS');
   s.addText('Files \u00b7 commands \u00b7 search \u00b7 tests \u2014 the interface shown is illustrative.', {
-    x: 0.8, y: 1.8, w: 8.4, h: 0.5,
+    x: 0.8, y: 1.75, w: 8.4, h: 0.85,
     fontSize: 18, color: muted, fontFace: fontBody, italic: true,
   });
   bullet(s, [
@@ -104,19 +104,19 @@ function heading(slide, title, kicker) {
 {
   const s = pres.addSlide();
   s.background = { color: bg };
-  heading(s, 'One historical benchmark \u2014 read carefully', 'THE NUMBER');
+  heading(s, 'One benchmark, read carefully', 'THE NUMBER');
   s.addText('The 2023 Claude 2 + BM25 result on full SWE-bench is 1.96%.', {
-    x: 0.8, y: 1.8, w: 8.4, h: 0.6,
+    x: 0.8, y: 1.75, w: 8.4, h: 0.85,
     fontSize: 22, color: accent, fontFace: fontBody, bold: true,
   });
   bullet(s, [
     'Source: SWE-bench paper, arXiv:2310.06770v1, Table 5.',
     'Setup: Claude 2 with BM25 retrieval, full SWE-bench.',
     'What it IS: a historical baseline.',
-    'What it is NOT: SWE-bench Lite, a current leaderboard figure, or a measure of iterative-loop uplift.',
+    'What it is NOT: SWE-bench Lite, a current leaderboard, or loop uplift.',
   ]);
-  s.addText('The loop can retry using feedback \u2014 that is qualitative, not a measured gain.', {
-    x: 0.8, y: 4.6, w: 8.4, h: 0.5,
+  s.addText('Retrying with feedback is qualitative, not a measured gain.', {
+    x: 0.8, y: 4.85, w: 8.4, h: 0.4,
     fontSize: 16, color: muted, fontFace: fontBody, italic: true,
   });
   s.addNotes('claim-01 (the 1.96% figure) is safety level A: supportable as historical fact, but only with date, dataset, and retrieval caveats. Do not let it read as a performance promise.');
@@ -128,7 +128,7 @@ function heading(slide, title, kicker) {
   s.background = { color: bg };
   heading(s, 'Human review matches risk', 'THE BOUNDARY');
   s.addText('Autonomy needs boundaries \u2014 calibrated to consequence.', {
-    x: 0.8, y: 1.8, w: 8.4, h: 0.6,
+    x: 0.8, y: 1.75, w: 8.4, h: 0.85,
     fontSize: 20, color: accent, fontFace: fontBody, bold: true,
   });
   bullet(s, [
