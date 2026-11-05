@@ -64,6 +64,9 @@ Adapted from [`backnotprop/pstack`](https://github.com/backnotprop/pstack) (MIT)
 | Script | Gate | What it checks or does |
 | --- | --- | --- |
 | [`status.mjs`](./make-presentation/scripts/status.mjs) | all | pipeline state, gate order, invalidation; `brief` prints a resume capsule (from pstack `recall`) |
+| [`source-check.mjs`](./make-presentation/scripts/source-check.mjs) | source-intake | every path in `SOURCE-INVENTORY.md` exists |
+| [`ledger-check.mjs`](./make-presentation/scripts/ledger-check.mjs) | evidence, story-architecture, story-grill | claim rows complete; no safety C/D claim in the main talk; numbers cite evidence; assets licensed |
+| [`plan-check.mjs`](./make-presentation/scripts/plan-check.mjs) | production-qa (via `qa-deck`) | the export matches the plan: slide count, action titles, speaker notes |
 | [`grill-check.mjs`](./make-presentation/scripts/grill-check.mjs) | every grill gate, production-qa | every tree node settled; no reasonless, Deferred, or unconfirmed load-bearing decision |
 | [`interrogation-check.mjs`](./make-presentation/scripts/interrogation-check.mjs) | story-grill, stage-grill | adversary cast, verbatim quotes, claim IDs, buckets, Act-on resolutions |
 | [`storyboard-check.mjs`](./make-presentation/scripts/storyboard-check.mjs) | story-architecture, story-grill | action titles, archetypes, archetype runs, evidence IDs, timing vs brief |

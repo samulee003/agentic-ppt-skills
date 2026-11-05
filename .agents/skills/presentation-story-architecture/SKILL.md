@@ -31,7 +31,7 @@ Use when `story-architecture` is the current gate.
 - **Language**: on-screen copy uses the written register of the audience's language; spoken phrasing belongs in transitions and speaker notes. Apply the profile's *Language* section when it sets stricter rules.
 - Split the slide rather than shrink text or pack distinct messages onto one page. Remove ornamental, duplicate, or "nice to have" pages.
 - **Meaningful brevity**: cut filler and secondary clutter, but keep each takeaway a clear, complete thought. Do not reduce statements to cryptic two-word fragments.
-- Run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>` and fix every error before finishing. It checks action titles, archetypes, archetype runs, evidence IDs against the ledger, and total main-talk time against the brief.
+- Run `node .agents/skills/make-presentation/scripts/storyboard-check.mjs <work-root>` and `ledger-check.mjs <work-root>` and fix every error before finishing. `ledger-check` rejects main-talk slides that cite safety C or D claims and warns when a title states a number without evidence. It checks action titles, archetypes, archetype runs, evidence IDs against the ledger, and total main-talk time against the brief.
 
 ## Structure
 

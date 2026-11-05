@@ -282,3 +282,42 @@ test('handoff QA accepts a PPTX without PDF; google-slides requires the PDF', as
     );
   });
 });
+
+test('qa-deck runs plan, ledger, and grill checks when the work folder exists', async () => {
+  const { readFile, readdir } = await import('node:fs/promises');
+  const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
+  const workSrc = path.join(repoRoot, 'examples/agentic-coding-anatomy/work');
+  const layout = {};
+  for (const name of await readdir(workSrc)) {
+    layout[`presentation-work/agentic-coding-anatomy/${name}`] = await readFile(path.join(workSrc, name));
+  }
+  const showcase = path.join(repoRoot, 'examples/agentic-coding-anatomy-claude-pptx/exports/agentic-coding-anatomy');
+  const drifted = path.join(repoRoot, 'examples/agentic-coding-anatomy-pptxgenjs/exports/agentic-coding-anatomy');
+  await withDeck(
+    {
+      ...layout,
+      'exports/agentic-coding-anatomy.pptx': await readFile(`${showcase}.pptx`),
+      'exports/agentic-coding-anatomy.pdf': await readFile(`${showcase}.pdf`),
+    },
+    async (root) => {
+      const { stdout } = await run(qaScript, root, 'agentic-coding-anatomy', '--engine=claude-pptx');
+      assert.match(stdout, /plan-check: no errors/);
+      assert.match(stdout, /ledger-check: no errors/);
+      assert.match(stdout, /grill-check production-qa: no errors/);
+    },
+  );
+  await withDeck(
+    {
+      ...layout,
+      'exports/agentic-coding-anatomy.pptx': await readFile(`${drifted}.pptx`),
+      'exports/agentic-coding-anatomy.pdf': await readFile(`${drifted}.pdf`),
+    },
+    async (root) => {
+      await assert.rejects(run(qaScript, root, 'agentic-coding-anatomy', '--engine=handoff'), (err) => {
+        assert.match(err.stdout, /storyboard title .* is not on the slide/);
+        assert.match(err.stderr, /plan, ledger, or grill checks found/);
+        return true;
+      });
+    },
+  );
+});

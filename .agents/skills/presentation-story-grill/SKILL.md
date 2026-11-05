@@ -29,6 +29,7 @@ then the user is grilled on what the interrogation found.
 - Return `needs_revision: evidence` when the story needs unsupported claims, missing counter-evidence, or weaker wording.
 - Return `passed` only when the story is still useful, accurate, and distinctive after the interrogation, and these all report no errors:
   - `storyboard-check.mjs <work-root>`
+  - `ledger-check.mjs <work-root>`
   - `interrogation-check.mjs <work-root> --round=story-grill`
   - `grill-check.mjs <work-root> story-grill`
 

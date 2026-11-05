@@ -26,4 +26,5 @@ Write `SOURCE-INVENTORY.md` from `templates/SOURCE-INVENTORY.md`.
 - Fill every section with concrete paths, dates when visible, and short evidence notes.
 - Prefer exact filenames over vague summaries.
 - If discoverable answers exist in the files, find them before asking the user.
-- Stop after the inventory is complete enough for product grilling to begin.
+- Run `node .agents/skills/make-presentation/scripts/source-check.mjs <work-root>`: every path the inventory lists must exist. Fix the path or move the item to *Missing*.
+- Stop after the inventory is complete enough for product grilling to begin and `source-check.mjs` reports no errors.

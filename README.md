@@ -125,14 +125,14 @@ decision changes.
 
 | # | Gate | It answers | Checked by |
 | --- | --- | --- | --- |
-| 1 | Source intake | What material do we have, and which version is current? | |
+| 1 | Source intake | What material do we have, and which version is current? | `source-check.mjs` |
 | 2 | Brief | Who is this for, what should change, what is out of scope? | `grill-check.mjs` |
-| 3 | Evidence | Which claims are safe to say, and with which caveats? | |
-| 4 | Story | What does each slide have to do, in what order? | `storyboard-check.mjs` |
+| 3 | Evidence | Which claims are safe to say, and with which caveats? | `ledger-check.mjs` |
+| 4 | Story | What does each slide have to do, in what order? | `storyboard-check.mjs`, `ledger-check.mjs` |
 | 5 | Story review | Does it survive its harshest audience? Do the titles alone tell the story? | `interrogation-check.mjs`, `grill-check.mjs` |
 | 6 | Prototype | Do representative slides work in the real tool and theme? | `pptx-check.mjs` |
 | 7 | Stage review | Can it be said aloud, on time, to this audience? | `interrogation-check.mjs`, `grill-check.mjs`, `unslop-check.mjs` |
-| 8 | QA | Do the exported files match, read well, and pass every check? Is every load-bearing decision confirmed by you? | `qa-deck.mjs`, `pptx-check.mjs`, `grill-check.mjs` |
+| 8 | QA | Do the exported files match, read well, and pass every check? Is every load-bearing decision confirmed by you? | `qa-deck.mjs`, `pptx-check.mjs`, `plan-check.mjs`, `grill-check.mjs` |
 
 Three modes: `general`; `fast-track` for small internal decks (gates 1–2 and
 4–5 are recorded together); and `research-enhanced` for decks with
@@ -163,6 +163,9 @@ All scripts are zero-dependency Node 18+ and run on any engine's output.
 
 | Script | Catches |
 | --- | --- |
+| `source-check.mjs` | source files the inventory lists but that do not exist |
+| `ledger-check.mjs` | claims with no source (or, in research mode, no date or safety level); main-talk slides citing contested (C) or rejected (D) claims; numbers in titles with no evidence; assets with no licence |
+| `plan-check.mjs` | an export that drifted from the plan: slides added or dropped, action titles rewritten, approved speaker notes replaced (the usual handoff-tool failure) |
 | `grill-check.mjs` | decision-tree nodes nobody settled; assumptions without a reason; questions still waiting on someone; load-bearing decisions only the agent made |
 | `interrogation-check.mjs` | objections that misquote the deck, cite claim IDs that do not exist, or have no proof; fewer than three adversaries; Act-on findings left unresolved |
 | `pptx-check.mjs` | missing speaker notes; slide, notes, and PDF page counts that disagree; text under the projector floor; text likely to overflow its box; pictures without alt text; text walls; image-only slides that can't be edited |

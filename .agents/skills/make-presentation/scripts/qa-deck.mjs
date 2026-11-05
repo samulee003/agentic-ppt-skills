@@ -21,10 +21,13 @@ import {
   resolveRequest,
   runStep,
 } from './deck-engines.mjs';
+import { checkGrillAt } from './grill-check.mjs';
+import { checkLedgerAt } from './ledger-check.mjs';
+import { checkPlanAt } from './plan-check.mjs';
 import { formatReport, inspectPptx } from './pptx-check.mjs';
 
 const USAGE =
-  'Usage: qa-deck.mjs <deck-id> [--engine=<auto|open-slide|genoffice|marp|pptxgenjs>] [--format=<auto|pdf,pptx,html|all>] [--export] [--out-dir=<dir>] [--dry-run]\n';
+  'Usage: qa-deck.mjs <deck-id> [--engine=<engine>] [--format=<auto|pdf,pptx,html|all>] [--export] [--out-dir=<dir>] [--work=<work-root>] [--dry-run]\n';
 
 async function main() {
   const { deckId, flags } = parseFlags(process.argv.slice(2), {
@@ -33,6 +36,7 @@ async function main() {
     outDir: 'exports',
     export: false,
     dryRun: false,
+    work: 'auto',
   });
   if (!deckId) {
     process.stderr.write(USAGE);
@@ -88,11 +92,31 @@ async function main() {
     process.stdout.write(formatReport(report, 'pptx-check'));
     pptxErrors = report.errors.length;
   }
+  // Plan, evidence, and grilling checks run when the pipeline work folder exists.
+  const work = flags.work === 'auto' ? path.join(cwd, 'presentation-work', deckId) : path.resolve(cwd, flags.work);
+  let pipelineErrors = 0;
+  if (existsSync(path.join(work, 'STATUS.md'))) {
+    const reports = [
+      ['plan-check', existsSync(pptx) ? checkPlanAt(work, pptx) : null],
+      ['ledger-check', checkLedgerAt(work)],
+      ['grill-check production-qa', checkGrillAt(work, 'production-qa')],
+    ];
+    for (const [name, report] of reports) {
+      if (!report) continue;
+      process.stdout.write(`${name}: ${report.errors.length ? `${report.errors.length} error(s)` : 'no errors'}\n`);
+      for (const error of report.errors) process.stdout.write(`error    ${error}\n`);
+      for (const warning of report.warnings) process.stdout.write(`warning  ${warning}\n`);
+      pipelineErrors += report.errors.length;
+    }
+  } else if (flags.work !== 'auto') {
+    throw new Error(`No STATUS.md in ${work}`);
+  }
   process.stdout.write(
     `Manual checks remain: see adapters/${engine}/qa.md (visual parity, PowerPoint inspection).\n`,
   );
   if (!exportsOk) throw new Error('Export integrity check failed');
   if (pptxErrors > 0) throw new Error(`pptx-check found ${pptxErrors} error(s)`);
+  if (pipelineErrors > 0) throw new Error(`plan, ledger, or grill checks found ${pipelineErrors} error(s)`);
 }
 
 main().catch((error) => {

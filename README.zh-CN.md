@@ -93,14 +93,14 @@ npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 
 | # | 关卡 | 回答的问题 | 检查工具 |
 | --- | --- | --- | --- |
-| 1 | 来源盘点 | 有哪些资料？哪个版本是最新的？ | |
+| 1 | 来源盘点 | 有哪些资料？哪个版本是最新的？ | `source-check.mjs` |
 | 2 | 需求书 | 给谁看？要改变什么？哪些不做？ | `grill-check.mjs` |
-| 3 | 证据 | 哪些话可以说？要加什么保留？ | |
-| 4 | 故事 | 每一页要做什么？顺序是？ | `storyboard-check.mjs` |
+| 3 | 证据 | 哪些话可以说？要加什么保留？ | `ledger-check.mjs` |
+| 4 | 故事 | 每一页要做什么？顺序是？ | `storyboard-check.mjs`、`ledger-check.mjs` |
 | 5 | 故事审查 | 经得起最刁钻的听众吗？只读标题能看懂吗？ | `interrogation-check.mjs`、`grill-check.mjs` |
 | 6 | 原型 | 代表页在实际工具和主题下行得通吗？ | `pptx-check.mjs` |
 | 7 | 上台审查 | 讲得出口、时间对、适合这群听众吗？ | `interrogation-check.mjs`、`grill-check.mjs`、`unslop-check.mjs` |
-| 8 | QA | 导出文件一致、好读、通过所有检查吗？每个关键决定都经你确认了吗？ | `qa-deck.mjs`、`pptx-check.mjs`、`grill-check.mjs` |
+| 8 | QA | 导出文件一致、好读、通过所有检查吗？每个关键决定都经你确认了吗？ | `qa-deck.mjs`、`pptx-check.mjs`、`plan-check.mjs`、`grill-check.mjs` |
 
 三种模式：`general`；给小型内部汇报的 `fast-track`（第 1–2 关、第 4–5 关合并记录）；以及内容涉及重要统计、研究、法律、医疗或金融时的 `research-enhanced`（A/B/C/D 论点安全等级、原始来源、逐页核查）。
 
@@ -126,6 +126,9 @@ npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 
 | 脚本 | 抓出的问题 |
 | --- | --- |
+| `source-check.mjs` | 来源盘点表里列了、实际却不存在的文件 |
+| `ledger-check.mjs` | 没有出处的论点（研究模式下还要有日期与安全等级）；主讲页引用有争议（C）或已剔除（D）的论点；标题有数字却没附证据；素材没记授权 |
+| `plan-check.mjs` | 成品偏离计划：页数增减、结论式标题被改写、核准的讲稿被换掉（交接给外部工具时最常见） |
 | `grill-check.mjs` | 没人确定的决策节点；没写理由的假设；仍在等别人回复的问题；只有代理自己决定的关键决定 |
 | `interrogation-check.mjs` | 错引演示、引用不存在的证据编号或没有证据的质疑；质疑者少于三位；必须处理却未处理的质疑 |
 | `pptx-check.mjs` | 缺讲稿；幻灯片、讲稿、PDF 页数不一致；字号低于投影下限；文字可能溢出文本框；图片缺替代文字；文字墙；整页是图片、无法编辑 |

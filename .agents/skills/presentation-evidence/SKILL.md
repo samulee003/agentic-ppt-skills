@@ -39,4 +39,5 @@ Research-enhanced mode alone adds A/B/C/D claim safety.
 
 - Move unsupported but useful material to notes or backup only when the wording stays honest.
 - Reject claims that cannot be supported proportionately for the presentation’s mode.
-- Stop once every material claim is supported, carefully qualified, moved to notes or backup, or rejected.
+- Run `node .agents/skills/make-presentation/scripts/ledger-check.mjs <work-root>`: every row needs an ID, the claim, and a source (plus a date and an A/B/C/D level in research-enhanced mode), and every asset needs a licence.
+- Stop once every material claim is supported, carefully qualified, moved to notes or backup, or rejected, and `ledger-check.mjs` reports no errors.

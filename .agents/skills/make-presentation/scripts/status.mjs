@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -272,7 +273,17 @@ function parseMetadataOptions(args) {
   return metadata;
 }
 
-function applyGateState(state, gate, status, reason, metadata = {}) {
+/** A passed gate's artifacts must exist: relative to the work root, the current folder, or absolute. */
+export function missingArtifacts(root, artifacts) {
+  return artifacts.filter((artifact) => {
+    const candidates = path.isAbsolute(artifact)
+      ? [artifact]
+      : [path.resolve(root, artifact), path.resolve(process.cwd(), artifact)];
+    return !candidates.some((file) => existsSync(file));
+  });
+}
+
+function applyGateState(state, gate, status, reason, metadata = {}, root = null) {
   assertOneOf(gate, GATES, 'gate');
   assertOneOf(status, STATUSES, 'status');
   assertRequiredString(reason, 'reason');
@@ -280,6 +291,14 @@ function applyGateState(state, gate, status, reason, metadata = {}) {
   const artifacts = metadata.artifacts ?? item.artifacts;
   if (status === 'passed' && artifacts.length === 0) {
     throw new Error('Passed result requires at least one --artifact <path>');
+  }
+  if (status === 'passed' && root !== null) {
+    const missing = missingArtifacts(root, artifacts);
+    if (missing.length) {
+      throw new Error(
+        `Cannot pass ${gate}: artifact(s) not found: ${missing.join(', ')} (paths are relative to the work root or the current folder)`,
+      );
+    }
   }
   state.gates[gate] = {
     ...item,
@@ -298,7 +317,7 @@ function applyGateState(state, gate, status, reason, metadata = {}) {
 
 async function setGate(root, gate, status, reason, metadata) {
   const state = validateState(await load(root));
-  applyGateState(state, gate, status, reason, metadata);
+  applyGateState(state, gate, status, reason, metadata, root);
   await save(root, state);
   return state;
 }
@@ -382,7 +401,7 @@ async function applyResult(root, gate, result, reason, metadata) {
   }
   const state = validateState(await load(root));
   if (result === 'passed' || result === 'blocked') {
-    applyGateState(state, gate, result, reason, metadata);
+    applyGateState(state, gate, result, reason, metadata, root);
     const partner = FAST_TRACK_PAIRS[gate];
     if (result === 'passed' && state.mode === 'fast-track' && partner) {
       // The partner is a grill gate; passing it here must not skip its checks.
@@ -393,7 +412,7 @@ async function applyResult(root, gate, result, reason, metadata) {
         );
       }
       const partnerReason = `fast-track: consolidated with ${gate}. ${reason}`;
-      applyGateState(state, partner, 'passed', partnerReason, metadata);
+      applyGateState(state, partner, 'passed', partnerReason, metadata, root);
     }
   } else if (result === 'needs_revision: product-grill') {
     invalidateFrom(state, 'product-grill', reason, gate);

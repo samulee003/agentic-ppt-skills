@@ -9,6 +9,11 @@
 - Interrogation (from pstack `interrogate`): adversaries per deck type attack
   the story and the talk; findings need a verbatim quote and a proof;
   `interrogation-check.mjs` re-verifies them.
+- Every gate has a check: `source-check.mjs` (inventory paths exist),
+  `ledger-check.mjs` (complete claim rows, no C/D claim in the main talk,
+  numbers cite evidence, assets licensed), `plan-check.mjs` (the export
+  matches the storyboard and speaker script), and `status.mjs` refuses to pass
+  a gate whose artifacts do not exist.
 - Post-talk retro (from pstack `reflect`) and `status.mjs brief` (from pstack
   `recall`).
 - Eight engines: `open-slide`, `genoffice`, `marp`, `pptxgenjs`, `claude-pptx`,

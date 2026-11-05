@@ -17,6 +17,20 @@ async function runStatus(root, ...args) {
   });
 }
 
+// Most tests are about state transitions, so their artifacts are created as
+// placeholders first. The missing-artifact test uses runStatus directly.
+async function runStatusWithArtifacts(root, ...args) {
+  const { mkdir, writeFile } = await import('node:fs/promises');
+  for (let i = 0; i < args.length - 1; i += 1) {
+    if (args[i] === '--artifact') {
+      const file = path.resolve(root, args[i + 1]);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, 'placeholder', { flag: 'a' });
+    }
+  }
+  return runStatus(root, ...args);
+}
+
 async function withWorkspace(callback) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'agentic-ppt-status-'));
   try {
@@ -43,7 +57,7 @@ test('init creates a valid pipeline and next reports the first gate', async () =
 test('set records provenance and allows the gate to pass', async () => {
   await withWorkspace(async (root) => {
     await runStatus(root, 'init', 'demo-deck', './notes');
-    await runStatus(
+    await runStatusWithArtifacts(
       root,
       'set',
       'source-intake',
@@ -74,7 +88,7 @@ test('invalidate cascades from a gate and selective invalidation does not cascad
   await withWorkspace(async (root) => {
     await runStatus(root, 'init', 'demo-deck', './notes');
     for (const gate of ['source-intake', 'product-grill', 'evidence']) {
-      await runStatus(root, 'set', gate, 'passed', 'Reviewed', '--artifact', `${gate}.md`);
+      await runStatusWithArtifacts(root, 'set', gate, 'passed', 'Reviewed', '--artifact', `${gate}.md`);
     }
 
     await runStatus(root, 'invalidate', 'product-grill', 'Brief changed');
@@ -103,14 +117,14 @@ test('passed results require an artifact and invalid result names fail', async (
     await runStatus(root, 'init', 'demo-deck', './notes');
 
     await assert.rejects(
-      runStatus(root, 'result', 'source-intake', 'passed', 'Missing artifact'),
+      runStatusWithArtifacts(root, 'result', 'source-intake', 'passed', 'Missing artifact'),
       (error) => {
         assert.match(error.stderr, /Passed result requires at least one --artifact/);
         return true;
       },
     );
     await assert.rejects(
-      runStatus(root, 'result', 'source-intake', 'unknown', 'Bad result'),
+      runStatusWithArtifacts(root, 'result', 'source-intake', 'unknown', 'Bad result'),
       (error) => {
         assert.match(error.stderr, /Invalid result "unknown"/);
         return true;
@@ -136,7 +150,7 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
     await runStatus(root, 'init', 'demo-deck', './notes', 'fast-track', 'Sprint review');
     // No grilling yet: passing source-intake must not silently pass product-grill.
     await assert.rejects(
-      runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md'),
+      runStatusWithArtifacts(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md'),
       (err) => {
         assert.match(err.stderr, /fast-track: source-intake also passes product-grill, but product-grill's checks fail/);
         assert.match(err.stderr, /No GRILL-LOG\.md/);
@@ -144,13 +158,13 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
       },
     );
     await writeFile(path.join(root, 'GRILL-LOG.md'), log(['product-grill']));
-    await runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md');
+    await runStatusWithArtifacts(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'evidence');
 
-    await runStatus(root, 'result', 'evidence', 'passed', 'Top metrics', '--artifact', 'EVIDENCE-LEDGER.md');
+    await runStatusWithArtifacts(root, 'result', 'evidence', 'passed', 'Top metrics', '--artifact', 'EVIDENCE-LEDGER.md');
     // Story nodes and the interrogation are required before story-grill passes with story-architecture.
     await assert.rejects(
-      runStatus(root, 'result', 'story-architecture', 'passed', 'Story', '--artifact', 'STORY.md'),
+      runStatusWithArtifacts(root, 'result', 'story-architecture', 'passed', 'Story', '--artifact', 'STORY.md'),
       /story-grill\/opposition: not settled/,
     );
     await writeFile(path.join(root, 'GRILL-LOG.md'), log(['product-grill', 'story-grill']));
@@ -158,7 +172,7 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
       path.join(root, 'INTERROGATION.md'),
       '## Round: story-grill\n\n### Adversaries\n\n- the CFO: 0\n- the operator: 0\n- the newcomer: 0\n',
     );
-    await runStatus(root, 'result', 'story-architecture', 'passed', 'Story + opposition', '--artifact', 'STORY.md');
+    await runStatusWithArtifacts(root, 'result', 'story-architecture', 'passed', 'Story + opposition', '--artifact', 'STORY.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'deck-prototype');
 
     const status = await readFile(path.join(root, 'STATUS.md'), 'utf8');
@@ -167,7 +181,7 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
 
   await withWorkspace(async (root) => {
     await runStatus(root, 'init', 'demo-deck', './notes');
-    await runStatus(root, 'result', 'source-intake', 'passed', 'Inventory',
+    await runStatusWithArtifacts(root, 'result', 'source-intake', 'passed', 'Inventory',
       '--artifact', 'SOURCE-INVENTORY.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'product-grill');
   });
@@ -177,7 +191,7 @@ test('brief reports progress, open load-bearing assumptions, unresolved findings
   const { writeFile } = await import('node:fs/promises');
   await withWorkspace(async (root) => {
     await runStatus(root, 'init', 'demo-deck', './notes');
-    await runStatus(root, 'result', 'source-intake', 'passed', 'Inventory done', '--artifact', 'SOURCE-INVENTORY.md');
+    await runStatusWithArtifacts(root, 'result', 'source-intake', 'passed', 'Inventory done', '--artifact', 'SOURCE-INVENTORY.md');
     await writeFile(path.join(root, 'PRESENTATION-BRIEF.md'), '## Playback\n\n- A decision deck for the board.\n');
     await writeFile(
       path.join(root, 'GRILL-LOG.md'),
@@ -218,5 +232,22 @@ test('brief includes profile nodes and flags old-schema grill logs', async () =>
     assert.match((await runStatus(root, 'brief')).stdout, /product-grill\/interaction-format: Assumed, load-bearing/);
     await writeFile(path.join(root, 'GRILL-LOG.md'), '| Phase | Question |\n| --- | --- |\n| product-grill | q |');
     assert.match((await runStatus(root, 'brief')).stdout, /GRILL-LOG\.md: GRILL-LOG\.md needs "Node" and "Status" columns/);
+  });
+});
+
+test('passing a gate requires its artifacts to exist', async () => {
+  const { writeFile } = await import('node:fs/promises');
+  await withWorkspace(async (root) => {
+    await runStatus(root, 'init', 'demo-deck', './notes');
+    await assert.rejects(
+      runStatus(root, 'result', 'source-intake', 'passed', 'Done', '--artifact', 'SOURCE-INVENTORY.md'),
+      (err) => {
+        assert.match(err.stderr, /Cannot pass source-intake: artifact\(s\) not found: SOURCE-INVENTORY\.md/);
+        return true;
+      },
+    );
+    await writeFile(path.join(root, 'SOURCE-INVENTORY.md'), '# SOURCE-INVENTORY');
+    await runStatus(root, 'result', 'source-intake', 'passed', 'Done', '--artifact', 'SOURCE-INVENTORY.md');
+    assert.equal((await runStatus(root, 'next')).stdout.trim(), 'product-grill');
   });
 });
