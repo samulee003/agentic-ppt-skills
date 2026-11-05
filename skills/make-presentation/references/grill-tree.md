@@ -18,12 +18,15 @@ that every node for the gate is covered.
 2. Round 1 is every remaining node with no unsettled prerequisite (for the
    product grill: profile, deck type, audience, and brand), **plus every node
    the sources already answer**, asked as a confirmation with the source's
-   answer as the recommendation, whatever its prerequisites. Confirmations do
-   not depend on each other: the user is checking one consistent proposal.
-   With the shared tree the product grill takes at most three rounds, and
-   usually two when the notes are good.
-3. Each later round is the new frontier. Do not ask a node whose
-   prerequisite is still open in the same round.
+   answer as the recommendation, whatever its prerequisites. Such a row's
+   *Reason* starts with `Source:` and names where the source says it.
+   With the shared tree the product grill takes three or four rounds, fewer
+   when the sources answer the early nodes.
+3. Each later round is the new frontier. Do not ask a load-bearing node in
+   the same round as its prerequisite: `grill-check.mjs` fails it unless its
+   *Reason* starts with `Source:`. A premise line ("I have assumed a 3-hour
+   training deck for staff") asks nothing: each node needs its own numbered
+   question with the recommended answer shown.
 4. Every question carries a recommended answer worded so "yes" accepts it.
 5. Stop when every applicable node for the gate has a row.
 

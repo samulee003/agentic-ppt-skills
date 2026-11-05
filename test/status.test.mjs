@@ -142,7 +142,7 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
   const { loadTree } = await import('../skills/make-presentation/scripts/grill-check.mjs');
   const tree = loadTree();
   const rows = (phase) =>
-    tree[phase].map((n) => `| ${phase} | ${n.id} | q | r | d | Decided | ${phase} | User answered | — |`);
+    tree[phase].map((n) => `| ${phase} | ${n.id} | q | r | d | Decided | ${phase} | Source: the notes | — |`);
   const log = (phases) =>
     [
       '| Round | Phase | Nodes asked | User reply (verbatim) |',

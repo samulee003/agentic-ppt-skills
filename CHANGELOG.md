@@ -15,6 +15,12 @@
     when nothing is a picture, chart, or diagram, and flags the speaker's
     voice on slides; `plan-check` fails a deck with no pictures when the
     brief promised them and flags slides that repeat their notes;
+  - a load-bearing node asked in the same round as its prerequisite fails
+    `grill-check` (one bundled "premise" question no longer settles the
+    brief), unless its reason cites a source;
+  - the `workbuddy-pptx` adapter builds the representative set first and
+    asks the user to confirm it before building the rest, and forbids one
+    layout template looped over every page;
   - QA may not wave warnings through as "expected by design" without the
     user's agreement.
 - A simulated end-to-end run (`examples/simulated-training-zh-hant/`) found

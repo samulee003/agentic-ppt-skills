@@ -21,6 +21,7 @@ must not guess them.
 
 - Work the tree per `../make-presentation/references/grilling-rounds.md`. Round 1 is every unsettled node with no open prerequisite (usually profile, deck type, audience, and anything the sources made answerable). Each later round is the new frontier.
 - Number every question, give a recommended answer worded so "yes" accepts it, and say what it would change downstream.
+- Ask the frontier, not the whole brief: a load-bearing node waits for the round after its prerequisites are answered (`grill-check.mjs` fails it otherwise, unless the *Reason* starts with `Source:`). Folding decisions into a premise ("I have assumed a 3-hour training deck for 25 staff") and asking one scope question does not ask them.
 - Ask, do not assume, every load-bearing node (deck type, audience, outcome, promise, evidence threshold, constraints, visual direction, must-avoid, imagery, success test) while a person can answer. Two confirmation questions and then building is not a product grill.
 - **Record every round.** Add a row to the *Rounds* table of `GRILL-LOG.md` for each round you ask: the node ids, and the user's reply copied verbatim. A `Decided` row must name that round. Never mark a node `Decided` that the user did not answer; if you chose it, it is `Assumed`.
 - Reversible nodes (profile, deliverables, brand, visual, out of scope) may carry a recommended default the user can accept with "yes to all". Log them `Assumed` only when the user did not answer that question, with the reason.

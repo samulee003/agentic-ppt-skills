@@ -1,8 +1,8 @@
 # WorkBuddy pptx: deck-qa gate
 
 1. Confirm every page was written with `slidep upsert-dsl` and passed
-   `slidep lint` with no diagnostics. That per-page check is this engine's
-   visual review; do not add a screenshot pass on top of it.
+   `slidep lint` with no diagnostics, and that the user confirmed the
+   representative set (`deck-prototype/visual-confirm` names its round).
 2. Convert the PDF: `soffice --headless --convert-to pdf --outdir exports exports/<deck-id>.pptx`.
 3. Run `node <skills>/make-presentation/scripts/qa-deck.mjs <deck-id> --engine=workbuddy-pptx`.
    It checks the exports and runs `pptx-check`, `plan-check` (titles and notes

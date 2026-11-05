@@ -102,6 +102,9 @@ export function parseLog(markdown) {
   return { rows, hasRoundColumn: Boolean(cols.round), rounds: parseRounds(markdown) };
 }
 
+/** A Decided row confirming what a source already says: "Source: client email". */
+const SOURCE_REASON = /^\s*(?:source|來源|来源|出處|出处)\s*[:：]/i;
+
 export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
   const errors = [];
   const warnings = [];
@@ -142,6 +145,26 @@ export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
         errors.push(`Row ${row.line} (${row.phase}/${row.node}): round ${row.round} is not in the Rounds table`);
       } else if (round.phase !== row.phase || !round.nodes.includes(row.node)) {
         errors.push(`Row ${row.line} (${row.phase}/${row.node}): round ${row.round} did not ask this node`);
+      }
+    }
+  }
+
+  // A round asks the frontier: a node whose prerequisite is answered in the same
+  // round was not really asked, it was bundled into a premise the user accepted.
+  // Load-bearing nodes only; a confirmation of what a source already says may
+  // skip the order.
+  const decidedIn = new Map();
+  for (const row of rows) if (row.status === 'Decided' && row.round) decidedIn.set(`${row.phase}/${row.node}`, row.round);
+  for (const row of rows) {
+    if (row.status !== 'Decided' || !row.round || SOURCE_REASON.test(row.reason)) continue;
+    const node = known.get(`${row.phase}/${row.node}`);
+    if (!node?.loadBearing) continue;
+    for (const dep of node?.deps ?? []) {
+      if (decidedIn.get(`${row.phase}/${dep}`) === row.round) {
+        errors.push(
+          `Row ${row.line} (${row.phase}/${row.node}): asked in round ${row.round} together with its prerequisite "${dep}"; ask it in a later round, or start the Reason with "Source:" and cite where the source answers it`,
+        );
+        break;
       }
     }
   }

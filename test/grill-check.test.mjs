@@ -25,7 +25,7 @@ ${Object.entries(ROUND)
 
 | Phase | Node | Question | Recommended answer | Decision | Status | Round | Reason | Invalidates |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |`;
-const row = (phase, node, status = 'Decided', reason = 'User answered', round = status === 'Decided' ? ROUND[phase] : '') =>
+const row = (phase, node, status = 'Decided', reason = 'Source: the notes', round = status === 'Decided' ? ROUND[phase] : '') =>
   `| ${phase} | ${node} | q | r | d | ${status} | ${round} | ${reason} | — |`;
 const all = (phase, status = 'Decided') => tree[phase].map((n) => row(phase, n.id, status));
 
@@ -122,7 +122,7 @@ test('status values are matched without regard to case or decoration', async () 
   assert.equal(normalizeStatus('decided'), 'Decided');
   assert.equal(normalizeStatus('**Assumed** ⚠️'), 'Assumed');
   assert.equal(normalizeStatus('maybe'), 'maybe');
-  const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | S1 | ok | — |`)].join('\n');
+  const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | S1 | Source: ok | — |`)].join('\n');
   assert.deepEqual(checkGrill({ log, gate: 'story-grill' }).errors, []);
 });
 
@@ -165,4 +165,29 @@ test('visual direction, must-avoid, imagery, and slide budget are load-bearing',
   for (const id of ['visual', 'must-avoid', 'imagery']) assert.ok(ids('product-grill').includes(id), id);
   assert.ok(ids('story-grill').includes('slide-budget'));
   assert.ok(ids('deck-prototype').includes('visual-confirm'));
+});
+
+test('a load-bearing node asked in the same round as its prerequisite fails', () => {
+  const log = `## Rounds
+
+| Round | Phase | Nodes asked | User reply (verbatim) |
+| --- | --- | --- | --- |
+| P1 | product-grill | deck-type, audience, outcome, brand | 全套授課投影片（推薦） |
+| P2 | product-grill | promise | Yes |
+
+## Decisions
+
+| Phase | Node | Question | Recommended answer | Decision | Status | Round | Reason | Invalidates |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| product-grill | deck-type | q | r | d | Decided | P1 | User answered | — |
+| product-grill | audience | q | r | d | Decided | P1 | User answered | — |
+| product-grill | outcome | q | r | d | Decided | P1 | Bundled into the premise | — |
+| product-grill | brand | q | r | d | Decided | P1 | User answered | — |
+| product-grill | promise | q | r | d | Decided | P2 | User answered | — |`;
+  const { errors } = checkGrill({ log, gate: 'product-grill' });
+  assert.ok(errors.some((e) => /product-grill\/outcome\): asked in round P1 together with its prerequisite "deck-type"/.test(e)));
+  assert.ok(!errors.some((e) => /\/promise\): asked in round/.test(e)), 'promise in a later round is fine');
+  assert.ok(!errors.some((e) => /\/brand\): asked in round/.test(e)), 'brand has no prerequisite');
+  const sourced = log.replace('Bundled into the premise', 'Source: the client email, 3 May');
+  assert.ok(!checkGrill({ log: sourced, gate: 'product-grill' }).errors.some((e) => /together with its prerequisite/.test(e)));
 });
