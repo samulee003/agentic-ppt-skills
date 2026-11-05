@@ -1,6 +1,9 @@
 # GRILL-LOG
 
-Append rows. Preserve existing decisions from other phases and earlier runs.
+Append rows. Never delete or rewrite rows from other phases or earlier runs; a
+later row for the same node replaces the earlier one. `Node` is an id from
+`make-presentation/references/grill-tree.md`. `Status` is `Decided`,
+`Assumed`, or `Deferred`.
 
-| Phase | Question | Recommended answer | Decision | Reason | Invalidates |
-| --- | --- | --- | --- | --- | --- |
+| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |
+| --- | --- | --- | --- | --- | --- | --- | --- |
