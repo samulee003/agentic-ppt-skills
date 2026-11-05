@@ -71,3 +71,23 @@ test('the bundled example interrogation verifies against its artifacts and expor
   assert.match(stdout, /2 round\(s\), 7 kept finding\(s\)/);
   assert.match(stdout, /interrogation-check: no errors/);
 });
+
+test('quotes are verified against this deck only, never another deck in exports/', async () => {
+  const { mkdtemp, mkdir, copyFile, writeFile, rm } = await import('node:fs/promises');
+  const os = await import('node:os');
+  const { loadCorpus } = await import('../skills/make-presentation/scripts/interrogation-check.mjs');
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'interrogate-'));
+  try {
+    const work = path.join(dir, 'presentation-work', 'q3-review');
+    await mkdir(work, { recursive: true });
+    await mkdir(path.join(dir, 'exports'));
+    await writeFile(path.join(work, 'STATUS.md'), '<!-- presentation-status:start -->\n```json\n{"deckId":"q3-review"}\n```\n');
+    const other = path.join(repo, 'examples/agentic-coding-anatomy-claude-pptx/exports/agentic-coding-anatomy.pptx');
+    await copyFile(other, path.join(dir, 'exports', 'q2-review.pptx'));
+    assert.doesNotMatch(loadCorpus(work), /Agentic coding is a loop/);
+    await copyFile(other, path.join(dir, 'exports', 'q3-review.pptx'));
+    assert.match(loadCorpus(work), /Agentic coding is a loop/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

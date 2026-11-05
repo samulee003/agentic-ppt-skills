@@ -12,7 +12,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { briefMinutes, parseTables } from './storyboard-check.mjs';
+import { briefMinutes, column, parseTables } from './storyboard-check.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const PHASES = ['product-grill', 'story-grill', 'deck-prototype', 'stage-grill'];
@@ -24,9 +24,6 @@ export function loadTree(markdown = readFileSync(path.join(here, '..', 'referenc
   return JSON.parse(match[1]);
 }
 
-function column(header, ...names) {
-  return header.find((name) => names.some((candidate) => name.startsWith(candidate)));
-}
 
 export function profileId(brief) {
   const line = (brief ?? '').split(/\r?\n/).find((l) => /^\s*-\s*Profile\b/i.test(l));
@@ -41,6 +38,13 @@ export function withProfile(tree, profileMarkdown) {
   return Object.fromEntries(
     Object.entries(tree).map(([phase, nodes]) => [phase, [...nodes, ...(extra[phase] ?? [])]]),
   );
+}
+
+/** "decided", "**Decided** ✅" → "Decided"; anything else is returned trimmed for the error message. */
+export function normalizeStatus(value) {
+  const word = value.replace(/[^A-Za-z]/g, '').toLowerCase();
+  const match = STATUSES.find((status) => status.toLowerCase() === word);
+  return match ?? value.replace(/[`*]/g, '').trim();
 }
 
 export function parseLog(markdown) {
@@ -65,7 +69,7 @@ export function parseLog(markdown) {
     phase: row[cols.phase].replace(/[`*]/g, '').trim(),
     node: row[cols.node].replace(/[`*]/g, '').trim(),
     decision: cols.decision ? row[cols.decision] : '',
-    status: row[cols.status].replace(/[`*]/g, '').trim(),
+    status: normalizeStatus(row[cols.status]),
     reason: cols.reason ? row[cols.reason].trim() : '',
   }));
   return { rows };
@@ -122,26 +126,35 @@ export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
   return { errors, warnings, covered, required };
 }
 
+/** The tree for a work root: the shared nodes plus the brief's profile nodes. */
+export function treeFor(brief) {
+  const profile = profileId(brief);
+  const profileFile = profile ? path.join(here, '..', 'profiles', `${profile}.md`) : null;
+  if (profile && !existsSync(profileFile)) {
+    throw new Error(`The brief names profile "${profile}", but ${profileFile} does not exist`);
+  }
+  return withProfile(loadTree(), profileFile ? readFileSync(profileFile, 'utf8') : null);
+}
+
+/** Runs the check for a work root, reading GRILL-LOG.md and PRESENTATION-BRIEF.md from it. */
+export function checkGrillAt(root, gate) {
+  const read = (name) => {
+    const file = path.join(root, name);
+    return existsSync(file) ? readFileSync(file, 'utf8') : null;
+  };
+  const log = read('GRILL-LOG.md');
+  if (log === null) return { errors: [`No GRILL-LOG.md in ${root}`], warnings: [], covered: 0, required: 0 };
+  const brief = read('PRESENTATION-BRIEF.md');
+  return checkGrill({ log, gate, brief, tree: treeFor(brief) });
+}
+
 function main(argv) {
   const [root, gate] = argv.filter((arg) => !arg.startsWith('--'));
   if (!root || !gate) {
     process.stderr.write('Usage: grill-check.mjs <work-root> <gate> [--json]\n');
     process.exit(1);
   }
-  const read = (name) => {
-    const file = path.join(root, name);
-    return existsSync(file) ? readFileSync(file, 'utf8') : null;
-  };
-  const log = read('GRILL-LOG.md');
-  if (log === null) throw new Error(`No GRILL-LOG.md in ${root}`);
-  const brief = read('PRESENTATION-BRIEF.md');
-  const profile = profileId(brief);
-  const profileFile = profile ? path.join(here, '..', 'profiles', `${profile}.md`) : null;
-  if (profile && !existsSync(profileFile)) {
-    throw new Error(`The brief names profile "${profile}", but ${profileFile} does not exist`);
-  }
-  const tree = withProfile(loadTree(), profileFile ? readFileSync(profileFile, 'utf8') : null);
-  const report = checkGrill({ log, gate, brief, tree });
+  const report = checkGrillAt(root, gate);
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {

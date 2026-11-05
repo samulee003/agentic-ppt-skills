@@ -103,3 +103,12 @@ test('a profile can add required grill nodes', async () => {
   assert.ok(errors.some((e) => /product-grill\/interaction-format: not settled/.test(e)));
   assert.deepEqual(checkGrill({ log, gate: 'product-grill' }).errors, [], 'default tree does not need it');
 });
+
+test('status values are matched without regard to case or decoration', async () => {
+  const { normalizeStatus } = await import('../skills/make-presentation/scripts/grill-check.mjs');
+  assert.equal(normalizeStatus('decided'), 'Decided');
+  assert.equal(normalizeStatus('**Assumed** ⚠️'), 'Assumed');
+  assert.equal(normalizeStatus('maybe'), 'maybe');
+  const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | ok | — |`)].join('\n');
+  assert.deepEqual(checkGrill({ log, gate: 'story-grill' }).errors, []);
+});

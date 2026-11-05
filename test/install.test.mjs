@@ -64,3 +64,17 @@ test('rejects bad options and installing into the repository itself', async () =
     /not from this repository/,
   );
 });
+
+test('reinstall removes files a newer version dropped but keeps unrelated skills', async () => {
+  await withTarget(async (dir) => {
+    await execFileAsync(process.execPath, [installer, dir]);
+    const stale = path.join(dir, '.agents/skills/make-presentation/references/old-reference.md');
+    const mine = path.join(dir, '.agents/skills/my-own-skill/SKILL.md');
+    await mkdir(path.dirname(mine), { recursive: true });
+    await writeFile(stale, 'outdated');
+    await writeFile(mine, 'mine');
+    await execFileAsync(process.execPath, [installer, dir]);
+    assert.ok(!existsSync(stale), 'stale file removed');
+    assert.ok(existsSync(mine), 'unrelated skill kept');
+  });
+});

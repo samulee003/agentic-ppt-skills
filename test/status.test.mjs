@@ -119,16 +119,46 @@ test('passed results require an artifact and invalid result names fail', async (
   });
 });
 
-test('fast-track consolidates paired gates; general mode does not', async () => {
+test('fast-track consolidates paired gates only when their grill checks pass', async () => {
+  const { writeFile } = await import('node:fs/promises');
+  const { loadTree } = await import('../skills/make-presentation/scripts/grill-check.mjs');
+  const tree = loadTree();
+  const rows = (phase) =>
+    tree[phase].map((n) => `| ${phase} | ${n.id} | q | r | d | Decided | User answered | — |`);
+  const log = (phases) =>
+    [
+      '| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |',
+      '| --- | --- | --- | --- | --- | --- | --- | --- |',
+      ...phases.flatMap(rows),
+    ].join('\n');
+
   await withWorkspace(async (root) => {
     await runStatus(root, 'init', 'demo-deck', './notes', 'fast-track', 'Sprint review');
-    await runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief',
-      '--artifact', 'PRESENTATION-BRIEF.md');
+    // No grilling yet: passing source-intake must not silently pass product-grill.
+    await assert.rejects(
+      runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md'),
+      (err) => {
+        assert.match(err.stderr, /fast-track: source-intake also passes product-grill, but product-grill's checks fail/);
+        assert.match(err.stderr, /No GRILL-LOG\.md/);
+        return true;
+      },
+    );
+    await writeFile(path.join(root, 'GRILL-LOG.md'), log(['product-grill']));
+    await runStatus(root, 'result', 'source-intake', 'passed', 'Unified brief', '--artifact', 'PRESENTATION-BRIEF.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'evidence');
 
     await runStatus(root, 'result', 'evidence', 'passed', 'Top metrics', '--artifact', 'EVIDENCE-LEDGER.md');
-    await runStatus(root, 'result', 'story-architecture', 'passed', 'Story + opposition',
-      '--artifact', 'STORY.md');
+    // Story nodes and the interrogation are required before story-grill passes with story-architecture.
+    await assert.rejects(
+      runStatus(root, 'result', 'story-architecture', 'passed', 'Story', '--artifact', 'STORY.md'),
+      /story-grill\/opposition: not settled/,
+    );
+    await writeFile(path.join(root, 'GRILL-LOG.md'), log(['product-grill', 'story-grill']));
+    await writeFile(
+      path.join(root, 'INTERROGATION.md'),
+      '## Round: story-grill\n\n### Adversaries\n\n- the CFO: 0\n- the operator: 0\n- the newcomer: 0\n',
+    );
+    await runStatus(root, 'result', 'story-architecture', 'passed', 'Story + opposition', '--artifact', 'STORY.md');
     assert.equal((await runStatus(root, 'next')).stdout.trim(), 'deck-prototype');
 
     const status = await readFile(path.join(root, 'STATUS.md'), 'utf8');
@@ -173,5 +203,20 @@ test('brief reports progress, open load-bearing assumptions, unresolved findings
     assert.match(stdout, /product-grill\/outcome: Deferred \(Waiting on the sponsor\)/);
     assert.match(stdout, /story-grill S1: Act on finding without a resolution/);
     assert.match(stdout, /Run `presentation-product-grill` for the `product-grill` gate, asking the open decisions/);
+  });
+});
+
+test('brief includes profile nodes and flags old-schema grill logs', async () => {
+  const { writeFile } = await import('node:fs/promises');
+  await withWorkspace(async (root) => {
+    await runStatus(root, 'init', 'demo-deck', './notes');
+    await writeFile(path.join(root, 'PRESENTATION-BRIEF.md'), '- Profile: `training-zh-hant`\n');
+    await writeFile(
+      path.join(root, 'GRILL-LOG.md'),
+      '| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| product-grill | interaction-format | q | r | d | Assumed | Guessed workshop | — |',
+    );
+    assert.match((await runStatus(root, 'brief')).stdout, /product-grill\/interaction-format: Assumed, load-bearing/);
+    await writeFile(path.join(root, 'GRILL-LOG.md'), '| Phase | Question |\n| --- | --- |\n| product-grill | q |');
+    assert.match((await runStatus(root, 'brief')).stdout, /GRILL-LOG\.md: GRILL-LOG\.md needs "Node" and "Status" columns/);
   });
 });

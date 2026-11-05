@@ -78,8 +78,12 @@ export function briefMinutes(brief) {
   return minutes ? Number(minutes[1]) : null;
 }
 
-function column(header, ...names) {
-  return header.find((name) => names.some((candidate) => name.startsWith(candidate)));
+/** Finds a table column: an exact header first ("proof"), then a prefix match ("proof type"). */
+export function column(header, ...names) {
+  return (
+    header.find((name) => names.includes(name)) ??
+    header.find((name) => names.some((candidate) => name.startsWith(candidate)))
+  );
 }
 
 export function checkStoryboard({ storyboard, ledger = null, brief = null }) {

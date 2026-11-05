@@ -46,4 +46,4 @@ Only when no person can answer (headless run) or the user explicitly says to sto
 
 ## Pass
 
-Run `node .agents/skills/make-presentation/scripts/grill-check.mjs <work-root> product-grill`. Pass only when it reports no errors and the user has confirmed the playback.
+Run `node .agents/skills/make-presentation/scripts/grill-check.mjs <work-root> product-grill`. Pass only when it reports no errors and the user has confirmed the playback. In a headless run, the playback goes under `## Unconfirmed` with the assumed nodes instead; `grill-check.mjs production-qa` then blocks delivery until a person confirms them.

@@ -6,7 +6,7 @@
 // included) or <target>/.claude/ (Claude Code), then verifies the install.
 
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,10 +54,11 @@ export function install({ target, runtime, force }, log = (line) => process.stdo
   for (const dir of ['skills', 'adapters']) {
     mkdirSync(path.join(root, dir), { recursive: true });
     for (const entry of readdirSync(path.join(SRC, dir), { withFileTypes: true })) {
-      cpSync(path.join(SRC, dir, entry.name), path.join(root, dir, entry.name), {
-        recursive: true,
-        force: true,
-      });
+      const destination = path.join(root, dir, entry.name);
+      // Replace each shipped skill or adapter whole, so files a newer version
+      // dropped do not linger. Other skills in the folder are left alone.
+      rmSync(destination, { recursive: true, force: true });
+      cpSync(path.join(SRC, dir, entry.name), destination, { recursive: true });
     }
   }
 

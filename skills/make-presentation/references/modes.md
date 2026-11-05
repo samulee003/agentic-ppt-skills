@@ -8,9 +8,9 @@ Use `general` when the deck is internal, creative, operational, or otherwise low
 
 Use `fast-track` when producing lightweight, agile presentations (< 10 slides, internal team updates, rapid tech shares, sprint reviews) where minimizing turn latency and artifact overhead is paramount.
 
-- Consolidates Gate 1 & 2 (Source Intake + Product Grill) into a single unified brief. Record it once on `source-intake`; the status helper passes `product-grill` with the same artifacts.
+- Consolidates Gate 1 & 2 (Source Intake + Product Grill) into a single unified brief. Record it once on `source-intake`; the status helper passes `product-grill` with the same artifacts, and refuses unless `grill-check.mjs product-grill` is clean.
 - Streamlines Gate 3 (Evidence) to focus only on top critical metrics. Evidence is still its own gate.
-- Combines Story & Opposition pass (Gate 4 & 5). Record it once on `story-architecture`; the helper passes `story-grill` with the same artifacts.
+- Combines Story & Opposition pass (Gate 4 & 5). Record it once on `story-architecture`; the helper passes `story-grill` with the same artifacts, and refuses unless `grill-check.mjs story-grill` and `interrogation-check.mjs --round=story-grill` are clean.
 - Runs the prototype (Gate 6), a short stage pass (Gate 7: timing and readability only), and fast-path QA (Gate 8). Each is still recorded separately.
 - Preserves all canvas budgets, the typography floors, the deterministic checks (`storyboard-check.mjs`, `pptx-check.mjs`), and export defect checks.
 - Skips the arena. Grilling is one round per grill gate: every load-bearing node is still asked, reversible nodes carry recommended defaults. `grill-check.mjs`, the unslop scan, and review buckets still run at their gates.

@@ -8,11 +8,11 @@
 //   - every kept finding has a bucket; every Act on finding has a resolution
 // Usage: interrogation-check.mjs <work-root> [--round=story-grill|stage-grill] [--pptx=<file>] [--json]
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { slideTexts } from './pptx-check.mjs';
-import { parseTables } from './storyboard-check.mjs';
+import { column, parseTables } from './storyboard-check.mjs';
 
 export const PROOF_TYPES = ['ledger', 'contradiction', 'check', 'arithmetic', 'unanswered'];
 export const BUCKETS = ['Act on', 'Consider', 'Noted'];
@@ -29,13 +29,6 @@ export function normalize(text) {
     .toLowerCase();
 }
 
-function column(header, ...names) {
-  // Prefer an exact header ("proof") over a prefix match ("proof type").
-  return (
-    header.find((name) => names.includes(name)) ??
-    header.find((name) => names.some((candidate) => name.startsWith(candidate)))
-  );
-}
 
 /** Splits INTERROGATION.md into rounds, each with its findings and adversary list. */
 export function parseRounds(markdown) {
@@ -121,15 +114,31 @@ export function checkInterrogation({ interrogation, corpus, claimIds, round = nu
   return { errors, warnings, rounds: rounds.length, kept };
 }
 
+/** The deck id recorded in the work root's STATUS.md, if any. */
+export function deckIdFor(root) {
+  const file = path.join(root, 'STATUS.md');
+  if (!existsSync(file)) return null;
+  const json = readFileSync(file, 'utf8').match(/<!-- presentation-status:start -->[\s\S]*?```json([\s\S]*?)```/)?.[1];
+  try {
+    return json ? JSON.parse(json.trim()).deckId ?? null : null;
+  } catch {
+    return null;
+  }
+}
+
 export function loadCorpus(root, pptxFile = null) {
   const parts = SOURCES.map((name) => path.join(root, name))
     .filter((file) => existsSync(file))
     .map((file) => readFileSync(file, 'utf8'));
+  // Only this deck's export: quotes must never be verified against another deck.
+  const deckId = deckIdFor(root);
   const candidates = pptxFile
     ? [pptxFile]
-    : [path.join(root, 'exports'), path.join(root, '..', '..', 'exports')]
-        .filter((dir) => existsSync(dir))
-        .flatMap((dir) => readdirSync(dir).filter((f) => f.endsWith('.pptx')).map((f) => path.join(dir, f)));
+    : deckId
+      ? [path.join(root, 'exports'), path.join(root, '..', '..', 'exports')]
+          .map((dir) => path.join(dir, `${deckId}.pptx`))
+          .filter((file) => existsSync(file))
+      : [];
   for (const file of candidates) {
     for (const slide of slideTexts(readFileSync(file))) parts.push(slide.text, slide.notes);
   }
@@ -143,21 +152,26 @@ export function loadClaimIds(root) {
   return new Set((table?.rows ?? []).map((row) => row[column(table.header, 'claim id')].replace(/[`*]/g, '').trim()));
 }
 
+/** Runs the check for a work root. */
+export function checkInterrogationAt(root, round = null, pptxFile = null) {
+  const file = path.join(root, 'INTERROGATION.md');
+  if (!existsSync(file)) return { errors: [`No INTERROGATION.md in ${root}`], warnings: [], rounds: 0, kept: 0 };
+  return checkInterrogation({
+    interrogation: readFileSync(file, 'utf8'),
+    corpus: loadCorpus(root, pptxFile),
+    claimIds: loadClaimIds(root),
+    round,
+  });
+}
+
 function main(argv) {
   const root = argv.find((arg) => !arg.startsWith('--'));
   if (!root) {
     process.stderr.write('Usage: interrogation-check.mjs <work-root> [--round=story-grill|stage-grill] [--pptx=<file>] [--json]\n');
     process.exit(1);
   }
-  const file = path.join(root, 'INTERROGATION.md');
-  if (!existsSync(file)) throw new Error(`No INTERROGATION.md in ${root}`);
   const flag = (name) => argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null;
-  const report = checkInterrogation({
-    interrogation: readFileSync(file, 'utf8'),
-    corpus: loadCorpus(root, flag('pptx')),
-    claimIds: loadClaimIds(root),
-    round: flag('round'),
-  });
+  const report = checkInterrogationAt(root, flag('round'), flag('pptx'));
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {

@@ -364,6 +364,16 @@ async function setEngine(root, engine) {
   return state;
 }
 
+async function fastTrackChecks(root, partner) {
+  const { checkGrillAt } = await import('./grill-check.mjs');
+  const problems = checkGrillAt(root, partner).errors;
+  if (partner === 'story-grill') {
+    const { checkInterrogationAt } = await import('./interrogation-check.mjs');
+    problems.push(...checkInterrogationAt(root, 'story-grill').errors);
+  }
+  return problems;
+}
+
 async function applyResult(root, gate, result, reason, metadata) {
   assertOneOf(gate, GATES, 'gate');
   assertOneOf(result, RESULTS, 'result');
@@ -375,6 +385,13 @@ async function applyResult(root, gate, result, reason, metadata) {
     applyGateState(state, gate, result, reason, metadata);
     const partner = FAST_TRACK_PAIRS[gate];
     if (result === 'passed' && state.mode === 'fast-track' && partner) {
+      // The partner is a grill gate; passing it here must not skip its checks.
+      const problems = await fastTrackChecks(root, partner);
+      if (problems.length) {
+        throw new Error(
+          `fast-track: ${gate} also passes ${partner}, but ${partner}'s checks fail:\n  ${problems.join('\n  ')}`,
+        );
+      }
       const partnerReason = `fast-track: consolidated with ${gate}. ${reason}`;
       applyGateState(state, partner, 'passed', partnerReason, metadata);
     }
@@ -449,13 +466,15 @@ export async function brief(root) {
 
   const open = [];
   if (grillMd) {
-    const { parseLog, loadTree } = await import('./grill-check.mjs');
-    const tree = loadTree();
+    const { parseLog, treeFor } = await import('./grill-check.mjs');
+    const tree = treeFor(briefMd);
     const loadBearing = new Set(
       Object.entries(tree).flatMap(([phase, nodes]) => nodes.filter((n) => n.loadBearing).map((n) => `${phase}/${n.id}`)),
     );
     const latest = new Map();
-    for (const row of parseLog(grillMd).rows) latest.set(`${row.phase}/${row.node}`, row);
+    const { rows, schemaError } = parseLog(grillMd);
+    if (schemaError) open.push(`GRILL-LOG.md: ${schemaError}`);
+    for (const row of rows) latest.set(`${row.phase}/${row.node}`, row);
     for (const [key, row] of latest) {
       if (row.status === 'Deferred') open.push(`${key}: Deferred (${row.reason || 'waiting on someone'})`);
       else if (row.status === 'Assumed' && loadBearing.has(key)) open.push(`${key}: Assumed, load-bearing (${row.reason}); confirm with the user`);

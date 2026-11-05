@@ -8,7 +8,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseTables } from './storyboard-check.mjs';
+import { column, parseTables } from './storyboard-check.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,9 +20,6 @@ function field(markdown, label) {
   return line.slice(line.indexOf(':') + 1).trim();
 }
 
-function column(header, ...names) {
-  return header.find((name) => names.some((candidate) => name.startsWith(candidate)));
-}
 
 export function themeId(brief) {
   const value = field(brief, 'Theme');

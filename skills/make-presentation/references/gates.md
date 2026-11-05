@@ -13,4 +13,4 @@
 
 Exporter changes invalidate PPTX/PDF proof and require a fresh re-export.
 
-In `fast-track` mode, passing `source-intake` also passes `product-grill`, and passing `story-architecture` also passes `story-grill`, with the same artifacts (see `modes.md`).
+In `fast-track` mode, passing `source-intake` also passes `product-grill`, and passing `story-architecture` also passes `story-grill`, with the same artifacts; the helper refuses when the paired grill gate's checks fail (see `modes.md`).

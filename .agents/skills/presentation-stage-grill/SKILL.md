@@ -9,8 +9,8 @@ Use when `stage-grill` is the current gate.
 
 - Read repo instructions, `PRESENTATION-BRIEF.md`, `STORY.md`, `STORYBOARD.md`, `GRILL-LOG.md`, current speaker notes, and actual page renders before judging the talk.
 - Always explore the files instead of asking the user for discoverable facts.
-- Settle the `stage-grill` nodes in `../make-presentation/references/grill-tree.md` (opening, timing, challenges, language, and resets for talks over 30 minutes, plus any profile nodes) in one round per `../make-presentation/references/grilling-rounds.md`, each question with a recommended answer worded so "yes" accepts it.
-- Before the round, run the stage interrogation (`../make-presentation/references/interrogate.md`) on the renders, the current notes, and the exported file, and append it to `INTERROGATION.md` as `## Round: stage-grill`. Its kept findings drive the `challenges` node.
+- First, run the stage interrogation (`../make-presentation/references/interrogate.md`) on the renders, the current notes, and the exported file, and append it to `INTERROGATION.md` as `## Round: stage-grill`. Its kept findings drive the `challenges` node.
+- Then settle the `stage-grill` nodes in `../make-presentation/references/grill-tree.md` (opening, timing, challenges, language, and resets for talks over 30 minutes, plus any profile nodes) in one round per `../make-presentation/references/grilling-rounds.md`, each question with a recommended answer worded so "yes" accepts it.
 - Headless, or the user says "stop asking": use `references/autonomous-stage.md` and log the nodes `Assumed`; the load-bearing ones (opening, timing, challenges) must be confirmed before `production-qa`.
 - When the user refers to the page they're currently viewing without naming it, resolve it through the engine's "current page" mechanism (e.g. `current-slide` for open-slide) before judging.
 - Use actual renders and current speaker notes, not outline-only summaries.
