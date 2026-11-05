@@ -87,8 +87,8 @@ checks, or profile rules.
 **Any agent (Claude Code, Codex, Cursor, …): one command in your project folder**
 
 ```bash
-npx github:samulee003/agentic-ppt-skills                   # installs into .agents/
-npx github:samulee003/agentic-ppt-skills --runtime=claude  # installs into .claude/
+npx --yes github:samulee003/agentic-ppt-skills                   # installs into .agents/
+npx --yes github:samulee003/agentic-ppt-skills --runtime=claude  # installs into .claude/
 ```
 
 Then ask:

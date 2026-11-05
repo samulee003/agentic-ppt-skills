@@ -44,9 +44,10 @@ This gate renders slides, so it needs a **slide engine**. Resolve it before auth
 7. **Data slides** follow `../make-presentation/references/data-slides.md`: one point per chart, accent on the series the title names, source line on every chart.
 8. **Type**: follow the canonical scale in `../make-presentation/references/typography.md` through the engine adapter. Split the slide rather than go under the body floor.
 9. **Language**: one language per surface, in the register set by the profile; no stray untranslated words.
-10. **Archetypes**: build each page in the archetype assigned in `STORYBOARD.md` (`hero`, `split`, `diagram`, `cards`, `data`, `section`, `interaction`). Cards need committed surfaces from the theme, not faint 1 px grey dashboard boxes.
-11. **Theme and brand**: apply the theme contract from `../make-presentation/themes/<id>.md`. When the brief names a brand template, its palette, fonts, and title area win; build on the template's master where the engine allows (see the adapter's *Brand template* note).
-12. **Profile**: apply the profile's *Prototype* section (for example, interaction layouts for training).
+10. **Imagery as agreed**: use the imagery the brief records (photos, illustrations, icons, diagrams, charts). If the brief promises pictures, the deck must have them (`plan-check.mjs` errors otherwise). A deck where most slides are a row of coloured boxes fails `pptx-check.mjs`.
+11. **Archetypes**: build each page in the archetype assigned in `STORYBOARD.md` (`hero`, `split`, `diagram`, `cards`, `data`, `section`, `interaction`). Cards need committed surfaces from the theme, not faint 1 px grey dashboard boxes.
+12. **Theme and brand**: apply the theme contract from `../make-presentation/themes/<id>.md`. When the brief names a brand template, its palette, fonts, and title area win; build on the template's master where the engine allows (see the adapter's *Brand template* note).
+13. **Profile**: apply the profile's *Prototype* section (for example, interaction layouts for training).
 
 - **Arena (optional)**: when the visual direction is unsettled, the deck is high stakes, or the first prototype was rejected twice, follow `../make-presentation/references/arena-prototype.md` to build 2 to 3 competing directions, pick a base, and graft. Skip in `fast-track` mode.
 - **Unslop**: run `node .agents/skills/make-presentation/scripts/unslop-check.mjs <slide-folder>` on the prototype pages and fix findings per `../make-presentation/references/unslop-copy.md`.

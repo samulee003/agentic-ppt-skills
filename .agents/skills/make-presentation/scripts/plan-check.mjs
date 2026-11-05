@@ -13,7 +13,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deckIdFor } from './interrogation-check.mjs';
-import { slideTexts } from './pptx-check.mjs';
+import { inspectPptx, slideTexts } from './pptx-check.mjs';
 import { column, parseTables } from './storyboard-check.mjs';
 
 const CJK = /[぀-ヿ㐀-鿿豈-﫿가-힯]/;
@@ -40,7 +40,17 @@ export function overlap(script, notes) {
   return want.filter((token) => have.has(token)).length / want.length;
 }
 
-export function checkPlan({ storyboard, script = null, slides }) {
+/** Does the brief's Imagery line promise pictures (photos, illustrations, icons)? */
+export function promisesPictures(brief) {
+  const line = (brief ?? '').split(/\r?\n/).find((l) => /^\s*-\s*(?:Imagery|配圖|配图|圖像|图像)/i.test(l));
+  if (!line) return false;
+  const value = line.slice(line.search(/[:：]/) + 1)
+    // drop what the brief rules out: "no photos", 「不用照片」
+    .replace(/(?:\bno\b|\bnot\b|\bwithout\b|不用|唔用|不要|唔要|避免|沒有|冇)[^,，;；。.]*/gi, ' ');
+  return /photo|illustration|icon|image|picture|screenshot|照片|插圖|插图|插畫|插画|圖示|图示|圖片|图片|截圖|截图/i.test(value);
+}
+
+export function checkPlan({ storyboard, script = null, slides, brief = null, pictures = null }) {
   const errors = [];
   const warnings = [];
   const board = parseTables(storyboard).find((t) => column(t.header, 'slide'));
@@ -78,6 +88,17 @@ export function checkPlan({ storyboard, script = null, slides }) {
       }
     }
   });
+  // The slide repeats its own notes: the presenter's script was pasted on screen.
+  slides.forEach((slide, index) => {
+    const slideTokens = tokens(slide.text);
+    if (slideTokens.length >= 30 && slide.notes && overlap(slide.text, slide.notes) > 0.7) {
+      warnings.push(`Slide ${index + 1}: the slide repeats its speaker notes; keep the slide to the takeaway and leave the explanation in the notes`);
+    }
+  });
+
+  if (brief && pictures !== null && promisesPictures(brief) && pictures === 0) {
+    errors.push('The brief\'s Imagery line promises pictures (photos, illustrations, or icons), but the deck has none');
+  }
   return { errors, warnings, slides: slides.length, planned };
 }
 
@@ -102,7 +123,14 @@ export function checkPlanAt(root, pptxFile = null) {
   if (!pptx || !existsSync(pptx)) {
     return { errors: [`No exported .pptx found for ${root}; pass --pptx=<file>`], warnings: [], slides: 0, planned: 0 };
   }
-  return checkPlan({ storyboard, script: read('SPEAKER-SCRIPT.md'), slides: slideTexts(readFileSync(pptx)) });
+  const buffer = readFileSync(pptx);
+  return checkPlan({
+    storyboard,
+    script: read('SPEAKER-SCRIPT.md'),
+    slides: slideTexts(buffer),
+    brief: read('PRESENTATION-BRIEF.md'),
+    pictures: inspectPptx(buffer, { requireNotes: false }).pictures,
+  });
 }
 
 function main(argv) {

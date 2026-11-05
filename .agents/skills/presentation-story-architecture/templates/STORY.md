@@ -19,6 +19,12 @@
 | Chapter | Role | Main claim | Evidence IDs | Transition in | Transition out |
 | --- | --- | --- | --- | --- | --- |
 
+## Slide budget
+
+- Slides: (main / backup)
+- Why this many: (talk length ÷ minutes per slide; slides per chapter; time taken by activities off the slides)
+- Cut to stay there:
+
 ## Main-talk range
 
 - Included:

@@ -255,3 +255,20 @@ test('short footer lines are captions; body text and per-box paragraphs are stil
   const cards = [0, 1, 2, 3].map((i) => shapeXml({ x: (0.5 + i * 3) * IN, y: 2 * IN, w: 2.8 * IN, h: 3 * IN, text: '卡'.repeat(35), sz: 1650 }));
   assert.ok(!inspectPptx(deck([{ xml: slideOf(...cards), notes: 'n' }])).warnings.some((w) => /dense|paragraph/.test(w)), '140 CJK across four cards is not a wall');
 });
+
+test('a deck of box rows with no visuals is flagged; speaker voice on a slide is flagged', () => {
+  const card = (i, text = '卡片內容') => shapeXml({ x: (0.5 + i * 3) * IN, y: 2 * IN, w: 2.8 * IN, h: 2.5 * IN, fill: true, text, sz: 2000 });
+  const boxes = slideOf(card(0), card(1), card(2));
+  const monotone = inspectPptx(deck(Array.from({ length: 8 }, () => ({ xml: boxes, notes: 'n' }))));
+  assert.ok(monotone.errors.some((e) => /8 of 8 slides are a row of boxes/.test(e)));
+  assert.ok(monotone.warnings.some((w) => /No slide has a picture, chart, or drawn diagram/.test(w)));
+  const line = '<p:cxnSp><p:spPr><a:prstGeom prst="straightConnector1"/></p:spPr></p:cxnSp>';
+  const mixed = Array.from({ length: 8 }, (_, i) => ({ xml: i < 4 ? boxes : slideOf(card(0), line), notes: 'n' }));
+  const varied = inspectPptx(deck(mixed));
+  assert.ok(!varied.errors.some((e) => /row of boxes/.test(e)));
+  assert.ok(!varied.warnings.some((w) => /No slide has/.test(w)));
+  const voice = slideOf(shapeXml({ x: IN, y: 2 * IN, w: 9 * IN, h: IN, text: '今天我想同大家講三件事', sz: 2400 }));
+  assert.ok(inspectPptx(deck([{ xml: voice, notes: 'n' }])).warnings.some((w) => /speaker's voice/.test(w)));
+  const quoted = slideOf(shapeXml({ x: IN, y: 2 * IN, w: 9 * IN, h: IN, text: '開場白：「我想同你傾五分鐘」', sz: 2400 }));
+  assert.ok(!inspectPptx(deck([{ xml: quoted, notes: 'n' }])).warnings.some((w) => /speaker's voice/.test(w)), 'quoted dialogue is fine');
+});

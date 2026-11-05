@@ -28,6 +28,8 @@ Use when `story-architecture` is the current gate.
   5. `data`: one chart, table, or hero figure that proves the action title (`../make-presentation/references/data-slides.md`).
   6. `section`: a chapter divider.
   7. `interaction`: a poll, discussion prompt, exercise, or demo cue.
+- **Slide budget**: fill the *Slide budget* section of `STORY.md`: how many slides, and why (talk length ÷ minutes per slide, slides per chapter, time spent off the slides), and what was cut. `storyboard-check.mjs` fails without it.
+- **Audience-facing copy**: slides carry what the audience should see and keep, in their words. The presenter's reasoning, asides, metaphors explained, and "today I want to…" belong in the speaker notes. `pptx-check.mjs` flags the speaker's voice on a slide, and `plan-check.mjs` flags a slide that repeats its notes.
 - **Language**: on-screen copy uses the written register of the audience's language; spoken phrasing belongs in transitions and speaker notes. Apply the profile's *Language* section when it sets stricter rules.
 - Split the slide rather than shrink text or pack distinct messages onto one page. Remove ornamental, duplicate, or "nice to have" pages.
 - **Meaningful brevity**: cut filler and secondary clutter, but keep each takeaway a clear, complete thought. Do not reduce statements to cryptic two-word fragments.

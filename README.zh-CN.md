@@ -61,8 +61,8 @@
 **任何代理（Claude Code、Codex、Cursor……）：在项目文件夹执行一行命令**
 
 ```bash
-npx github:samulee003/agentic-ppt-skills                   # 安装到 .agents/
-npx github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
+npx --yes github:samulee003/agentic-ppt-skills                   # 安装到 .agents/
+npx --yes github:samulee003/agentic-ppt-skills --runtime=claude  # 安装到 .claude/
 ```
 
 接着直接说：

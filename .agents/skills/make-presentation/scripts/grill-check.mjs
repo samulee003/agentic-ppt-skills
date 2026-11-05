@@ -47,15 +47,41 @@ export function normalizeStatus(value) {
   return match ?? value.replace(/[`*]/g, '').trim();
 }
 
+/** Rounds actually asked: id, phase, the node ids asked, and the user's reply. */
+export function parseRounds(markdown) {
+  const table = parseTables(markdown).find((t) => t.header.includes('nodes asked'));
+  if (!table) return [];
+  const get = (row, ...names) => {
+    const key = column(table.header, ...names);
+    return key ? row[key].replace(/[`*]/g, '').trim() : '';
+  };
+  return table.rows.map((row) => ({
+    id: get(row, 'round').toUpperCase(),
+    phase: get(row, 'phase'),
+    nodes: get(row, 'nodes asked')
+      .split(/[,，、;\s]+/)
+      .map((n) => n.trim())
+      .filter(Boolean),
+    reply: get(row, 'user reply'),
+  }));
+}
+
 export function parseLog(markdown) {
-  const table = parseTables(markdown).find((t) => column(t.header, 'phase'));
-  if (!table) return { rows: [], schemaError: 'GRILL-LOG.md has no table with a "Phase" column' };
+  const tables = parseTables(markdown);
+  // The decisions table has a "Node" column; the rounds table has "Nodes asked".
+  const table = tables.find((t) => t.header.includes('node') && column(t.header, 'phase'));
+  if (!table) {
+    return tables.some((t) => column(t.header, 'phase'))
+      ? { rows: [], schemaError: 'GRILL-LOG.md needs "Node" and "Status" columns (see presentation-product-grill/templates/GRILL-LOG.md)' }
+      : { rows: [], schemaError: 'GRILL-LOG.md has no table with a "Phase" column' };
+  }
   const cols = {
     phase: column(table.header, 'phase'),
     node: column(table.header, 'node'),
     decision: column(table.header, 'decision'),
     status: column(table.header, 'status'),
     reason: column(table.header, 'reason'),
+    round: table.header.includes('round') ? 'round' : undefined,
   };
   if (!cols.node || !cols.status) {
     return {
@@ -71,8 +97,9 @@ export function parseLog(markdown) {
     decision: cols.decision ? row[cols.decision] : '',
     status: normalizeStatus(row[cols.status]),
     reason: cols.reason ? row[cols.reason].trim() : '',
+    round: cols.round ? row[cols.round].replace(/[`*]/g, '').trim().toUpperCase() : '',
   }));
-  return { rows };
+  return { rows, hasRoundColumn: Boolean(cols.round), rounds: parseRounds(markdown) };
 }
 
 export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
@@ -82,8 +109,15 @@ export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
   if (!final && !PHASES.includes(gate)) {
     throw new Error(`Unknown gate "${gate}". Expected one of: ${[...PHASES, 'production-qa'].join(', ')}`);
   }
-  const { rows, schemaError } = parseLog(log);
+  const { rows, schemaError, hasRoundColumn, rounds } = parseLog(log);
   if (schemaError) return { errors: [schemaError], warnings, covered: 0, required: 0 };
+  if (!hasRoundColumn) {
+    errors.push('GRILL-LOG.md needs a "Round" column and a Rounds table: every Decided row names the round that asked it (see grill-tree.md)');
+  }
+  const roundsById = new Map(rounds.map((r) => [r.id, r]));
+  for (const r of rounds) {
+    if (!r.reply || /^(-|—|n\/a)$/i.test(r.reply)) errors.push(`Round ${r.id}: no user reply recorded; copy the reply verbatim`);
+  }
 
   const minutes = brief ? briefMinutes(brief) : null;
   const conditions = { longTalk: minutes === null || minutes > 30 };
@@ -99,6 +133,16 @@ export function checkGrill({ log, gate, brief = null, tree = loadTree() }) {
     }
     if (row.status === 'Assumed' && row.reason.replace(/[-—\s]/g, '') === '') {
       errors.push(`Row ${row.line} (${row.phase}/${row.node}): Assumed without a reason`);
+    }
+    if (row.status === 'Decided' && hasRoundColumn) {
+      const round = roundsById.get(row.round);
+      if (!row.round) {
+        errors.push(`Row ${row.line} (${row.phase}/${row.node}): Decided without a round; if the user was not asked, it is Assumed`);
+      } else if (!round) {
+        errors.push(`Row ${row.line} (${row.phase}/${row.node}): round ${row.round} is not in the Rounds table`);
+      } else if (round.phase !== row.phase || !round.nodes.includes(row.node)) {
+        errors.push(`Row ${row.line} (${row.phase}/${row.node}): round ${row.round} did not ask this node`);
+      }
     }
   }
 

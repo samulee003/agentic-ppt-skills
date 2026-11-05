@@ -19,9 +19,15 @@ repository. The root [`README.md`](./README.md) is the human-oriented guide.
 Preferred: run the installer from the target folder (it copies, then verifies):
 
 ```bash
-npx github:samulee003/agentic-ppt-skills            # → .agents/
-npx github:samulee003/agentic-ppt-skills --runtime=claude   # → .claude/
+npx --yes github:samulee003/agentic-ppt-skills                      # → .agents/
+npx --yes github:samulee003/agentic-ppt-skills --runtime=claude     # → .claude/
+npx --yes github:samulee003/agentic-ppt-skills --runtime=workbuddy  # → ~/.workbuddy/
+npx --yes github:samulee003/agentic-ppt-skills --to=<folder>        # any runtime: <folder>/skills, <folder>/adapters
 ```
+
+`--yes` skips npx's confirmation prompt, which hangs in non-interactive shells.
+On WorkBuddy, name `make-presentation` explicitly: its built-in office routing
+otherwise sends presentation requests to `workbuddy-pptx` and skips the gates.
 
 Claude Code can also install the plugin:
 `/plugin marketplace add samulee003/agentic-ppt-skills`, then
@@ -76,6 +82,10 @@ node .agents/skills/make-presentation/scripts/status.mjs \
 Grilling is the point: at every grill gate, ask the user the frontier of
 `make-presentation/references/grill-tree.md` in rounds, with recommended
 answers. Do not assume a load-bearing decision while the user can answer.
+Record each round and the user's verbatim reply in `GRILL-LOG.md`; a node the
+user did not answer is `Assumed`, never `Decided`. The brief alone has 15
+nodes, including visual direction, must-avoid, and imagery: two questions and
+then building is a failed product grill.
 
 Run exactly one focused skill for the earliest unresolved gate. `SKILL.md` is
 the agent contract; `skills/SKILLS-INDEX.md` is the human-facing catalog.

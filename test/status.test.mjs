@@ -142,11 +142,15 @@ test('fast-track consolidates paired gates only when their grill checks pass', a
   const { loadTree } = await import('../skills/make-presentation/scripts/grill-check.mjs');
   const tree = loadTree();
   const rows = (phase) =>
-    tree[phase].map((n) => `| ${phase} | ${n.id} | q | r | d | Decided | User answered | — |`);
+    tree[phase].map((n) => `| ${phase} | ${n.id} | q | r | d | Decided | ${phase} | User answered | — |`);
   const log = (phases) =>
     [
-      '| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |',
-      '| --- | --- | --- | --- | --- | --- | --- | --- |',
+      '| Round | Phase | Nodes asked | User reply (verbatim) |',
+      '| --- | --- | --- | --- |',
+      ...phases.map((phase) => `| ${phase.toUpperCase()} | ${phase} | ${tree[phase].map((n) => n.id).join(', ')} | Yes to all. |`),
+      '',
+      '| Phase | Node | Question | Recommended answer | Decision | Status | Round | Reason | Invalidates |',
+      '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
       ...phases.flatMap(rows),
     ].join('\n');
 
@@ -202,7 +206,7 @@ test('brief reports progress, open load-bearing assumptions, unresolved findings
       `| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | product-grill | audience | q | r | d | Assumed | Headless run | — |
-| product-grill | visual | q | r | d | Assumed | Reversible | — |
+| product-grill | brand | q | r | d | Assumed | Reversible | — |
 | product-grill | outcome | q | r | d | Deferred | Waiting on the sponsor | — |`,
     );
     await writeFile(
@@ -217,7 +221,7 @@ test('brief reports progress, open load-bearing assumptions, unresolved findings
     assert.match(stdout, /demo-deck: 1\/8 gates passed/);
     assert.match(stdout, /Playback: A decision deck for the board\./);
     assert.match(stdout, /product-grill\/audience: Assumed, load-bearing \(Headless run\)/);
-    assert.doesNotMatch(stdout, /product-grill\/visual/);
+    assert.doesNotMatch(stdout, /product-grill\/brand/);
     assert.match(stdout, /product-grill\/outcome: Deferred \(Waiting on the sponsor\)/);
     assert.match(stdout, /story-grill S1: Act on finding without a resolution/);
     assert.match(stdout, /Run `presentation-product-grill` for the `product-grill` gate, asking the open decisions/);

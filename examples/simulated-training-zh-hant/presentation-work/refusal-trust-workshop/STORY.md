@@ -21,6 +21,12 @@
 | What to do (slides 5–9) | tools | Three steps, shown on a real case | E4, E6 | 「三步」 | 「依家輪到你哋試」 |
 | Practice and transfer (slides 10–12) | rehearsal, commitment | Practise the three steps; take the card home | E4 | 「兩人一組」 | 「記住：放棄先係失敗」 |
 
+## Slide budget
+
+- Slides: 12 main, 1 backup
+- Why this many: 45 minutes, of which 15 go to the role-play on one slide and about 5 stay spare; the other 24.5 minutes cover 11 slides at 2–3 minutes each, with a room prompt on most of them. 4MAT chapters: 3 Why, 1 How, 5 What, 3 practice and close
+- Cut to stay there: a separate slide for the variant card (it lives on slide 10) and a second case example
+
 ## Main-talk range
 
 - Included: slides 1–12

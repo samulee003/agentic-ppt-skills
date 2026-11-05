@@ -63,8 +63,8 @@
 
 - Theme: (`make-presentation/themes/<id>.md`, a benchmark deck, or "custom" with the fields below)
 - Overrides to the theme (palette, fonts, surfaces), if any:
-- Imagery: (drawn illustrations, photography, diagrams only; asset sources)
-- Prohibited anti-patterns:
+- Imagery: (photos, illustrations, icons, diagrams, screenshots, data charts; where each comes from)
+- Prohibited anti-patterns (the user's *must avoid* answer):
 
 ## Success test
 

@@ -117,7 +117,17 @@ export function plannedActivitySeconds(text) {
   return seconds;
 }
 
-export function checkStoryboard({ storyboard, ledger = null, brief = null, script = null }) {
+/** STORY.md must say why the deck has the slides it has. */
+export function slideBudgetProblem(story) {
+  const section = story.match(/##\s*Slide budget\s*\n([\s\S]*?)(?=\n##\s|$)/i)?.[1];
+  if (section === undefined) return 'STORY.md has no "Slide budget" section: say why the deck has this many slides';
+  const why = section.split(/\r?\n/).find((l) => /^\s*-\s*Why this many/i.test(l));
+  const value = why ? afterLabel(why).trim() : '';
+  if (!value || /^\(.*\)$/.test(value)) return 'STORY.md "Slide budget" does not say why this many slides';
+  return null;
+}
+
+export function checkStoryboard({ storyboard, ledger = null, brief = null, script = null, story = null }) {
   const errors = [];
   const warnings = [];
   const table = parseTables(storyboard).find((t) => column(t.header, 'slide'));
@@ -215,6 +225,11 @@ export function checkStoryboard({ storyboard, ledger = null, brief = null, scrip
     }
   }
 
+  if (story) {
+    const problem = slideBudgetProblem(story);
+    if (problem) errors.push(problem);
+  }
+
   const target = brief ? briefMinutes(brief) : null;
   if (timeCol && timedRows > 0 && target) {
     if (mainMinutes > target) {
@@ -246,6 +261,7 @@ function main(argv) {
     ledger: read('EVIDENCE-LEDGER.md'),
     brief: read('PRESENTATION-BRIEF.md'),
     script: read('SPEAKER-SCRIPT.md'),
+    story: read('STORY.md'),
   });
   if (argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

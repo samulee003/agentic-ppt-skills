@@ -12,6 +12,7 @@ Read repo instructions first. Route the project from the earliest unresolved gat
 Every command in these skills is written for skills installed at `.agents/skills/` with adapters at `.agents/adapters/`. When they live elsewhere, substitute the real folder in every command and path, in every skill:
 
 - Claude Code project install: `.claude/skills/` and `.claude/adapters/`.
+- WorkBuddy: `~/.workbuddy/skills/` and `~/.workbuddy/adapters/`.
 - Claude Code plugin: `${CLAUDE_PLUGIN_ROOT}/skills/` and `${CLAUDE_PLUGIN_ROOT}/adapters/` (if this line still shows the literal `${CLAUDE_PLUGIN_ROOT}`, you are not running as a plugin).
 - Find the real folder by locating this `SKILL.md`: the skills folder is its parent's parent, and `adapters/` sits next to it.
 

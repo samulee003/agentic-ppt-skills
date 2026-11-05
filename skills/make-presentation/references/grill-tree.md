@@ -27,6 +27,18 @@ that every node for the gate is covered.
 4. Every question carries a recommended answer worded so "yes" accepts it.
 5. Stop when every applicable node for the gate has a row.
 
+## Every decision needs its round
+
+`GRILL-LOG.md` has two tables. **Rounds** records each round you actually
+asked: its id, the phase, the node ids it asked, and the user's reply copied
+verbatim. **Decisions** has one row per node; a `Decided` row names the round
+that settled it in its `Round` column. `grill-check.mjs` fails a `Decided` row
+whose round does not exist, is in another phase, or did not ask that node.
+
+Never mark a node `Decided` that the user did not answer in a recorded round.
+If you chose it yourself, it is `Assumed`, and load-bearing assumptions block
+delivery until a round confirms them.
+
 ## Status values
 
 | Status | Meaning | Allowed |
@@ -54,7 +66,9 @@ works on the day. They are asked, not assumed, whenever a person can answer.
     { "id": "constraints", "title": "Constraints", "question": "Talk length, Q&A, venue and screen, on-screen and spoken language?", "deps": ["deck-type"], "loadBearing": true },
     { "id": "deliverables", "title": "Deliverables", "question": "Presenting deck, reading deck, or both; formats; must the .pptx be editable, and where will the team edit it?", "deps": ["audience"], "loadBearing": false },
     { "id": "brand", "title": "Brand template", "question": "Is there a brand template or guide (or none)?", "deps": [], "loadBearing": false },
-    { "id": "visual", "title": "Visual direction", "question": "Which theme, or which benchmark deck?", "deps": ["deck-type", "brand"], "loadBearing": false },
+    { "id": "visual", "title": "Visual direction", "question": "Which of these two or three themes (shown with a sample), or which benchmark deck?", "deps": ["deck-type", "brand"], "loadBearing": true },
+    { "id": "must-avoid", "title": "Must avoid", "question": "What must the deck never look like or contain: styles, colours, layouts, clip-art, words, topics?", "deps": [], "loadBearing": true },
+    { "id": "imagery", "title": "Imagery", "question": "What carries the visuals: photos, illustrations, icons, diagrams, screenshots, or data charts, and where do they come from?", "deps": ["visual"], "loadBearing": true },
     { "id": "success-test", "title": "Success test", "question": "What observable signal will show the deck worked?", "deps": ["outcome"], "loadBearing": true },
     { "id": "out-of-scope", "title": "Out of scope", "question": "What must the deck not cover or claim?", "deps": ["outcome"], "loadBearing": false }
   ],
@@ -63,11 +77,12 @@ works on the day. They are asked, not assumed, whenever a person can answer.
     { "id": "headline-test", "title": "Headline test", "question": "Read only the titles: do they carry the argument? Which gaps or redundant slides did it expose?", "deps": [], "loadBearing": true },
     { "id": "counter-evidence", "title": "Counter-evidence", "question": "Which counter-evidence goes in the talk, in backup, or nowhere?", "deps": ["opposition"], "loadBearing": true },
     { "id": "cuts", "title": "Cuts", "question": "Which slides are cut, merged, or moved to backup?", "deps": ["headline-test"], "loadBearing": false },
-    { "id": "structure", "title": "Structure", "question": "Does the structure follow the deck type's default, and if not, why?", "deps": [], "loadBearing": false }
+    { "id": "structure", "title": "Structure", "question": "Does the structure follow the deck type's default, and if not, why?", "deps": [], "loadBearing": false },
+    { "id": "slide-budget", "title": "Slide budget", "question": "Why this many slides: minutes per slide, slides per chapter, and what was cut to stay there?", "deps": ["cuts"], "loadBearing": true }
   ],
   "deck-prototype": [
     { "id": "engine", "title": "Engine", "question": "Which engine builds the deck?", "deps": [], "loadBearing": false },
-    { "id": "visual-confirm", "title": "Visual direction confirmed", "question": "Seen on real pages, does the theme work, or what changes?", "deps": ["engine"], "loadBearing": false },
+    { "id": "visual-confirm", "title": "Visual direction confirmed", "question": "Seen on real pages, does the theme work, or what changes?", "deps": ["engine"], "loadBearing": true },
     { "id": "representative-set", "title": "Representative set", "question": "Which pages prove the deck (hook, thesis, data, densest page, ending)?", "deps": [], "loadBearing": false }
   ],
   "stage-grill": [

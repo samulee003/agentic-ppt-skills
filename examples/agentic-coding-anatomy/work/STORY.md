@@ -24,6 +24,12 @@
 | Chapter 4 | Safeguards | Human review should match action risk and reversibility | None | Safeguards | Wrap up |
 | Chapter 5 | Summary | Coding agents shift developer roles to auditing | None | Summary | End Q&A |
 
+## Slide budget
+
+- Slides: 5 main, 0 backup
+- Why this many: a 5-minute lightning slot at about one minute per slide; one slide per idea (frame, loop, tools, the one number, review by risk)
+- Cut to stay there: the multi-agent "future" section from the notes
+
 ## Main-talk range
 
 - Included: Slides 1-5

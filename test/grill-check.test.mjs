@@ -9,11 +9,24 @@ const execFileAsync = promisify(execFile);
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const script = path.join(repo, 'skills/make-presentation/scripts/grill-check.mjs');
 
-const header = `| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |
-| --- | --- | --- | --- | --- | --- | --- | --- |`;
-const row = (phase, node, status = 'Decided', reason = 'User answered') =>
-  `| ${phase} | ${node} | q | r | d | ${status} | ${reason} | — |`;
 const tree = loadTree();
+const ROUND = { 'product-grill': 'P1', 'story-grill': 'S1', 'deck-prototype': 'V1', 'stage-grill': 'T1' };
+const PROFILE_NODES = { 'product-grill': ['interaction-format'], 'stage-grill': ['transfer', 'framing'] };
+// One recorded round per phase that asked every node, so tests can focus on statuses.
+const header = `## Rounds
+
+| Round | Phase | Nodes asked | User reply (verbatim) |
+| --- | --- | --- | --- |
+${Object.entries(ROUND)
+  .map(([phase, id]) => `| ${id} | ${phase} | ${[...tree[phase].map((n) => n.id), ...(PROFILE_NODES[phase] ?? [])].join(', ')} | Yes to all. |`)
+  .join('\n')}
+
+## Decisions
+
+| Phase | Node | Question | Recommended answer | Decision | Status | Round | Reason | Invalidates |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |`;
+const row = (phase, node, status = 'Decided', reason = 'User answered', round = status === 'Decided' ? ROUND[phase] : '') =>
+  `| ${phase} | ${node} | q | r | d | ${status} | ${round} | ${reason} | — |`;
 const all = (phase, status = 'Decided') => tree[phase].map((n) => row(phase, n.id, status));
 
 test('the grill tree is well formed: unique ids, known deps, no cycles', () => {
@@ -64,7 +77,7 @@ test('load-bearing assumptions warn at their gate and block production-qa', () =
   assert.ok(atQa.errors.some((e) => /audience: load-bearing .* before delivery/.test(e)));
   // A reversible node may stay Assumed.
   rows.pop();
-  rows.push(row('product-grill', 'visual', 'Assumed', 'Reversible; seen on the prototype'));
+  rows.push(row('product-grill', 'brand', 'Assumed', 'Reversible; no template mentioned'));
   assert.deepEqual(checkGrill({ log: [header, ...rows].join('\n'), gate: 'production-qa' }).errors, []);
 });
 
@@ -109,7 +122,7 @@ test('status values are matched without regard to case or decoration', async () 
   assert.equal(normalizeStatus('decided'), 'Decided');
   assert.equal(normalizeStatus('**Assumed** ⚠️'), 'Assumed');
   assert.equal(normalizeStatus('maybe'), 'maybe');
-  const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | ok | — |`)].join('\n');
+  const log = [header, ...tree['story-grill'].map((n) => `| story-grill | ${n.id} | q | r | d | decided | S1 | ok | — |`)].join('\n');
   assert.deepEqual(checkGrill({ log, gate: 'story-grill' }).errors, []);
 });
 
@@ -130,4 +143,26 @@ test('the product grill needs at most three rounds, with or without the training
   const profile = await readFile(path.join(repo, 'skills/make-presentation/profiles/training-zh-hant.md'), 'utf8');
   assert.ok(rounds(tree['product-grill']) <= 3, 'shared tree');
   assert.ok(rounds(withProfile(tree, profile)['product-grill']) <= 3, 'with training-zh-hant');
+});
+
+test('a Decided row must name a recorded round that asked it, with the reply on record', () => {
+  const rows = all('story-grill');
+  rows[0] = row('story-grill', 'opposition', 'Decided', 'from the notes', '');
+  rows[1] = row('story-grill', 'headline-test', 'Decided', 'ok', 'S9');
+  rows[2] = row('story-grill', 'counter-evidence', 'Decided', 'ok', 'P1');
+  const { errors } = checkGrill({ log: [header, ...rows].join('\n'), gate: 'story-grill' });
+  assert.ok(errors.some((e) => /opposition\): Decided without a round; if the user was not asked, it is Assumed/.test(e)));
+  assert.ok(errors.some((e) => /headline-test\): round S9 is not in the Rounds table/.test(e)));
+  assert.ok(errors.some((e) => /counter-evidence\): round P1 did not ask this node/.test(e)));
+  const silent = header.replace('| S1 | story-grill |', '| S1 | story-grill |').replace(/\| Yes to all\. \|\n\| V1/, '| — |\n| V1');
+  assert.ok(checkGrill({ log: [silent, ...all('story-grill')].join('\n'), gate: 'story-grill' }).errors.some((e) => /Round S1: no user reply recorded/.test(e)));
+  const noRounds = `| Phase | Node | Question | Recommended answer | Decision | Status | Reason | Invalidates |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| story-grill | opposition | q | r | d | Decided | ok | — |`;
+  assert.ok(checkGrill({ log: noRounds, gate: 'story-grill' }).errors.some((e) => /needs a "Round" column and a Rounds table/.test(e)));
+});
+
+test('visual direction, must-avoid, imagery, and slide budget are load-bearing', () => {
+  const ids = (phase) => tree[phase].filter((n) => n.loadBearing).map((n) => n.id);
+  for (const id of ['visual', 'must-avoid', 'imagery']) assert.ok(ids('product-grill').includes(id), id);
+  assert.ok(ids('story-grill').includes('slide-budget'));
+  assert.ok(ids('deck-prototype').includes('visual-confirm'));
 });

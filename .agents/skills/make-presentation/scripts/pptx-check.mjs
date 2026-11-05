@@ -23,6 +23,9 @@ export const HARD_FLOOR = 0.02;
 // a hair under the exact ratio. Allow half a pixel at 1080 px.
 export const FLOOR_TOLERANCE = 0.0005;
 export const DENSITY_WORDS = 70;
+// The speaker's own voice belongs in the notes, not on the slide. Quoted
+// dialogue (「…」, "…") is exempt: a training deck may show lines to say.
+export const SPEAKER_VOICE = /我想|我會|我们今天|我們今天|今天我|讓我|让我|我覺得|我觉得|\bI want to\b|\bI'll\b|\blet me\b|\btoday I\b/i;
 // Text a builder leaves behind when content is still missing.
 export const PLACEHOLDER = /\b(?:TODO|TBD|TBC|FIXME|lorem ipsum|placeholder)\b|\bX{3,}\b|待補|待定|佔位|占位|\[(?:insert|add|logo|image)[^\]]*\]/i;
 export const DENSITY_CJK = 160;
@@ -368,6 +371,21 @@ export function inspectPptx(buffer, options = {}) {
       hasNotes: notes.length > 0,
       imageOnly: allText === '' && (pictures.length > 0 || /<p:bg>[\s\S]*?<a:blip\b/.test(xml)),
     };
+    // What kind of slide this is, for the deck-level variety checks.
+    const shapesAll = [...contentXml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/g)].map((m) => m[0]);
+    const boxes = shapesAll
+      .filter(hasVisibleBox)
+      .map(shapeRect)
+      .filter((r) => r && cx && cy && r.w * r.h < cx * cy * 0.4 && r.w > cx * 0.08 && r.h > cy * 0.12);
+    const row = boxes.filter((b) => boxes.some((o) => o !== b && Math.abs(o.y - b.y) < 274320 && Math.abs(o.w - b.w) < b.w * 0.3));
+    const visuals =
+      pictures.length +
+      (xml.match(/<p:graphicFrame\b/g) ?? []).length +
+      (xml.match(/<p:cxnSp\b/g) ?? []).length +
+      (xml.match(/<a:prstGeom prst="(?:line|straightConnector1|rightArrow|chevron)"/g) ?? []).length;
+    slide.kind = visuals > 0 ? 'visual' : row.length >= 2 ? 'boxes' : 'text';
+    const spoken = allText.replace(/「[^」]*」|“[^”]*”|"[^"]*"/g, ' ').match(SPEAKER_VOICE);
+    if (spoken) warnings.push(`Slide ${number}: "${spoken[0]}" is the speaker's voice; put it in the notes and keep the slide audience-facing`);
     slides.push(slide);
 
     if (requireNotes && !slide.hasNotes) errors.push(`Slide ${number}: no speaker notes`);
@@ -420,6 +438,19 @@ export function inspectPptx(buffer, options = {}) {
     }
   });
 
+  // Variety: a deck of rows of coloured boxes with no picture, chart, or diagram.
+  const boxSlides = slides.filter((slide) => slide.kind === 'boxes').length;
+  const visualSlides = slides.filter((slide) => slide.kind === 'visual').length;
+  if (slides.length >= 6 && boxSlides / slides.length > 0.6) {
+    // Past three in four slides this is a monotonous deck, not a style.
+    (boxSlides / slides.length > 0.75 ? errors : warnings).push(
+      `${boxSlides} of ${slides.length} slides are a row of boxes; vary the layouts (the storyboard archetypes: hero, split, diagram, data) instead of repeating cards`,
+    );
+  }
+  if (slides.length >= 8 && visualSlides === 0) {
+    warnings.push('No slide has a picture, chart, or drawn diagram: the deck is text and colour blocks only');
+  }
+
   const imageOnly = slides.filter((slide) => slide.imageOnly).length;
   if (imageOnly > 0) {
     warnings.push(
@@ -442,6 +473,7 @@ export function inspectPptx(buffer, options = {}) {
     pdfPages: pdfPages ?? null,
     slideSize: cx && cy ? { widthIn: cx / 914400, heightIn: cy / 914400 } : null,
     slides,
+    pictures: slides.reduce((sum, slide) => sum + slide.pictures, 0),
     errors,
     warnings,
   };

@@ -132,3 +132,11 @@ test('activities the notes schedule count toward the slot; backup slides are not
   const script = '| Page | Approved wording |\n| --- | --- |\n| 1 | Churn rose. Discuss in pairs for 2 minutes. |\n| 2 | Short. |';
   assert.deepEqual(checkStoryboard({ storyboard, script }).warnings, []);
 });
+
+test('STORY.md must explain the slide budget', async () => {
+  const { slideBudgetProblem } = await import('../skills/make-presentation/scripts/storyboard-check.mjs');
+  assert.match(slideBudgetProblem('# STORY\n\n## Chapters\n'), /no "Slide budget" section/);
+  assert.match(slideBudgetProblem('## Slide budget\n\n- Slides: 16\n- Why this many: (talk length ÷ minutes per slide)\n'), /does not say why/);
+  assert.equal(slideBudgetProblem('## Slide budget\n\n- Why this many: 20 minutes at about 2 minutes a slide\n'), null);
+  assert.equal(slideBudgetProblem('## Slide budget\n\n- Why this many：三小時課，投影片只佔 40 分鐘\n'), null);
+});

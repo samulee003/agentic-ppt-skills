@@ -166,3 +166,19 @@ test('pptx-check flags placeholder text left on a slide', async () => {
     assert.doesNotMatch(text, PLACEHOLDER, text);
   }
 });
+
+test('plan-check: promised pictures must exist; slides must not repeat their notes', async () => {
+  const { promisesPictures } = await import('../skills/make-presentation/scripts/plan-check.mjs');
+  assert.equal(promisesPictures('- Imagery: photos of the venue and icons'), true);
+  assert.equal(promisesPictures('- Imagery: drawn shapes only; no photos of real elders'), false);
+  assert.equal(promisesPictures('- 配圖：用插畫，不用照片'), true);
+  assert.equal(promisesPictures('- Imagery: diagrams and one chart'), false);
+  const storyboard = board(['| 1 | Churn rose four points after the price change | data | j | E1 | t | 1 | main |']);
+  const long = 'Churn rose four points after the price change because the March increase hit the smallest accounts first and they left within six weeks of the renewal letters going out to every customer';
+  const slides = [{ text: `Churn rose four points after the price change ${long}`, notes: long }];
+  const brief = '- Imagery: photos of customers';
+  const { errors, warnings } = checkPlan({ storyboard, slides, brief, pictures: 0 });
+  assert.ok(errors.some((e) => /promises pictures .* but the deck has none/.test(e)));
+  assert.ok(warnings.some((w) => /repeats its speaker notes/.test(w)));
+  assert.deepEqual(checkPlan({ storyboard, slides: [{ text: 'Churn rose four points after the price change', notes: long }], brief, pictures: 3 }).errors, []);
+});
